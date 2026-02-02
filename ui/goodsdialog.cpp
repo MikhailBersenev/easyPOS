@@ -1,9 +1,13 @@
 #include "goodsdialog.h"
+#include "goodeditdialog.h"
 #include "../easyposcore.h"
+#include "../goods/categorymanager.h"
+#include "../goods/structures.h"
 #include "../db/databaseconnection.h"
+#include "../RBAC/structures.h"
+#include <QDate>
 #include <QSqlQuery>
 #include <QSqlError>
-#include <QInputDialog>
 
 GoodsDialog::GoodsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : ReferenceDialog(parent, core, tr("Товары"))
@@ -59,14 +63,106 @@ void GoodsDialog::loadTable(bool includeDeleted)
 
 void GoodsDialog::addRecord()
 {
-    showInfo(tr("Функция добавления товара — в разработке.\n"
-                "Нужен полноценный диалог с выбором категории, загрузкой изображения и т.д."));
+    addOrEditGood(0);
 }
 
 void GoodsDialog::editRecord()
 {
-    showInfo(tr("Функция редактирования товара — в разработке.\n"
-                "Нужен полноценный диалог с выбором категории, загрузкой изображения и т.д."));
+    const int row = currentRow();
+    if (row < 0) {
+        showWarning(tr("Выберите товар для редактирования."));
+        return;
+    }
+    addOrEditGood(cellText(row, 0).toInt());
+}
+
+void GoodsDialog::addOrEditGood(int existingId)
+{
+    QString name, description;
+    int categoryId = 1;
+    bool isActive = true;
+
+    if (existingId > 0) {
+        const int row = currentRow();
+        if (row < 0) return;
+        name = cellText(row, 1);
+        description = cellText(row, 2);
+        isActive = (cellText(row, 4) == tr("Да"));
+        QSqlQuery sq(m_core->getDatabaseConnection()->getDatabase());
+        sq.prepare(QStringLiteral("SELECT categoryid FROM goods WHERE id = :id"));
+        sq.bindValue(QStringLiteral(":id"), existingId);
+        if (sq.exec() && sq.next())
+            categoryId = sq.value(0).toInt();
+    }
+
+    CategoryManager catMgr(this);
+    catMgr.setDatabaseConnection(m_core->getDatabaseConnection());
+    const QList<GoodCategory> cats = catMgr.list();
+    QList<int> catIds;
+    QStringList catNames;
+    for (const GoodCategory &c : cats) {
+        catIds << c.id;
+        catNames << c.name;
+    }
+    if (catNames.isEmpty()) {
+        showError(tr("Нет категорий. Сначала добавьте категории товаров."));
+        return;
+    }
+
+    UserSession session = m_core->getCurrentSession();
+    qint64 employeeId = m_core->getEmployeeIdByUserId(session.userId);
+    if (employeeId <= 0) {
+        showError(tr("Нет привязки пользователя к сотруднику."));
+        return;
+    }
+
+    GoodEditDialog dlg(this);
+    dlg.setCategories(catIds, catNames);
+    dlg.setData(name, description, categoryId, isActive);
+    dlg.setWindowTitle(existingId > 0 ? tr("Редактирование товара") : tr("Новый товар"));
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    name = dlg.name();
+    description = dlg.description();
+    categoryId = dlg.categoryId();
+    isActive = dlg.isActive();
+
+    QSqlDatabase db = m_core->getDatabaseConnection()->getDatabase();
+    QSqlQuery q(db);
+
+    if (existingId > 0) {
+        q.prepare(QStringLiteral(
+            "UPDATE goods SET name = :name, description = :desc, categoryid = :catid, "
+            "isactive = :active, updatedate = :ud WHERE id = :id"));
+        q.bindValue(QStringLiteral(":name"), name);
+        q.bindValue(QStringLiteral(":desc"), description);
+        q.bindValue(QStringLiteral(":catid"), categoryId);
+        q.bindValue(QStringLiteral(":active"), isActive);
+        q.bindValue(QStringLiteral(":ud"), QDate::currentDate());
+        q.bindValue(QStringLiteral(":id"), existingId);
+        if (!q.exec()) {
+            showError(tr("Ошибка сохранения: %1").arg(q.lastError().text()));
+            return;
+        }
+        showInfo(tr("Товар обновлён."));
+    } else {
+        q.prepare(QStringLiteral(
+            "INSERT INTO goods (name, description, categoryid, isactive, updatedate, employeeid, isdeleted) "
+            "VALUES (:name, :desc, :catid, :active, :ud, :empid, false) RETURNING id"));
+        q.bindValue(QStringLiteral(":name"), name);
+        q.bindValue(QStringLiteral(":desc"), description);
+        q.bindValue(QStringLiteral(":catid"), categoryId);
+        q.bindValue(QStringLiteral(":active"), isActive);
+        q.bindValue(QStringLiteral(":ud"), QDate::currentDate());
+        q.bindValue(QStringLiteral(":empid"), employeeId);
+        if (!q.exec() || !q.next()) {
+            showError(tr("Ошибка добавления: %1").arg(q.lastError().text()));
+            return;
+        }
+        showInfo(tr("Товар добавлен."));
+    }
+    loadTable();
 }
 
 void GoodsDialog::deleteRecord()

@@ -1,5 +1,6 @@
 #include "easyposcore.h"
 #include "RBAC/authmanager.h"
+#include "settings/settingsmanager.h"
 #include "RBAC/accountmanager.h"
 #include "RBAC/rolemanager.h"
 #include "sales/stockmanager.h"
@@ -12,6 +13,7 @@ EasyPOSCore::EasyPOSCore()
     : databaseConnection(nullptr)
     , stockManager(nullptr)
     , settingsManager(nullptr)
+    , authManager(nullptr)
 {
     qDebug() << "EasyPOSCore::EasyPOSCore()";
     createSettingsManager(this);
@@ -94,14 +96,15 @@ void EasyPOSCore::CloseDbConnection()
 
 AuthManager* EasyPOSCore::createAuthManager(QObject *parent)
 {
+    Q_UNUSED(parent);
     if (!databaseConnection || !databaseConnection->isConnected()) {
         qDebug() << "Не удалось создать AuthManager: нет подключения к БД";
         return nullptr;
     }
-    
-    AuthManager* authManager = new AuthManager(parent ? parent : this);
+    if (authManager)
+        return authManager;
+    authManager = new AuthManager(this);
     authManager->setDatabaseConnection(databaseConnection);
-    
     qDebug() << "AuthManager создан через фабричный метод";
     return authManager;
 }
@@ -199,4 +202,32 @@ UserSession EasyPOSCore::getCurrentSession() const
 bool EasyPOSCore::hasActiveSession() const
 {
     return m_currentSession.userId > 0;
+}
+
+bool EasyPOSCore::ensureSessionValid()
+{
+    if (!settingsManager)
+        return false;
+    QString token = settingsManager->stringValue(SettingsKeys::SessionToken);
+    if (token.isEmpty()) {
+        if (m_currentSession.userId > 0) {
+            m_currentSession = UserSession();
+            emit sessionInvalidated();
+        }
+        return false;
+    }
+    AuthManager *am = createAuthManager();
+    if (!am)
+        return false;
+    UserSession s = am->getSessionByToken(token);
+    if (!s.isValid() || s.isExpired()) {
+        settingsManager->remove(SettingsKeys::SessionToken);
+        settingsManager->sync();
+        m_currentSession = UserSession();
+        emit sessionInvalidated();
+        return false;
+    }
+    m_currentSession = s;
+    am->updateSessionActivity(s.userId);
+    return true;
 }

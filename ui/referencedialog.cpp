@@ -1,5 +1,6 @@
 #include "referencedialog.h"
 #include "ui_referencedialog.h"
+#include "../easyposcore.h"
 #include <QMessageBox>
 #include <QHeaderView>
 #include <QTableWidgetItem>
@@ -76,6 +77,9 @@ void ReferenceDialog::setupColumns(const QStringList &columns, const QList<int> 
             ui->tableWidget->setColumnWidth(i, widths[i]);
         }
     }
+    // Скрываем колонку ID (индекс 0)
+    if (columns.size() > 0)
+        ui->tableWidget->setColumnHidden(0, true);
 }
 
 int ReferenceDialog::currentRow() const
@@ -146,11 +150,13 @@ void ReferenceDialog::updateRecordCount()
 
 void ReferenceDialog::on_addButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
     addRecord();
 }
 
 void ReferenceDialog::on_editButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
     if (currentRow() < 0) {
         showWarning(tr("Выберите запись для редактирования."));
         return;
@@ -160,6 +166,7 @@ void ReferenceDialog::on_editButton_clicked()
 
 void ReferenceDialog::on_deleteButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
     if (currentRow() < 0) {
         showWarning(tr("Выберите запись для удаления."));
         return;
@@ -174,6 +181,7 @@ void ReferenceDialog::on_closeButton_clicked()
 
 void ReferenceDialog::on_refreshButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
     loadTable(false);  // false = не показывать удалённые
 }
 
@@ -198,6 +206,7 @@ void ReferenceDialog::on_searchEdit_returnPressed()
 void ReferenceDialog::on_tableWidget_doubleClicked(const QModelIndex &index)
 {
     Q_UNUSED(index);
+    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
     if (currentRow() >= 0)
         editRecord();
 }

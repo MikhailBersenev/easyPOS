@@ -53,10 +53,20 @@ public:
     UserSession getCurrentSession() const;
     bool hasActiveSession() const;
 
+    /**
+     * @brief Проверить токен сессии и обновить lastActivity при успехе
+     * @return true если сессия валидна, false иначе (токен удалён из настроек, сессия очищена)
+     */
+    bool ensureSessionValid();
+
+signals:
+    void sessionInvalidated();
+
 private:
     DatabaseConnection* databaseConnection;
     StockManager* stockManager;
     SettingsManager* settingsManager;
+    AuthManager* authManager;
     UserSession m_currentSession;
     
     void CreateDbConnection(PostgreSQLAuth authConfig);

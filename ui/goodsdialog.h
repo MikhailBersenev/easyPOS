@@ -22,6 +22,9 @@ protected:
     void addRecord() override;
     void editRecord() override;
     void deleteRecord() override;
+
+private:
+    void addOrEditGood(int existingId);
 };
 
 #endif // GOODSDIALOG_H

@@ -1,8 +1,8 @@
 #include "goodcatsdialog.h"
+#include "categoryeditdialog.h"
 #include "../easyposcore.h"
 #include "../goods/categorymanager.h"
 #include "../goods/structures.h"
-#include <QInputDialog>
 
 GoodCatsDialog::GoodCatsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : ReferenceDialog(parent, core, tr("Категории товаров"))
@@ -86,23 +86,18 @@ void GoodCatsDialog::deleteRecord()
 
 void GoodCatsDialog::addOrEditCategory(const GoodCategory *existing)
 {
-    bool okName = false, okDesc = false;
-    
-    QString name = existing
-        ? QInputDialog::getText(this, tr("Категория"), tr("Название:"),
-                                QLineEdit::Normal, existing->name, &okName)
-        : QInputDialog::getText(this, tr("Новая категория"), tr("Название:"),
-                                QLineEdit::Normal, QString(), &okName);
-    if (!okName || name.trimmed().isEmpty())
+    CategoryEditDialog dlg(this);
+    if (existing) {
+        dlg.setWindowTitle(tr("Редактирование категории"));
+        dlg.setData(existing->name, existing->description);
+    } else {
+        dlg.setWindowTitle(tr("Новая категория"));
+    }
+    if (dlg.exec() != QDialog::Accepted)
         return;
 
-    QString description = existing
-        ? QInputDialog::getText(this, tr("Категория"), tr("Описание:"),
-                                QLineEdit::Normal, existing->description, &okDesc)
-        : QInputDialog::getText(this, tr("Новая категория"), tr("Описание:"),
-                                QLineEdit::Normal, QString(), &okDesc);
-    if (!okDesc)
-        return;
+    const QString name = dlg.name();
+    const QString description = dlg.description();
 
     CategoryManager mgr(this);
     mgr.setDatabaseConnection(m_core->getDatabaseConnection());

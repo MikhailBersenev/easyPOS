@@ -8,6 +8,8 @@
 #include "ui/sales/goodfind.h"
 #include "ui/goodcatsdialog.h"
 #include "ui/goodsdialog.h"
+#include "ui/servicesdialog.h"
+#include "ui/vatratesdialog.h"
 #include "ui/windowcreator.h"
 #include <QMessageBox>
 #include <QInputDialog>
@@ -21,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
     , m_session(session)
 {
     ui->setupUi(this);
+    connect(m_core.get(), &EasyPOSCore::sessionInvalidated, this, &MainWindow::close);
 
     QString title = tr("easyPOS - Касса");
     if (m_core) {
@@ -112,6 +115,7 @@ void MainWindow::updateTotals()
 
 void MainWindow::on_newCheckButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     if (!m_salesManager || m_employeeId <= 0) return;
     SaleOperationResult r = m_salesManager->createCheck(m_employeeId);
     if (!r.success) {
@@ -125,6 +129,7 @@ void MainWindow::on_newCheckButton_clicked()
 
 void MainWindow::on_findGoodButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     if (!m_salesManager || m_currentCheckId <= 0) {
         QMessageBox::warning(this, tr("Касса"), tr("Сначала нажмите «Новый чек»."));
         return;
@@ -132,6 +137,7 @@ void MainWindow::on_findGoodButton_clicked()
     GoodFind *dlg = WindowCreator::Create<GoodFind>(this, m_core, false);
     if (!dlg || dlg->exec() != QDialog::Accepted)
         return;
+    if (!m_core->ensureSessionValid()) { close(); return; }
     const qint64 qnt = static_cast<qint64>(ui->qtySpinBox->value());
     SaleOperationResult r;
     if (dlg->isBatchSelected()) {
@@ -148,6 +154,7 @@ void MainWindow::on_findGoodButton_clicked()
 
 void MainWindow::on_removeFromCartButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     if (!m_salesManager || m_currentCheckId <= 0) return;
     const int row = ui->checkWidget->currentRow();
     if (row < 0) {
@@ -167,6 +174,7 @@ void MainWindow::on_removeFromCartButton_clicked()
 
 void MainWindow::on_discountButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     if (!m_salesManager || m_currentCheckId <= 0) {
         QMessageBox::warning(this, tr("Касса"), tr("Сначала создайте чек и добавьте позиции."));
         return;
@@ -184,6 +192,7 @@ void MainWindow::on_discountButton_clicked()
 
 void MainWindow::on_payButton_clicked()
 {
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     if (!m_salesManager || m_currentCheckId <= 0) {
         QMessageBox::warning(this, tr("Касса"), tr("Нет активного чека."));
         return;
@@ -210,7 +219,7 @@ void MainWindow::on_payButton_clicked()
 
 void MainWindow::on_actionCategories_triggered()
 {
-    if (!m_core) return;
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     GoodCatsDialog *dlg = WindowCreator::Create<GoodCatsDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -218,7 +227,7 @@ void MainWindow::on_actionCategories_triggered()
 
 void MainWindow::on_actionGoods_triggered()
 {
-    if (!m_core) return;
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     GoodsDialog *dlg = WindowCreator::Create<GoodsDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -226,11 +235,17 @@ void MainWindow::on_actionGoods_triggered()
 
 void MainWindow::on_actionServices_triggered()
 {
-    QMessageBox::information(this, tr("Справочники"), tr("Справочник «Услуги» — в разработке."));
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    ServicesDialog *dlg = WindowCreator::Create<ServicesDialog>(this, m_core, false);
+    if (dlg)
+        dlg->exec();
 }
 
 void MainWindow::on_actionVatRates_triggered()
 {
-    QMessageBox::information(this, tr("Справочники"), tr("Справочник «Ставки НДС» — в разработке."));
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    VatRatesDialog *dlg = WindowCreator::Create<VatRatesDialog>(this, m_core, false);
+    if (dlg)
+        dlg->exec();
 }
 

@@ -21,6 +21,7 @@ AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore
     // Создаем AuthManager через фабричный метод
     if (m_easyPOSCore) {
         m_authManager = m_easyPOSCore->createAuthManager(this);
+        connect(m_easyPOSCore.get(), &EasyPOSCore::sessionInvalidated, this, [this] { show(); });
         tryRestoreSession();
     }
 }

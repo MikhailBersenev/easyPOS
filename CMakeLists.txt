@@ -32,7 +32,13 @@ qt_add_executable(easyPOS
     ui/windowcreator.h
     ui/referencedialog.h ui/referencedialog.cpp ui/referencedialog.ui
     ui/goodcatsdialog.h ui/goodcatsdialog.cpp
+    ui/categoryeditdialog.h ui/categoryeditdialog.cpp
     ui/goodsdialog.h ui/goodsdialog.cpp
+    ui/goodeditdialog.h ui/goodeditdialog.cpp
+    ui/serviceeditdialog.h ui/serviceeditdialog.cpp
+    ui/vatrateeditdialog.h ui/vatrateeditdialog.cpp
+    ui/servicesdialog.h ui/servicesdialog.cpp
+    ui/vatratesdialog.h ui/vatratesdialog.cpp
     goods/structures.h
     goods/categorymanager.h goods/categorymanager.cpp
     settings/settingsmanager.h settings/settingsmanager.cpp
