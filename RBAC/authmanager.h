@@ -37,6 +37,12 @@ public:
     UserSession getSession(int userId) const;
     UserSession getSession(const QString &username) const;
     
+    // Получение сессии по токену (из БД)
+    UserSession getSessionByToken(const QString &token) const;
+    
+    // Проверка валидности токена
+    bool isTokenValid(const QString &token) const;
+    
     // Проверка валидности сессии
     bool isSessionValid(int userId) const;
     bool isSessionValid(const UserSession &session) const;
@@ -62,8 +68,8 @@ signals:
 
 private:
     DatabaseConnection *m_dbConnection;
-    QHash<int, UserSession> m_activeSessions;  // Кэш активных сессий
-    QSqlError m_lastError;
+    mutable QHash<int, UserSession> m_activeSessions;  // Кэш активных сессий
+    mutable QSqlError m_lastError;
     
     // Хеширование пароля
     QString hashPassword(const QString &password) const;
@@ -72,7 +78,7 @@ private:
     bool verifyPassword(const QString &password, const QString &hash) const;
     
     // Загрузка роли пользователя из БД
-    Role loadUserRole(int userId);
+    Role loadUserRole(int userId) const;
     
     // Загрузка разрешений роли из БД
     QList<Permission> loadRolePermissions(int roleId);
@@ -82,6 +88,13 @@ private:
     
     // Генерация токена сессии
     QString generateSessionToken() const;
+    
+    // Сохранение сессии в БД
+    bool saveSessionToDb(const UserSession &session) const;
+    
+    // Удаление сессии из БД
+    bool removeSessionFromDb(int userId) const;
+    bool removeSessionFromDbByToken(const QString &token) const;
 };
 
 #endif // AUTHMANAGER_H

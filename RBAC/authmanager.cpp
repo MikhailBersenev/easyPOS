@@ -203,6 +203,9 @@ AuthResult AuthManager::authenticate(const QString &username, const QString &pas
     result.session = createSession(userId, username, role);
     m_activeSessions[userId] = result.session;
     
+    // Сохранение сессии в БД для валидации по токену
+    saveSessionToDb(result.session);
+    
     result.success = true;
     result.message = "Авторизация успешна";
     
@@ -224,6 +227,7 @@ AuthResult AuthManager::authenticate(const QString &username, const QString &pas
 bool AuthManager::logout(int userId)
 {
     if (m_activeSessions.contains(userId)) {
+        removeSessionFromDb(userId);
         m_activeSessions.remove(userId);
         emit userLoggedOut(userId);
         return true;
@@ -279,6 +283,66 @@ UserSession AuthManager::getSession(const QString &username) const
     return UserSession();
 }
 
+UserSession AuthManager::getSessionByToken(const QString &token) const
+{
+    if (token.isEmpty())
+        return UserSession();
+
+    // Сначала проверяем кэш
+    for (const UserSession &session : m_activeSessions) {
+        if (session.sessionToken == token && !session.isExpired()) {
+            return session;
+        }
+    }
+
+    // Загружаем из БД
+    if (!m_dbConnection || !m_dbConnection->isConnected())
+        return UserSession();
+
+    QSqlDatabase db = m_dbConnection->getDatabase();
+    QSqlQuery q(db);
+    q.prepare(QStringLiteral(
+        "SELECT userid, logintime, lastactivity FROM usersessions "
+        "WHERE token = :token"));
+    q.bindValue(QStringLiteral(":token"), token);
+    if (!q.exec() || !q.next())
+        return UserSession();
+
+    int userId = q.value(0).toInt();
+    QDateTime lastActivity = q.value(2).toDateTime();
+    int timeoutMinutes = 30;
+    if (lastActivity.secsTo(QDateTime::currentDateTime()) > timeoutMinutes * 60)
+        return UserSession();  // Сессия истекла
+
+    QSqlQuery userQ(db);
+    userQ.prepare(QStringLiteral("SELECT name, roleid FROM users WHERE id = :id"));
+    userQ.bindValue(QStringLiteral(":id"), userId);
+    if (!userQ.exec() || !userQ.next())
+        return UserSession();
+
+    QString username = userQ.value(0).toString();
+    int roleId = userQ.value(1).toInt();
+    Role role = loadUserRole(roleId);
+    if (role.id == 0)
+        return UserSession();
+
+    UserSession session;
+    session.userId = userId;
+    session.username = username;
+    session.role = role;
+    session.loginTime = q.value(1).toDateTime();
+    session.lastActivity = lastActivity;
+    session.sessionToken = token;
+    // Добавляем в кэш для последующих вызовов getSession(userId)
+    m_activeSessions[userId] = session;
+    return session;
+}
+
+bool AuthManager::isTokenValid(const QString &token) const
+{
+    return getSessionByToken(token).isValid();
+}
+
 bool AuthManager::isSessionValid(int userId) const
 {
     UserSession session = getSession(userId);
@@ -294,6 +358,16 @@ void AuthManager::updateSessionActivity(int userId)
 {
     if (m_activeSessions.contains(userId)) {
         m_activeSessions[userId].lastActivity = QDateTime::currentDateTime();
+        // Обновляем last_activity в БД
+        if (m_dbConnection && m_dbConnection->isConnected()) {
+            QSqlDatabase db = m_dbConnection->getDatabase();
+            QSqlQuery q(db);
+            q.prepare(QStringLiteral(
+                "UPDATE usersessions SET lastactivity = :now WHERE userid = :userid"));
+            q.bindValue(QStringLiteral(":now"), QDateTime::currentDateTime());
+            q.bindValue(QStringLiteral(":userid"), userId);
+            q.exec();
+        }
     }
 }
 
@@ -325,7 +399,7 @@ bool AuthManager::verifyPassword(const QString &password, const QString &hash) c
     return passwordHash == hash;
 }
 
-Role AuthManager::loadUserRole(int roleId)
+Role AuthManager::loadUserRole(int roleId) const
 {
     Role role;
     
@@ -411,5 +485,54 @@ UserSession AuthManager::createSession(int userId, const QString &username, cons
 QString AuthManager::generateSessionToken() const
 {
     return QUuid::createUuid().toString(QUuid::WithoutBraces);
+}
+
+bool AuthManager::saveSessionToDb(const UserSession &session) const
+{
+    if (!m_dbConnection || !m_dbConnection->isConnected() || !session.isValid())
+        return false;
+
+    // Удаляем старую сессию пользователя (один пользователь — одна сессия)
+    removeSessionFromDb(session.userId);
+
+    QSqlDatabase db = m_dbConnection->getDatabase();
+    QSqlQuery q(db);
+    q.prepare(QStringLiteral(
+        "INSERT INTO usersessions (userid, token, logintime, lastactivity) "
+        "VALUES (:userid, :token, :logintime, :lastactivity)"));
+    q.bindValue(QStringLiteral(":userid"), session.userId);
+    q.bindValue(QStringLiteral(":token"), session.sessionToken);
+    q.bindValue(QStringLiteral(":logintime"), session.loginTime);
+    q.bindValue(QStringLiteral(":lastactivity"), session.lastActivity);
+
+    if (!q.exec()) {
+        m_lastError = q.lastError();
+        return false;
+    }
+    return true;
+}
+
+bool AuthManager::removeSessionFromDb(int userId) const
+{
+    if (!m_dbConnection || !m_dbConnection->isConnected())
+        return false;
+
+    QSqlDatabase db = m_dbConnection->getDatabase();
+    QSqlQuery q(db);
+    q.prepare(QStringLiteral("DELETE FROM usersessions WHERE userid = :userid"));
+    q.bindValue(QStringLiteral(":userid"), userId);
+    return q.exec();
+}
+
+bool AuthManager::removeSessionFromDbByToken(const QString &token) const
+{
+    if (!m_dbConnection || !m_dbConnection->isConnected() || token.isEmpty())
+        return false;
+
+    QSqlDatabase db = m_dbConnection->getDatabase();
+    QSqlQuery q(db);
+    q.prepare(QStringLiteral("DELETE FROM usersessions WHERE token = :token"));
+    q.bindValue(QStringLiteral(":token"), token);
+    return q.exec();
 }
 

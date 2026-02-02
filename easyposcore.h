@@ -11,6 +11,7 @@ class AccountManager;
 class RoleManager;
 class StockManager;
 class SalesManager;
+class SettingsManager;
 
 class EasyPOSCore : public QObject
 {
@@ -23,14 +24,23 @@ public:
     DatabaseConnection* getDatabaseConnection() const { return databaseConnection; }
     
     // Фабричные методы для создания объектов
+    SettingsManager* createSettingsManager(QObject *parent = nullptr);
     AuthManager* createAuthManager(QObject *parent = nullptr);
     AccountManager* createAccountManager(QObject *parent = nullptr);
     RoleManager* createRoleManager(QObject *parent = nullptr);
     StockManager* createStockManager(QObject *parent = nullptr);
     SalesManager* createSalesManager(QObject *parent = nullptr);
     
+    // Получение менеджера настроек (создаётся при первом вызове createSettingsManager)
+    SettingsManager* getSettingsManager() const { return settingsManager; }
+    
     // Получение единственного экземпляра StockManager
     StockManager* getStockManager() const { return stockManager; }
+
+    /**
+     * @brief Инициализация подключения к БД (вызывать после первоначальной настройки)
+     */
+    void ensureDbConnection();
     
     // Проверка подключения к БД
     bool isDatabaseConnected() const;
@@ -46,6 +56,7 @@ public:
 private:
     DatabaseConnection* databaseConnection;
     StockManager* stockManager;
+    SettingsManager* settingsManager;
     UserSession m_currentSession;
     
     void CreateDbConnection(PostgreSQLAuth authConfig);

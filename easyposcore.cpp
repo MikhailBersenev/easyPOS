@@ -4,28 +4,44 @@
 #include "RBAC/rolemanager.h"
 #include "sales/stockmanager.h"
 #include "sales/salesmanager.h"
+#include "settings/settingsmanager.h"
 #include <QDebug>
 #include <QSqlQuery>
 
 EasyPOSCore::EasyPOSCore()
     : databaseConnection(nullptr)
     , stockManager(nullptr)
+    , settingsManager(nullptr)
 {
     qDebug() << "EasyPOSCore::EasyPOSCore()";
-    //Создаем подключение к базе данных
-    PostgreSQLAuth authConfig;
-    // Настройка параметров подключения
-    authConfig.host = "192.168.0.202"; //Хост
-    authConfig.port = 5432; //Порт
-    authConfig.database = "pos_bakery";  // имя базы данных
-    authConfig.username = "postgres"; // Имя пользователя
-    authConfig.password = "123456";   //Пароль
-    authConfig.sslMode = "prefer";
-    authConfig.connectTimeout = 10;
+    createSettingsManager(this);
+}
 
-    this->CreateDbConnection(authConfig);
-    
-    // Создаем единственный экземпляр StockManager
+SettingsManager* EasyPOSCore::createSettingsManager(QObject *parent)
+{
+    if (settingsManager)
+        return settingsManager;
+    settingsManager = new SettingsManager(parent ? parent : this);
+    qDebug() << "SettingsManager создан через фабричный метод";
+    return settingsManager;
+}
+
+void EasyPOSCore::ensureDbConnection()
+{
+    if (!settingsManager)
+        createSettingsManager(this);
+
+    if (databaseConnection && databaseConnection->isConnected())
+        return;  // Уже подключено
+
+    PostgreSQLAuth authConfig = settingsManager->loadDatabaseSettings();
+    if (authConfig.database.isEmpty())
+        authConfig.database = QStringLiteral("pos_bakery");
+    if (authConfig.username.isEmpty())
+        authConfig.username = QStringLiteral("postgres");
+
+    CreateDbConnection(authConfig);
+
     if (databaseConnection && databaseConnection->isConnected()) {
         stockManager = new StockManager(this);
         stockManager->setDatabaseConnection(databaseConnection);

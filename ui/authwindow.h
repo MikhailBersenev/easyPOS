@@ -27,6 +27,11 @@ public:
     // Получение менеджера авторизации
     AuthManager* getAuthManager() const { return m_authManager; }
 
+    /**
+     * @brief Сессия восстановлена по токену (открыт MainWindow)
+     */
+    bool isSessionRestored() const { return m_sessionRestored; }
+
 private slots:
     void on_signInButton_clicked();
 
@@ -35,7 +40,9 @@ private slots:
     void on_showPasswordCheckBox_checkStateChanged(const Qt::CheckState &arg1);
 
 private:
+    bool tryRestoreSession();
     Ui::AuthWindow *ui;
+    bool m_sessionRestored = false;
     std::shared_ptr<EasyPOSCore> m_easyPOSCore;
     AuthManager* m_authManager;
     UserSession m_currentSession;

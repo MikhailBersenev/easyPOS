@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "easyposcore.h"
 #include "RBAC/structures.h"
+#include "settings/settingsmanager.h"
 #include "sales/salesmanager.h"
 #include "sales/structures.h"
 #include "ui/sales/goodfind.h"
@@ -20,6 +21,23 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
     , m_session(session)
 {
     ui->setupUi(this);
+
+    QString title = tr("easyPOS - Касса");
+    if (m_core) {
+        QString host, user;
+        if (auto *sm = m_core->getSettingsManager()) {
+            host = sm->stringValue(SettingsKeys::DbHost, QStringLiteral("localhost"));
+            if (host.isEmpty()) host = QStringLiteral("localhost");
+        }
+        user = m_session.username;
+        if (!host.isEmpty() || !user.isEmpty()) {
+            title += QLatin1String(" | ");
+            if (!host.isEmpty()) title += host;
+            if (!host.isEmpty() && !user.isEmpty()) title += QLatin1String(" | ");
+            if (!user.isEmpty()) title += user;
+        }
+    }
+    setWindowTitle(title);
 
     m_employeeId = m_core ? m_core->getEmployeeIdByUserId(m_session.userId) : 0;
     m_salesManager = m_core ? m_core->createSalesManager(this) : nullptr;

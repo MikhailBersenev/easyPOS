@@ -19,6 +19,8 @@ qt_add_executable(easyPOS
     mainwindow.h
     mainwindow.ui
     ui/authwindow.h ui/authwindow.cpp ui/authwindow.ui
+    ui/setupwizard.h ui/setupwizard.cpp
+    ui/setupdbpage.h ui/setupdbpage.cpp ui/setupdbpage.ui
     db/structures.h
     db/databaseconnection.h db/databaseconnection.cpp
     RBAC/structures.h
@@ -33,6 +35,7 @@ qt_add_executable(easyPOS
     ui/goodsdialog.h ui/goodsdialog.cpp
     goods/structures.h
     goods/categorymanager.h goods/categorymanager.cpp
+    settings/settingsmanager.h settings/settingsmanager.cpp
     sales/structures.h
     sales/salesmanager.h sales/salesmanager.cpp
     sales/stockmanager.h sales/stockmanager.cpp
@@ -96,6 +99,7 @@ qt_add_executable(unit_tests
     RBAC/rolemanager.h RBAC/rolemanager.cpp
     sales/stockmanager.h sales/stockmanager.cpp
     sales/salesmanager.h sales/salesmanager.cpp
+    settings/settingsmanager.h settings/settingsmanager.cpp
     easyposcore.cpp easyposcore.h
 )
 

@@ -3,12 +3,12 @@
 #include "../easyposcore.h"
 #include "../RBAC/authmanager.h"
 #include "../RBAC/structures.h"
+#include "../settings/settingsmanager.h"
 #include "windowcreator.h"
 #include "signupwindow.h"
 #include "../mainwindow.h"
 #include <QMessageBox>
 #include <QDebug>
-
 
 AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore)
     : QDialog(parent)
@@ -21,7 +21,35 @@ AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore
     // Создаем AuthManager через фабричный метод
     if (m_easyPOSCore) {
         m_authManager = m_easyPOSCore->createAuthManager(this);
+        tryRestoreSession();
     }
+}
+
+bool AuthWindow::tryRestoreSession()
+{
+    if (!m_easyPOSCore || !m_authManager) return false;
+
+    auto *sm = m_easyPOSCore->getSettingsManager();
+    if (!sm || !sm->contains(SettingsKeys::SessionToken)) return false;
+
+    QString token = sm->stringValue(SettingsKeys::SessionToken);
+    if (token.isEmpty()) return false;
+
+    UserSession session = m_authManager->getSessionByToken(token);
+    if (!session.isValid() || session.isExpired()) {
+        sm->remove(SettingsKeys::SessionToken);
+        sm->sync();
+        return false;
+    }
+
+    m_easyPOSCore->setCurrentSession(session);
+    MainWindow *mw = WindowCreator::Create<MainWindow>(this, m_easyPOSCore);
+    if (mw) {
+        m_sessionRestored = true;
+        hide();
+        return true;
+    }
+    return false;
 }
 
 AuthWindow::~AuthWindow()
@@ -47,6 +75,11 @@ void AuthWindow::on_signInButton_clicked()
         // Сохраняем сессию в EasyPOSCore
         if (m_easyPOSCore) {
             m_easyPOSCore->setCurrentSession(session);
+            // Сохраняем токен для восстановления сессии
+            if (auto *sm = m_easyPOSCore->getSettingsManager()) {
+                sm->setValue(SettingsKeys::SessionToken, session.sessionToken);
+                sm->sync();
+            }
         }
         
 #if 0
