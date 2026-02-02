@@ -7,6 +7,7 @@
 struct GoodCategory {
     int id;
     QString name;
+    QString description;
     bool isActive;
     QDate updateDate;
     bool isDeleted;

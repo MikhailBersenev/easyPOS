@@ -162,6 +162,10 @@
     <property name="title">
      <string>Справочники</string>
     </property>
+    <addaction name="actionCategories"/>
+    <addaction name="actionGoods"/>
+    <addaction name="actionServices"/>
+    <addaction name="actionVatRates"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -179,6 +183,26 @@
    <addaction name="menu_4"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionCategories">
+   <property name="text">
+    <string>Категории товаров</string>
+   </property>
+  </action>
+  <action name="actionGoods">
+   <property name="text">
+    <string>Товары</string>
+   </property>
+  </action>
+  <action name="actionServices">
+   <property name="text">
+    <string>Услуги</string>
+   </property>
+  </action>
+  <action name="actionVatRates">
+   <property name="text">
+    <string>Ставки НДС</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

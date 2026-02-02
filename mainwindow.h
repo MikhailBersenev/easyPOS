@@ -25,6 +25,10 @@ private slots:
     void on_removeFromCartButton_clicked();
     void on_discountButton_clicked();
     void on_payButton_clicked();
+    void on_actionCategories_triggered();
+    void on_actionGoods_triggered();
+    void on_actionServices_triggered();
+    void on_actionVatRates_triggered();
 
 private:
     void refreshCart();

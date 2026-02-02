@@ -28,6 +28,11 @@ qt_add_executable(easyPOS
     easyposcore.h easyposcore.cpp
     ui/signupwindow.h ui/signupwindow.cpp ui/signupwindow.ui
     ui/windowcreator.h
+    ui/referencedialog.h ui/referencedialog.cpp ui/referencedialog.ui
+    ui/goodcatsdialog.h ui/goodcatsdialog.cpp
+    ui/goodsdialog.h ui/goodsdialog.cpp
+    goods/structures.h
+    goods/categorymanager.h goods/categorymanager.cpp
     sales/structures.h
     sales/salesmanager.h sales/salesmanager.cpp
     sales/stockmanager.h sales/stockmanager.cpp

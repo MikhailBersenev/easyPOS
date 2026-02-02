@@ -5,6 +5,8 @@
 #include "sales/salesmanager.h"
 #include "sales/structures.h"
 #include "ui/sales/goodfind.h"
+#include "ui/goodcatsdialog.h"
+#include "ui/goodsdialog.h"
 #include "ui/windowcreator.h"
 #include <QMessageBox>
 #include <QInputDialog>
@@ -186,5 +188,31 @@ void MainWindow::on_payButton_clicked()
     m_currentCheckId = 0;
     refreshCart();
     ui->statusbar->showMessage(tr("Чек закрыт. Нажмите «Новый чек» для следующей продажи."));
+}
+
+void MainWindow::on_actionCategories_triggered()
+{
+    if (!m_core) return;
+    GoodCatsDialog *dlg = WindowCreator::Create<GoodCatsDialog>(this, m_core, false);
+    if (dlg)
+        dlg->exec();
+}
+
+void MainWindow::on_actionGoods_triggered()
+{
+    if (!m_core) return;
+    GoodsDialog *dlg = WindowCreator::Create<GoodsDialog>(this, m_core, false);
+    if (dlg)
+        dlg->exec();
+}
+
+void MainWindow::on_actionServices_triggered()
+{
+    QMessageBox::information(this, tr("Справочники"), tr("Справочник «Услуги» — в разработке."));
+}
+
+void MainWindow::on_actionVatRates_triggered()
+{
+    QMessageBox::information(this, tr("Справочники"), tr("Справочник «Ставки НДС» — в разработке."));
 }
 
