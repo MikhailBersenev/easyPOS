@@ -3,6 +3,8 @@
 #include "test_AccountManager.h"
 #include "test_RoleManager.h"
 #include "test_StockManager.h"
+#include "test_SalesManager.h"
+#include "test_SettingsManager.h"
 #include <QtTest>
 #include <QCoreApplication>
 #include <QDebug>
@@ -37,6 +39,16 @@ int main(int argc, char *argv[])
     qDebug() << "\n=== Тестирование StockManager ===";
     TestStockManager testStockManager;
     failures += QTest::qExec(&testStockManager, argc, argv);
+    
+    // Запуск тестов SalesManager
+    qDebug() << "\n=== Тестирование SalesManager ===";
+    TestSalesManager testSalesManager;
+    failures += QTest::qExec(&testSalesManager, argc, argv);
+    
+    // Запуск тестов SettingsManager
+    qDebug() << "\n=== Тестирование SettingsManager ===";
+    TestSettingsManager testSettingsManager;
+    failures += QTest::qExec(&testSettingsManager, argc, argv);
     
     qDebug() << "\n=== Итоги тестирования ===";
     if (failures == 0) {

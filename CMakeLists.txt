@@ -103,6 +103,8 @@ qt_add_executable(unit_tests
     unit_tests/test_AccountManager.h unit_tests/test_AccountManager.cpp
     unit_tests/test_RoleManager.h unit_tests/test_RoleManager.cpp
     unit_tests/test_StockManager.h unit_tests/test_StockManager.cpp
+    unit_tests/test_SalesManager.h unit_tests/test_SalesManager.cpp
+    unit_tests/test_SettingsManager.h unit_tests/test_SettingsManager.cpp
     db/databaseconnection.cpp
     db/databaseconnection.h
     db/structures.h
