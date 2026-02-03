@@ -16,14 +16,69 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="centralLayout">
     <item>
+     <widget class="QToolBar" name="mainToolBar">
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <property name="windowTitle">
+       <string>Панель инструментов</string>
+      </property>
+      <attribute name="toolBarArea">
+       <enum>TopToolBarArea</enum>
+      </attribute>
+      <attribute name="toolBarBreak">
+       <bool>false</bool>
+      </attribute>
+      <addaction name="actionNewCheck"/>
+      <addaction name="actionFindGood"/>
+      <addaction name="actionPay"/>
+     </widget>
+    </item>
+    <item>
      <widget class="QWidget" name="centralPanel" native="true">
        <layout class="QVBoxLayout" name="rightLayout">
         <item>
-         <widget class="QLabel" name="checkLabel">
-          <property name="text">
-           <string>Чек</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="searchLayout">
+          <item>
+           <widget class="QLabel" name="searchLabel">
+            <property name="text">
+             <string>Поиск:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="searchLineEdit">
+            <property name="placeholderText">
+             <string>Название товара или услуги... (Enter)</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="checkHeaderLayout">
+          <item>
+           <widget class="QLabel" name="checkLabel">
+            <property name="text">
+             <string>Чек</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="checkNumberLabel">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="itemsCountLabel">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QTableWidget" name="checkWidget">
@@ -60,21 +115,28 @@
           <item>
            <widget class="QLabel" name="totalLabel">
             <property name="text">
-             <string>Итого: 0,00</string>
+             <string>Итого: 0,00 ₽</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QLabel" name="discountLabel">
             <property name="text">
-             <string>Скидка: 0,00</string>
+             <string>Скидка: 0,00 ₽</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QLabel" name="toPayLabel">
             <property name="text">
-             <string>К оплате: 0,00</string>
+             <string>К оплате: 0,00 ₽</string>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>14</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
             </property>
            </widget>
           </item>
@@ -103,9 +165,29 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="repeatButton">
+            <property name="text">
+             <string>Повторить</string>
+            </property>
+            <property name="toolTip">
+             <string>Добавить последнюю позицию снова (Ctrl+R)</string>
+            </property>
+          </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="findGoodButton">
             <property name="text">
              <string>Поиск</string>
+            </property>
+            <property name="toolTip">
+             <string>Поиск товара (F3)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="cancelCheckButton">
+            <property name="text">
+             <string>Отменить чек</string>
             </property>
            </widget>
           </item>
@@ -129,6 +211,16 @@
              <string>Скидка</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="printButton">
+            <property name="text">
+             <string>Печать</string>
+            </property>
+            <property name="toolTip">
+             <string>Распечатать чек</string>
+            </property>
+          </widget>
           </item>
           <item>
            <widget class="QPushButton" name="payButton">
@@ -157,6 +249,10 @@
     <property name="title">
      <string>Файл</string>
     </property>
+   <addaction name="actionCheckHistory"/>
+   <addaction name="actionSalesReport"/>
+   <addaction name="actionSaveCheckToPdf"/>
+   <addaction name="actionLogout"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -171,11 +267,15 @@
     <property name="title">
      <string>Настройки</string>
     </property>
+    <addaction name="actionDbConnection"/>
+    <addaction name="actionPrintAfterPay"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
      <string>Помощь</string>
     </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionShortcuts"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -201,6 +301,82 @@
   <action name="actionVatRates">
    <property name="text">
     <string>Ставки НДС</string>
+   </property>
+  </action>
+  <action name="actionSaveCheckToPdf">
+   <property name="text">
+    <string>Сохранить чек в PDF</string>
+   </property>
+  </action>
+  <action name="actionCheckHistory">
+   <property name="text">
+    <string>История чеков</string>
+   </property>
+  </action>
+  <action name="actionPrintAfterPay">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Печатать чек после оплаты</string>
+   </property>
+  </action>
+  <action name="actionDbConnection">
+   <property name="text">
+    <string>Подключение к БД</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>О программе</string>
+   </property>
+  </action>
+  <action name="actionShortcuts">
+   <property name="text">
+    <string>Горячие клавиши</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="actionLogout">
+   <property name="text">
+    <string>Выход</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionSalesReport">
+   <property name="text">
+    <string>Отчёт по продажам</string>
+   </property>
+  </action>
+  <action name="actionNewCheck">
+   <property name="text">
+    <string>Новый чек</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="actionFindGood">
+   <property name="text">
+    <string>Поиск товара</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="actionPay">
+   <property name="text">
+    <string>Оплатить</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
    </property>
   </action>
  </widget>

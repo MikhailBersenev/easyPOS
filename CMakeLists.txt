@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(easyPOS LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Sql Test LinguistTools)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Sql PrintSupport Test LinguistTools)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
@@ -37,6 +37,12 @@ qt_add_executable(easyPOS
     ui/goodeditdialog.h ui/goodeditdialog.cpp
     ui/serviceeditdialog.h ui/serviceeditdialog.cpp
     ui/vatrateeditdialog.h ui/vatrateeditdialog.cpp
+    ui/discountdialog.h ui/discountdialog.cpp
+    ui/dbsettingsdialog.h ui/dbsettingsdialog.cpp ui/dbsettingsdialog.ui
+    ui/checkhistorydialog.h ui/checkhistorydialog.cpp
+    ui/salesreportdialog.h ui/salesreportdialog.cpp
+    ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp
+    ui/checkpdfexporter.h ui/checkpdfexporter.cpp
     ui/servicesdialog.h ui/servicesdialog.cpp
     ui/vatratesdialog.h ui/vatratesdialog.cpp
     goods/structures.h
@@ -62,6 +68,7 @@ target_link_libraries(easyPOS
         Qt::Core
         Qt::Widgets
         Qt::Sql
+        Qt6::PrintSupport
 )
 target_link_libraries(easyPOS PRIVATE Qt6::Core)
 target_link_libraries(easyPOS PRIVATE Qt6::Core)

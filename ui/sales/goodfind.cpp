@@ -54,6 +54,12 @@ GoodFind::GoodFind(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     fillTable();
 }
 
+void GoodFind::setInitialSearch(const QString &text)
+{
+    ui->searchEdit->setText(text.trimmed());
+    applyFilter(text.trimmed());
+}
+
 GoodFind::~GoodFind()
 {
     delete ui;

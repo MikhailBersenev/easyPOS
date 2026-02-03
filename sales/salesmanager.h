@@ -34,6 +34,7 @@ public:
     SaleOperationResult addSale(qint64 checkId, qint64 itemId, qint64 qnt,
                                qint64 vatRateId = 0);
     SaleOperationResult removeSale(qint64 saleId);
+    SaleOperationResult updateSaleQuantity(qint64 saleId, qint64 newQnt);
 
     QList<SaleRow> getSalesByCheck(qint64 checkId, bool includeDeleted = false);
     SaleRow getSale(qint64 saleId, bool includeDeleted = false);

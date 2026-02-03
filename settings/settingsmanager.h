@@ -86,6 +86,12 @@ namespace SettingsKeys {
 
     // Сессия (токен для восстановления)
     constexpr const char *SessionToken = "session/token";
+
+    // Печать чека после оплаты
+    constexpr const char *PrintAfterPay = "pos/printAfterPay";
+
+    // Геометрия главного окна
+    constexpr const char *MainWindowGeometry = "mainwindow/geometry";
 }
 
 #endif // SETTINGSMANAGER_H

@@ -231,3 +231,16 @@ bool EasyPOSCore::ensureSessionValid()
     am->updateSessionActivity(s.userId);
     return true;
 }
+
+void EasyPOSCore::logout()
+{
+    if (authManager && m_currentSession.userId > 0) {
+        authManager->logout(m_currentSession.userId);
+    }
+    if (settingsManager) {
+        settingsManager->remove(SettingsKeys::SessionToken);
+        settingsManager->sync();
+    }
+    m_currentSession = UserSession();
+    emit sessionInvalidated();
+}

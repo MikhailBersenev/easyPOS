@@ -59,6 +59,11 @@ public:
      */
     bool ensureSessionValid();
 
+    /**
+     * @brief Выход из учётной записи (удаляет токен, очищает сессию, испускает sessionInvalidated)
+     */
+    void logout();
+
 signals:
     void sessionInvalidated();
 

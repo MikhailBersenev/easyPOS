@@ -19,6 +19,9 @@ public:
     explicit GoodFind(QWidget *parent, std::shared_ptr<EasyPOSCore> core);
     ~GoodFind();
 
+    // Установить начальный фильтр поиска
+    void setInitialSearch(const QString &text);
+
     // Результат выбора: true = товар (batch), false = услуга (service)
     bool isBatchSelected() const { return m_isBatch; }
     qint64 selectedBatchId() const { return m_batchId; }

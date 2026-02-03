@@ -809,6 +809,93 @@ SaleOperationResult SalesManager::removeSale(qint64 saleId)
     return r;
 }
 
+SaleOperationResult SalesManager::updateSaleQuantity(qint64 saleId, qint64 newQnt)
+{
+    SaleOperationResult r;
+    if (!dbOk(m_dbConnection, r, m_lastError))
+        return r;
+    if (newQnt <= 0) {
+        r.message = QStringLiteral("Количество должно быть больше нуля");
+        return r;
+    }
+
+    SaleRow row = getSale(saleId, false);
+    if (row.id == 0) {
+        r.message = QStringLiteral("Позиция не найдена");
+        return r;
+    }
+
+    if (row.qnt == newQnt) {
+        r.success = true;
+        r.checkId = row.checkId;
+        r.saleId = saleId;
+        return r;
+    }
+
+    QSqlDatabase db = m_dbConnection->getDatabase();
+    QSqlQuery q(db);
+
+    int goodIdForStock = 0;
+    if (row.batchId > 0) {
+        q.prepare(QStringLiteral("SELECT goodid, qnt FROM batches WHERE id = :id"));
+        q.bindValue(QStringLiteral(":id"), row.batchId);
+        if (!q.exec() || !q.next()) {
+            r.message = QStringLiteral("Партия не найдена");
+            return r;
+        }
+        goodIdForStock = static_cast<int>(q.value(QStringLiteral("goodid")).toLongLong());
+        double batchAvailable = q.value(QStringLiteral("qnt")).toDouble();
+        if (m_stockManager) {
+            QList<Stock> stocks = m_stockManager->getStocksByGoodId(goodIdForStock, false);
+            batchAvailable = 0;
+            for (const Stock &s : stocks)
+                batchAvailable += s.availableQuantity();
+        }
+        double needMore = static_cast<double>(newQnt) - static_cast<double>(row.qnt);
+        if (needMore > 0 && batchAvailable < needMore) {
+            r.message = QStringLiteral("Недостаточно товара. Доступно: %1").arg(QString::number(batchAvailable, 'f', 2));
+            return r;
+        }
+        if (m_stockManager) {
+            StockOperationResult rel = m_stockManager->releaseReserve(goodIdForStock, static_cast<double>(row.qnt));
+            if (!rel.success) {
+                r.message = rel.message;
+                return r;
+            }
+            StockOperationResult res = m_stockManager->reserveStock(goodIdForStock, static_cast<double>(newQnt));
+            if (!res.success) {
+                m_stockManager->reserveStock(goodIdForStock, static_cast<double>(row.qnt));
+                r.message = res.message;
+                return r;
+            }
+        }
+    }
+
+    const double newSum = row.unitPrice * static_cast<double>(newQnt);
+    q.prepare(QStringLiteral("UPDATE sales SET qnt = :qnt, sum = :sum WHERE id = :id"));
+    q.bindValue(QStringLiteral(":qnt"), newQnt);
+    q.bindValue(QStringLiteral(":sum"), newSum);
+    q.bindValue(QStringLiteral(":id"), saleId);
+    if (!q.exec()) {
+        m_lastError = q.lastError();
+        r.error = m_lastError;
+        r.message = QStringLiteral("Ошибка изменения количества: ") + m_lastError.text();
+        if (row.batchId > 0 && m_stockManager && goodIdForStock > 0) {
+            m_stockManager->releaseReserve(goodIdForStock, static_cast<double>(newQnt));
+            m_stockManager->reserveStock(goodIdForStock, static_cast<double>(row.qnt));
+        }
+        return r;
+    }
+
+    recalcCheckTotal(row.checkId);
+
+    r.success = true;
+    r.checkId = row.checkId;
+    r.saleId = saleId;
+    r.message = QStringLiteral("Количество изменено");
+    return r;
+}
+
 QList<SaleRow> SalesManager::getSalesByCheck(qint64 checkId, bool includeDeleted)
 {
     QList<SaleRow> list;
@@ -863,9 +950,12 @@ SaleRow SalesManager::getSale(qint64 saleId, bool includeDeleted)
 
     QString sql = QStringLiteral(
         "SELECT s.id, s.itemid, s.qnt, s.vatrateid, s.sum, s.comment, s.checkid, s.isdeleted, "
-        "i.batchid, i.serviceid "
+        "i.batchid, i.serviceid, COALESCE(g.name, sv.name) AS itemname "
         "FROM sales s "
         "JOIN items i ON i.id = s.itemid "
+        "LEFT JOIN batches b ON b.id = i.batchid "
+        "LEFT JOIN goods g ON g.id = b.goodid "
+        "LEFT JOIN services sv ON sv.id = i.serviceid "
         "WHERE s.id = :id");
     if (!includeDeleted)
         sql += QStringLiteral(" AND (s.isdeleted IS NULL OR s.isdeleted = false)");
@@ -886,6 +976,7 @@ SaleRow SalesManager::getSale(qint64 saleId, bool includeDeleted)
     row.isDeleted = q.value(QStringLiteral("isdeleted")).toBool();
     row.batchId = q.value(QStringLiteral("batchid")).toLongLong();
     row.serviceId = q.value(QStringLiteral("serviceid")).toLongLong();
+    row.itemName = q.value(QStringLiteral("itemname")).toString();
     row.unitPrice = row.qnt > 0 ? row.sum / static_cast<double>(row.qnt) : 0.0;
     return row;
 }
