@@ -1,55 +1,42 @@
 #include "vatrateeditdialog.h"
-#include <QFormLayout>
-#include <QDialogButtonBox>
+#include "ui_vatrateeditdialog.h"
 #include <QMessageBox>
 
 VatRateEditDialog::VatRateEditDialog(QWidget *parent)
     : QDialog(parent)
-    , m_nameEdit(new QLineEdit(this))
-    , m_rateSpin(new QDoubleSpinBox(this))
+    , ui(new Ui::VatRateEditDialog)
 {
-    setWindowTitle(tr("Ставка НДС"));
-    setMinimumWidth(320);
-    m_nameEdit->setPlaceholderText(tr("Например: НДС 20%"));
-    m_nameEdit->setMaxLength(100);
-    m_rateSpin->setRange(0, 100);
-    m_rateSpin->setDecimals(2);
-    m_rateSpin->setSuffix(tr(" %"));
-
-    auto *form = new QFormLayout();
-    form->addRow(tr("Название:"), m_nameEdit);
-    form->addRow(tr("Ставка:"), m_rateSpin);
-
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(buttons, &QDialogButtonBox::accepted, this, [this] {
+    ui->setupUi(this);
+    ui->rateSpin->setRange(0, 100);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, [this] {
         if (name().isEmpty()) {
             QMessageBox::warning(this, windowTitle(), tr("Введите название."));
-            m_nameEdit->setFocus();
+            ui->nameEdit->setFocus();
             return;
         }
         accept();
     });
-    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    ui->nameEdit->setFocus();
+}
 
-    auto *layout = new QVBoxLayout(this);
-    layout->addLayout(form);
-    layout->addWidget(buttons);
-
-    m_nameEdit->setFocus();
+VatRateEditDialog::~VatRateEditDialog()
+{
+    delete ui;
 }
 
 void VatRateEditDialog::setData(const QString &name, double rate)
 {
-    m_nameEdit->setText(name);
-    m_rateSpin->setValue(rate);
+    ui->nameEdit->setText(name);
+    ui->rateSpin->setValue(rate);
 }
 
 QString VatRateEditDialog::name() const
 {
-    return m_nameEdit->text().trimmed();
+    return ui->nameEdit->text().trimmed();
 }
 
 double VatRateEditDialog::rate() const
 {
-    return m_rateSpin->value();
+    return ui->rateSpin->value();
 }

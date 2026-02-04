@@ -2,8 +2,8 @@
 #define CATEGORYEDITDIALOG_H
 
 #include <QDialog>
-#include <QLineEdit>
-#include <QPlainTextEdit>
+
+namespace Ui { class CategoryEditDialog; }
 
 class CategoryEditDialog : public QDialog
 {
@@ -11,13 +11,13 @@ class CategoryEditDialog : public QDialog
 
 public:
     explicit CategoryEditDialog(QWidget *parent = nullptr);
+    ~CategoryEditDialog();
     void setData(const QString &name, const QString &description);
     QString name() const;
     QString description() const;
 
 private:
-    QLineEdit *m_nameEdit;
-    QPlainTextEdit *m_descriptionEdit;
+    Ui::CategoryEditDialog *ui;
 };
 
 #endif // CATEGORYEDITDIALOG_H

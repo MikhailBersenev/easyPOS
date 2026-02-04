@@ -11,6 +11,7 @@ class AccountManager;
 class RoleManager;
 class StockManager;
 class SalesManager;
+class ProductionManager;
 class SettingsManager;
 
 class EasyPOSCore : public QObject
@@ -36,6 +37,9 @@ public:
     
     // Получение единственного экземпляра StockManager
     StockManager* getStockManager() const { return stockManager; }
+
+    // Получение единственного экземпляра ProductionManager
+    ProductionManager* getProductionManager() const { return productionManager; }
 
     /**
      * @brief Инициализация подключения к БД (вызывать после первоначальной настройки)
@@ -70,6 +74,7 @@ signals:
 private:
     DatabaseConnection* databaseConnection;
     StockManager* stockManager;
+    ProductionManager* productionManager;
     SettingsManager* settingsManager;
     AuthManager* authManager;
     UserSession m_currentSession;

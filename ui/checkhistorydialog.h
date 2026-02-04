@@ -3,7 +3,9 @@
 
 #include <QDialog>
 #include <memory>
+#include "../sales/structures.h"
 
+namespace Ui { class CheckHistoryDialog; }
 class EasyPOSCore;
 
 class CheckHistoryDialog : public QDialog
@@ -20,7 +22,9 @@ private slots:
     void onExportCsv();
 
 private:
-    class CheckHistoryDialogPrivate *d;
+    Ui::CheckHistoryDialog *ui;
+    std::shared_ptr<EasyPOSCore> m_core;
+    QList<Check> m_lastChecks;
 };
 
 #endif // CHECKHISTORYDIALOG_H

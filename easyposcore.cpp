@@ -5,6 +5,7 @@
 #include "RBAC/rolemanager.h"
 #include "sales/stockmanager.h"
 #include "sales/salesmanager.h"
+#include "production/productionmanager.h"
 #include "settings/settingsmanager.h"
 #include <QDebug>
 #include <QSqlQuery>
@@ -12,6 +13,7 @@
 EasyPOSCore::EasyPOSCore()
     : databaseConnection(nullptr)
     , stockManager(nullptr)
+    , productionManager(nullptr)
     , settingsManager(nullptr)
     , authManager(nullptr)
 {
@@ -47,7 +49,10 @@ void EasyPOSCore::ensureDbConnection()
     if (databaseConnection && databaseConnection->isConnected()) {
         stockManager = new StockManager(this);
         stockManager->setDatabaseConnection(databaseConnection);
-        qDebug() << "StockManager создан в EasyPOSCore";
+        productionManager = new ProductionManager(this);
+        productionManager->setDatabaseConnection(databaseConnection);
+        productionManager->setStockManager(stockManager);
+        qDebug() << "StockManager и ProductionManager созданы в EasyPOSCore";
     }
 }
 

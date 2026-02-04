@@ -1,55 +1,41 @@
 #include "categoryeditdialog.h"
-#include <QFormLayout>
-#include <QDialogButtonBox>
-#include <QPushButton>
+#include "ui_categoryeditdialog.h"
 #include <QMessageBox>
 
 CategoryEditDialog::CategoryEditDialog(QWidget *parent)
     : QDialog(parent)
-    , m_nameEdit(new QLineEdit(this))
-    , m_descriptionEdit(new QPlainTextEdit(this))
+    , ui(new Ui::CategoryEditDialog)
 {
-    setWindowTitle(tr("Категория"));
-    setMinimumWidth(380);
-    m_nameEdit->setPlaceholderText(tr("Название категории"));
-    m_nameEdit->setMaxLength(200);
-    m_descriptionEdit->setPlaceholderText(tr("Описание (необязательно)"));
-    m_descriptionEdit->setMaximumHeight(100);
-
-    auto *form = new QFormLayout();
-    form->addRow(tr("Название:"), m_nameEdit);
-    form->addRow(tr("Описание:"), m_descriptionEdit);
-
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(buttons, &QDialogButtonBox::accepted, this, [this] {
+    ui->setupUi(this);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, [this] {
         if (name().isEmpty()) {
             QMessageBox::warning(this, windowTitle(), tr("Введите название."));
-            m_nameEdit->setFocus();
+            ui->nameEdit->setFocus();
             return;
         }
         accept();
     });
-    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    ui->nameEdit->setFocus();
+}
 
-    auto *layout = new QVBoxLayout(this);
-    layout->addLayout(form);
-    layout->addWidget(buttons);
-
-    m_nameEdit->setFocus();
+CategoryEditDialog::~CategoryEditDialog()
+{
+    delete ui;
 }
 
 void CategoryEditDialog::setData(const QString &name, const QString &description)
 {
-    m_nameEdit->setText(name);
-    m_descriptionEdit->setPlainText(description);
+    ui->nameEdit->setText(name);
+    ui->descriptionEdit->setPlainText(description);
 }
 
 QString CategoryEditDialog::name() const
 {
-    return m_nameEdit->text().trimmed();
+    return ui->nameEdit->text().trimmed();
 }
 
 QString CategoryEditDialog::description() const
 {
-    return m_descriptionEdit->toPlainText().trimmed();
+    return ui->descriptionEdit->toPlainText().trimmed();
 }

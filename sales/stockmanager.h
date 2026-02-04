@@ -77,6 +77,22 @@ public:
     // Проверка существования остатка
     bool stockExists(int stockId, bool includeDeleted = false);
     bool stockExistsByGoodId(int goodId, bool includeDeleted = false);
+
+    // Партии (для справочника остатков)
+    QList<BatchDetail> getBatches(bool includeDeleted = false);
+    BatchDetail getBatch(qint64 batchId);
+    StockOperationResult updateBatch(qint64 batchId, const QString &batchNumber, qint64 qnt,
+                                    qint64 reservedQuantity, double price,
+                                    const QDate &prodDate, const QDate &expDate, bool writtenOff);
+    StockOperationResult createBatch(qint64 goodId, const QString &batchNumber, qint64 qnt,
+                                     double price, const QDate &prodDate, const QDate &expDate,
+                                     qint64 employeeId);
+    StockOperationResult setBatchDeleted(qint64 batchId, bool deleted);
+
+    // Штрихкоды партии
+    QList<BarcodeEntry> getBarcodesForBatch(qint64 batchId, bool includeDeleted = false);
+    StockOperationResult addBarcodeToBatch(qint64 batchId, const QString &barcode);
+    StockOperationResult removeBarcode(qint64 barcodeId);
     
     // Получение последней ошибки
     QSqlError lastError() const;

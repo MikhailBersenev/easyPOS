@@ -33,38 +33,79 @@
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tableWidget">
-      <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectRows</enum>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
       </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::SingleSelection</enum>
-      </property>
-      <column>
-       <property name="text">
-        <string>Тип</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Название</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Категория</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Цена</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Кол-во</string>
-       </property>
-      </column>
+      <widget class="QWidget" name="tabGoods" native="true">
+       <attribute name="title">
+        <string>Товары</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tabGoodsLayout">
+        <item>
+         <widget class="QTableWidget" name="tableWidget">
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>Название</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Категория</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Цена</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Кол-во</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabServices" native="true">
+       <attribute name="title">
+        <string>Услуги</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tabServicesLayout">
+        <item>
+         <widget class="QTableWidget" name="tableWidgetServices">
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>Название</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Категория</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Цена</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>

@@ -2,10 +2,8 @@
 #define GOODEDITDIALOG_H
 
 #include <QDialog>
-#include <QLineEdit>
-#include <QPlainTextEdit>
-#include <QComboBox>
-#include <QCheckBox>
+
+namespace Ui { class GoodEditDialog; }
 
 class GoodEditDialog : public QDialog
 {
@@ -13,6 +11,7 @@ class GoodEditDialog : public QDialog
 
 public:
     explicit GoodEditDialog(QWidget *parent = nullptr);
+    ~GoodEditDialog();
     void setCategories(const QList<int> &ids, const QStringList &names);
     void setData(const QString &name, const QString &description, int categoryId, bool isActive);
     QString name() const;
@@ -21,10 +20,7 @@ public:
     bool isActive() const;
 
 private:
-    QLineEdit *m_nameEdit;
-    QPlainTextEdit *m_descriptionEdit;
-    QComboBox *m_categoryCombo;
-    QCheckBox *m_activeCheck;
+    Ui::GoodEditDialog *ui;
     QList<int> m_categoryIds;
 };
 

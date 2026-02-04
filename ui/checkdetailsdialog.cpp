@@ -1,35 +1,22 @@
 #include "checkdetailsdialog.h"
+#include "ui_checkdetailsdialog.h"
 #include "checkpdfexporter.h"
 #include "../easyposcore.h"
 #include "../sales/salesmanager.h"
 #include "../sales/structures.h"
-#include <QTextEdit>
-#include <QVBoxLayout>
-#include <QDialogButtonBox>
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QLocale>
 
-class CheckDetailsDialogPrivate
-{
-public:
-    std::shared_ptr<EasyPOSCore> core;
-    qint64 checkId;
-    QTextEdit *textEdit;
-};
-
 CheckDetailsDialog::CheckDetailsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core, qint64 checkId)
     : QDialog(parent)
-    , d(new CheckDetailsDialogPrivate)
+    , ui(new Ui::CheckDetailsDialog)
+    , m_core(core)
+    , m_checkId(checkId)
 {
-    d->core = core;
-    d->checkId = checkId;
+    ui->setupUi(this);
     setWindowTitle(tr("Детали чека №%1").arg(checkId));
-    setMinimumSize(400, 350);
-
-    d->textEdit = new QTextEdit(this);
-    d->textEdit->setReadOnly(true);
 
     if (core) {
         auto *sm = core->createSalesManager(this);
@@ -49,38 +36,32 @@ CheckDetailsDialog::CheckDetailsDialog(QWidget *parent, std::shared_ptr<EasyPOSC
                     .arg(QString::number(ch.totalAmount, 'f', 2))
                     .arg(QString::number(ch.discountAmount, 'f', 2))
                     .arg(QString::number(toPay, 'f', 2));
-                d->textEdit->setPlainText(text);
+                ui->textEdit->setPlainText(text);
             }
         }
     }
 
     auto *btnPdf = new QPushButton(tr("Сохранить в PDF"));
     connect(btnPdf, &QPushButton::clicked, this, &CheckDetailsDialog::onSaveToPdf);
-
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close);
-    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-    buttons->addButton(btnPdf, QDialogButtonBox::ActionRole);
-
-    auto *layout = new QVBoxLayout(this);
-    layout->addWidget(d->textEdit);
-    layout->addWidget(buttons);
+    ui->buttonBox->addButton(btnPdf, QDialogButtonBox::ActionRole);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
 CheckDetailsDialog::~CheckDetailsDialog()
 {
-    delete d;
+    delete ui;
 }
 
 void CheckDetailsDialog::onSaveToPdf()
 {
-    QString defaultName = tr("Чек_%1.pdf").arg(d->checkId);
+    QString defaultName = tr("Чек_%1.pdf").arg(m_checkId);
     QString path = QFileDialog::getSaveFileName(this, tr("Сохранить чек в PDF"),
         defaultName, tr("PDF (*.pdf)"));
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".pdf"), Qt::CaseInsensitive))
         path += QLatin1String(".pdf");
 
-    if (CheckPdfExporter::saveToPdf(d->core, d->checkId, path))
+    if (CheckPdfExporter::saveToPdf(m_core, m_checkId, path))
         QMessageBox::information(this, tr("PDF"), tr("Чек сохранён в PDF."));
     else
         QMessageBox::critical(this, tr("PDF"), tr("Не удалось сохранить PDF."));

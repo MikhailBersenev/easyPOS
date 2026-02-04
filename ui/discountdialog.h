@@ -2,8 +2,8 @@
 #define DISCOUNTDIALOG_H
 
 #include <QDialog>
-#include <QRadioButton>
-#include <QDoubleSpinBox>
+
+namespace Ui { class DiscountDialog; }
 
 class DiscountDialog : public QDialog
 {
@@ -11,16 +11,16 @@ class DiscountDialog : public QDialog
 
 public:
     explicit DiscountDialog(double totalAmount, QWidget *parent = nullptr);
+    ~DiscountDialog();
     double discountAmount() const;
 
-private:
-    QRadioButton *m_sumRadio;
-    QRadioButton *m_percentRadio;
-    QDoubleSpinBox *m_sumSpin;
-    QDoubleSpinBox *m_percentSpin;
-    double m_totalAmount;
+private slots:
     void updateFromPercent();
     void updateFromSum();
+
+private:
+    Ui::DiscountDialog *ui;
+    double m_totalAmount;
 };
 
 #endif // DISCOUNTDIALOG_H

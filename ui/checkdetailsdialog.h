@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <memory>
 
+namespace Ui { class CheckDetailsDialog; }
 class EasyPOSCore;
 
 class CheckDetailsDialog : public QDialog
@@ -18,7 +19,9 @@ private slots:
     void onSaveToPdf();
 
 private:
-    class CheckDetailsDialogPrivate *d;
+    Ui::CheckDetailsDialog *ui;
+    std::shared_ptr<EasyPOSCore> m_core;
+    qint64 m_checkId;
 };
 
 #endif // CHECKDETAILSDIALOG_H

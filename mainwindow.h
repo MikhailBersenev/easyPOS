@@ -46,7 +46,9 @@ private slots:
     void on_actionAbout_triggered();
     void on_actionShortcuts_triggered();
     void on_actionSalesReport_triggered();
-
+    void on_actionRecipes_triggered();
+    void on_actionProductionRun_triggered();
+    void on_actionStockBalance_triggered();
 private:
     void refreshCart();
     void updateTotals();

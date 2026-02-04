@@ -2,8 +2,8 @@
 #define VATRATEEDITDIALOG_H
 
 #include <QDialog>
-#include <QLineEdit>
-#include <QDoubleSpinBox>
+
+namespace Ui { class VatRateEditDialog; }
 
 class VatRateEditDialog : public QDialog
 {
@@ -11,13 +11,13 @@ class VatRateEditDialog : public QDialog
 
 public:
     explicit VatRateEditDialog(QWidget *parent = nullptr);
+    ~VatRateEditDialog();
     void setData(const QString &name, double rate);
     QString name() const;
     double rate() const;
 
 private:
-    QLineEdit *m_nameEdit;
-    QDoubleSpinBox *m_rateSpin;
+    Ui::VatRateEditDialog *ui;
 };
 
 #endif // VATRATEEDITDIALOG_H

@@ -88,5 +88,48 @@ struct ServiceInfo {
     double price = 0.0;
 };
 
+// Способ оплаты
+struct PaymentMethodInfo {
+    qint64 id = 0;
+    QString name;
+    int sortOrder = 0;
+    bool isActive = true;
+};
+
+// Оплата по чеку (одна строка)
+struct CheckPaymentRow {
+    qint64 paymentMethodId = 0;
+    QString paymentMethodName;
+    double amount = 0.0;
+};
+
+// Партия товара (для справочника остатков / редактирования)
+struct BatchDetail {
+    qint64 id = 0;
+    qint64 goodId = 0;
+    QString goodName;
+    QString batchNumber;
+    qint64 qnt = 0;
+    qint64 reservedQuantity = 0;
+    double price = 0.0;
+    QDate prodDate;
+    QDate expDate;
+    bool writtenOff = false;
+    QDate updateDate;
+    qint64 employeeId = 0;
+    bool isDeleted = false;
+
+    qint64 availableQuantity() const { return qnt - reservedQuantity; }
+};
+
+// Штрихкод партии
+struct BarcodeEntry {
+    qint64 id = 0;
+    QString barcode;
+    qint64 batchId = 0;
+    QDate updateDate;
+    bool isDeleted = false;
+};
+
 #endif // SALES_STRUCTURES_H
 

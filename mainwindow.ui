@@ -262,6 +262,14 @@
     <addaction name="actionGoods"/>
     <addaction name="actionServices"/>
     <addaction name="actionVatRates"/>
+    <addaction name="actionStockBalance"/>
+   </widget>
+   <widget class="QMenu" name="menuProduction">
+    <property name="title">
+     <string>Производство</string>
+    </property>
+    <addaction name="actionRecipes"/>
+    <addaction name="actionProductionRun"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -279,6 +287,7 @@
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
+   <addaction name="menuProduction"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
   </widget>
@@ -301,6 +310,21 @@
   <action name="actionVatRates">
    <property name="text">
     <string>Ставки НДС</string>
+   </property>
+  </action>
+  <action name="actionStockBalance">
+   <property name="text">
+    <string>Остатки на складе</string>
+   </property>
+  </action>
+  <action name="actionRecipes">
+   <property name="text">
+    <string>Рецепты производства</string>
+   </property>
+  </action>
+  <action name="actionProductionRun">
+   <property name="text">
+    <string>Провести производство</string>
    </property>
   </action>
   <action name="actionSaveCheckToPdf">

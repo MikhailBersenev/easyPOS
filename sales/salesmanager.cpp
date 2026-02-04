@@ -1066,6 +1066,68 @@ QList<ServiceInfo> SalesManager::getAvailableServices()
     return list;
 }
 
+QList<PaymentMethodInfo> SalesManager::getPaymentMethods()
+{
+    QList<PaymentMethodInfo> list;
+    if (!m_dbConnection || !m_dbConnection->isConnected())
+        return list;
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral(
+        "SELECT id, name, COALESCE(sortorder, 0) FROM paymentmethods "
+        "WHERE (isdeleted IS NULL OR isdeleted = false) AND isactive = true ORDER BY sortorder, name"));
+    if (!q.exec())
+        return list;
+    while (q.next()) {
+        PaymentMethodInfo info;
+        info.id = q.value(0).toLongLong();
+        info.name = q.value(1).toString();
+        info.sortOrder = q.value(2).toInt();
+        info.isActive = true;
+        list.append(info);
+    }
+    return list;
+}
+
+SaleOperationResult SalesManager::recordCheckPayments(qint64 checkId, const QList<CheckPaymentRow> &payments)
+{
+    SaleOperationResult r;
+    if (!dbOk(m_dbConnection, r, m_lastError))
+        return r;
+    if (checkId <= 0) {
+        r.message = QStringLiteral("Неверный ID чека");
+        return r;
+    }
+    QSqlQuery del(m_dbConnection->getDatabase());
+    del.prepare(QStringLiteral("DELETE FROM checkpayments WHERE checkid = :cid"));
+    del.bindValue(QStringLiteral(":cid"), checkId);
+    if (!del.exec()) {
+        m_lastError = del.lastError();
+        r.error = m_lastError;
+        r.message = QStringLiteral("Ошибка очистки оплат: %1").arg(m_lastError.text());
+        return r;
+    }
+    for (const CheckPaymentRow &row : payments) {
+        if (row.amount <= 0 || row.paymentMethodId <= 0)
+            continue;
+        QSqlQuery ins(m_dbConnection->getDatabase());
+        ins.prepare(QStringLiteral(
+            "INSERT INTO checkpayments (checkid, paymentmethodid, amount) VALUES (:cid, :pmid, :amt)"));
+        ins.bindValue(QStringLiteral(":cid"), checkId);
+        ins.bindValue(QStringLiteral(":pmid"), row.paymentMethodId);
+        ins.bindValue(QStringLiteral(":amt"), row.amount);
+        if (!ins.exec()) {
+            m_lastError = ins.lastError();
+            r.error = m_lastError;
+            r.message = QStringLiteral("Ошибка записи оплаты: %1").arg(m_lastError.text());
+            return r;
+        }
+    }
+    r.success = true;
+    r.checkId = checkId;
+    r.message = QStringLiteral("Оплаты записаны");
+    return r;
+}
+
 QSqlError SalesManager::lastError() const
 {
     return m_lastError;

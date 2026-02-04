@@ -2,10 +2,8 @@
 #define SERVICEEDITDIALOG_H
 
 #include <QDialog>
-#include <QLineEdit>
-#include <QPlainTextEdit>
-#include <QDoubleSpinBox>
-#include <QComboBox>
+
+namespace Ui { class ServiceEditDialog; }
 
 class ServiceEditDialog : public QDialog
 {
@@ -13,6 +11,7 @@ class ServiceEditDialog : public QDialog
 
 public:
     explicit ServiceEditDialog(QWidget *parent = nullptr);
+    ~ServiceEditDialog();
     void setCategories(const QList<int> &ids, const QStringList &names);
     void setData(const QString &name, const QString &description, double price, int categoryId);
     QString name() const;
@@ -21,10 +20,7 @@ public:
     int categoryId() const;
 
 private:
-    QLineEdit *m_nameEdit;
-    QPlainTextEdit *m_descriptionEdit;
-    QDoubleSpinBox *m_priceSpin;
-    QComboBox *m_categoryCombo;
+    Ui::ServiceEditDialog *ui;
     QList<int> m_categoryIds;
 };
 

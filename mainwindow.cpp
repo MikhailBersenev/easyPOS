@@ -14,6 +14,10 @@
 #include "ui/dbsettingsdialog.h"
 #include "ui/checkhistorydialog.h"
 #include "ui/salesreportdialog.h"
+#include "ui/recipesdialog.h"
+#include "ui/productionrundialog.h"
+#include "ui/stockbalancedialog.h"
+#include "ui/paymentdialog.h"
 #include "ui/windowcreator.h"
 #include <QMessageBox>
 #include <QInputDialog>
@@ -478,17 +482,34 @@ void MainWindow::on_payButton_clicked()
     }
     const Check ch = m_salesManager->getCheck(m_currentCheckId);
     const double toPay = (ch.totalAmount - ch.discountAmount) < 0 ? 0 : (ch.totalAmount - ch.discountAmount);
-    if (QMessageBox::question(this, tr("Оплата"),
-            tr("Подтвердить оплату %1 ₽?\nЧек №%2")
-                .arg(QString::number(toPay, 'f', 2))
-                .arg(m_currentCheckId),
-            QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (toPay <= 0) {
+        QMessageBox::warning(this, tr("Касса"), tr("Сумма к оплате должна быть больше нуля."));
+        return;
+    }
+
+    QList<PaymentMethodInfo> methods = m_salesManager->getPaymentMethods();
+    if (methods.isEmpty()) {
+        QMessageBox::warning(this, tr("Оплата"),
+            tr("Нет способов оплаты. Выполните миграцию db/migrate_add_payment_methods.sql"));
+        return;
+    }
+
+    PaymentDialog payDlg(this);
+    payDlg.setAmountToPay(toPay);
+    payDlg.setPaymentMethods(methods);
+    if (payDlg.exec() != QDialog::Accepted)
         return;
 
-    // Финализируем чек (списываем товар через StockManager)
+    const QList<CheckPaymentRow> payments = payDlg.getPayments();
+    SaleOperationResult payResult = m_salesManager->recordCheckPayments(m_currentCheckId, payments);
+    if (!payResult.success) {
+        QMessageBox::warning(this, tr("Ошибка"), payResult.message);
+        return;
+    }
+
     SaleOperationResult result = m_salesManager->finalizeCheck(m_currentCheckId);
     if (!result.success) {
-        QMessageBox::warning(this, tr("Ошибка"), 
+        QMessageBox::warning(this, tr("Ошибка"),
             tr("Не удалось финализировать чек: %1").arg(result.message));
         return;
     }
@@ -504,7 +525,7 @@ void MainWindow::on_payButton_clicked()
     QMessageBox::information(this, tr("Оплата"),
         tr("Чек №%1 закрыт.\nК оплате: %2 ₽")
             .arg(closedCheckId)
-            .arg(QString::number(toPay < 0 ? 0 : toPay, 'f', 2)));
+            .arg(QString::number(toPay, 'f', 2)));
     updateDaySummary();
     ui->statusbar->showMessage(tr("Чек закрыт. Нажмите «Новый чек» для следующей продажи."));
 }
@@ -586,6 +607,29 @@ void MainWindow::on_actionSalesReport_triggered()
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     SalesReportDialog dlg(this, m_core);
     dlg.exec();
+}
+
+void MainWindow::on_actionRecipes_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    RecipesDialog *dlg = WindowCreator::Create<RecipesDialog>(this, m_core, false);
+    if (dlg)
+        dlg->exec();
+}
+
+void MainWindow::on_actionProductionRun_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    ProductionRunDialog dlg(this, m_core);
+    dlg.exec();
+}
+
+void MainWindow::on_actionStockBalance_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    StockBalanceDialog *dlg = WindowCreator::Create<StockBalanceDialog>(this, m_core, false);
+    if (dlg)
+        dlg->exec();
 }
 
 void MainWindow::on_actionLogout_triggered()

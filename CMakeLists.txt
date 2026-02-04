@@ -32,16 +32,17 @@ qt_add_executable(easyPOS
     ui/windowcreator.h
     ui/referencedialog.h ui/referencedialog.cpp ui/referencedialog.ui
     ui/goodcatsdialog.h ui/goodcatsdialog.cpp
-    ui/categoryeditdialog.h ui/categoryeditdialog.cpp
+    ui/categoryeditdialog.h ui/categoryeditdialog.cpp ui/categoryeditdialog.ui
     ui/goodsdialog.h ui/goodsdialog.cpp
-    ui/goodeditdialog.h ui/goodeditdialog.cpp
-    ui/serviceeditdialog.h ui/serviceeditdialog.cpp
-    ui/vatrateeditdialog.h ui/vatrateeditdialog.cpp
-    ui/discountdialog.h ui/discountdialog.cpp
+    ui/goodeditdialog.h ui/goodeditdialog.cpp ui/goodeditdialog.ui
+    ui/serviceeditdialog.h ui/serviceeditdialog.cpp ui/serviceeditdialog.ui
+    ui/vatrateeditdialog.h ui/vatrateeditdialog.cpp ui/vatrateeditdialog.ui
+    ui/discountdialog.h ui/discountdialog.cpp ui/discountdialog.ui
+    ui/paymentdialog.h ui/paymentdialog.cpp ui/paymentdialog.ui
     ui/dbsettingsdialog.h ui/dbsettingsdialog.cpp ui/dbsettingsdialog.ui
-    ui/checkhistorydialog.h ui/checkhistorydialog.cpp
-    ui/salesreportdialog.h ui/salesreportdialog.cpp
-    ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp
+    ui/checkhistorydialog.h ui/checkhistorydialog.cpp ui/checkhistorydialog.ui
+    ui/salesreportdialog.h ui/salesreportdialog.cpp ui/salesreportdialog.ui
+    ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp ui/checkdetailsdialog.ui
     ui/checkpdfexporter.h ui/checkpdfexporter.cpp
     ui/servicesdialog.h ui/servicesdialog.cpp
     ui/vatratesdialog.h ui/vatratesdialog.cpp
@@ -51,7 +52,14 @@ qt_add_executable(easyPOS
     sales/structures.h
     sales/salesmanager.h sales/salesmanager.cpp
     sales/stockmanager.h sales/stockmanager.cpp
+    production/structures.h
+    production/productionmanager.h production/productionmanager.cpp
     ui/sales/goodfind.h ui/sales/goodfind.cpp ui/sales/goodfind.ui
+    ui/recipeeditdialog.h ui/recipeeditdialog.cpp ui/recipeeditdialog.ui
+    ui/recipesdialog.h ui/recipesdialog.cpp
+    ui/productionrundialog.h ui/productionrundialog.cpp ui/productionrundialog.ui
+    ui/stockbalancedialog.h ui/stockbalancedialog.cpp
+    ui/batcheditdialog.h ui/batcheditdialog.cpp ui/batcheditdialog.ui
 
 
 
@@ -114,6 +122,7 @@ qt_add_executable(unit_tests
     RBAC/rolemanager.h RBAC/rolemanager.cpp
     sales/stockmanager.h sales/stockmanager.cpp
     sales/salesmanager.h sales/salesmanager.cpp
+    production/structures.h production/productionmanager.h production/productionmanager.cpp
     settings/settingsmanager.h settings/settingsmanager.cpp
     easyposcore.cpp easyposcore.h
 )

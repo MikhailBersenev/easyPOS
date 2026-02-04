@@ -44,6 +44,10 @@ public:
     QList<BatchInfo> getAvailableBatches();
     QList<ServiceInfo> getAvailableServices();
 
+    // Способы оплаты и оплаты по чеку
+    QList<PaymentMethodInfo> getPaymentMethods();
+    SaleOperationResult recordCheckPayments(qint64 checkId, const QList<CheckPaymentRow> &payments);
+
     QSqlError lastError() const;
 
 signals:
