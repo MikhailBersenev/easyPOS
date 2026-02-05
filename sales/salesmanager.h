@@ -21,8 +21,9 @@ public:
     /** Создать чек. shiftId — ID активной смены сотрудника (обязательно для привязки чека к смене). */
     SaleOperationResult createCheck(qint64 employeeId, qint64 shiftId = 0);
     Check getCheck(qint64 checkId, bool includeDeleted = false);
+    /** shiftId &lt;= 0 — все смены, иначе только чеки указанной смены */
     QList<Check> getChecks(const QDate &dateFrom, const QDate &dateTo,
-                           qint64 employeeId = -1, bool includeDeleted = false);
+                           qint64 employeeId = -1, bool includeDeleted = false, qint64 shiftId = -1);
     SaleOperationResult setCheckDiscount(qint64 checkId, double discountAmount);
     SaleOperationResult cancelCheck(qint64 checkId);
     SaleOperationResult finalizeCheck(qint64 checkId);

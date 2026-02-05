@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QString>
+#include <QTimeZone>
 
 #include "../db/structures.h"
 
@@ -63,6 +64,9 @@ public:
     int intValue(const QString &key, int defaultValue = 0) const;
     bool boolValue(const QString &key, bool defaultValue = false) const;
 
+    /** Часовой пояс для отображения времени. Пустая строка в настройках = системный. */
+    QTimeZone timeZone() const;
+
 signals:
     void settingsChanged();
 
@@ -74,6 +78,9 @@ private:
 namespace SettingsKeys {
     // Язык интерфейса: "" = по системе, "ru" = русский, "en" = English
     constexpr const char *Language = "ui/language";
+
+    // Часовой пояс: "" = системный, иначе IANA ID (например Europe/Moscow)
+    constexpr const char *TimeZone = "general/timeZone";
 
     // Первоначальная настройка
     constexpr const char *SetupCompleted = "setup/completed";

@@ -241,7 +241,7 @@ Check SalesManager::getCheck(qint64 checkId, bool includeDeleted)
 }
 
 QList<Check> SalesManager::getChecks(const QDate &dateFrom, const QDate &dateTo,
-                                     qint64 employeeId, bool includeDeleted)
+                                     qint64 employeeId, bool includeDeleted, qint64 shiftId)
 {
     QList<Check> list;
     if (!m_dbConnection || !m_dbConnection->isConnected())
@@ -257,7 +257,9 @@ QList<Check> SalesManager::getChecks(const QDate &dateFrom, const QDate &dateTo,
         sql += QStringLiteral(" AND (ch.isdeleted IS NULL OR ch.isdeleted = false)");
     if (employeeId > 0)
         sql += QStringLiteral(" AND ch.employeeid = :eid");
-    sql += QStringLiteral(" ORDER BY ch.date DESC, ch.\"time\" DESC");
+    if (shiftId > 0)
+        sql += QStringLiteral(" AND ch.shiftid = :shiftid");
+    sql += QStringLiteral(" ORDER BY ch.shiftid ASC NULLS LAST, ch.\"time\" DESC");
 
     QSqlQuery q(m_dbConnection->getDatabase());
     q.prepare(sql);
@@ -265,6 +267,8 @@ QList<Check> SalesManager::getChecks(const QDate &dateFrom, const QDate &dateTo,
     q.bindValue(QStringLiteral(":dt"), dateTo);
     if (employeeId > 0)
         q.bindValue(QStringLiteral(":eid"), employeeId);
+    if (shiftId > 0)
+        q.bindValue(QStringLiteral(":shiftid"), shiftId);
 
     if (!q.exec())
         return list;

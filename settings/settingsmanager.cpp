@@ -100,3 +100,12 @@ bool SettingsManager::boolValue(const QString &key, bool defaultValue) const
 {
     return value(key, defaultValue).toBool();
 }
+
+QTimeZone SettingsManager::timeZone() const
+{
+    const QString id = stringValue(SettingsKeys::TimeZone, QString());
+    if (id.isEmpty())
+        return QTimeZone::systemTimeZone();
+    const QTimeZone tz(id.toUtf8());
+    return tz.isValid() ? tz : QTimeZone::systemTimeZone();
+}

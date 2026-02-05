@@ -29,6 +29,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="shiftLabel">
+       <property name="text">
+        <string>Смена:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="shiftCombo">
+       <property name="minimumWidth">
+        <number>180</number>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -66,7 +80,7 @@
       <enum>QAbstractItemView::SingleSelection</enum>
      </property>
      <attribute name="columnCount">
-      <number>5</number>
+      <number>6</number>
      </attribute>
      <column>
       <property name="text">
@@ -86,6 +100,11 @@
      <column>
       <property name="text">
        <string>Скидка</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Смена</string>
       </property>
      </column>
      <column>

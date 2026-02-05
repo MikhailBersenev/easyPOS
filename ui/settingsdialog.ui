@@ -61,6 +61,26 @@
            </item>
           </widget>
          </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="timeZoneLabel">
+           <property name="text">
+            <string>Часовой пояс:</string>
+           </property>
+           <property name="toolTip">
+            <string>Используется для отображения времени в чеках, сменах и отчётах</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="timeZoneComboBox">
+           <property name="minimumWidth">
+            <number>280</number>
+           </property>
+           <property name="toolTip">
+            <string>По умолчанию — системный часовой пояс</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>

@@ -17,6 +17,7 @@
 #include <QCheckBox>
 #include <QTableWidgetItem>
 #include <QFileDialog>
+#include <QTimeZone>
 
 SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : QDialog(parent)
@@ -30,6 +31,16 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
         ui->languageComboBox->setItemData(1, QStringLiteral("en"));
         ui->languageComboBox->setItemData(2, QStringLiteral("ru"));
     }
+    // Заполняем список часовых поясов (IANA ID), первый пункт — системный
+    ui->timeZoneComboBox->clear();
+    ui->timeZoneComboBox->addItem(tr("По умолчанию (система)"), QStringLiteral(""));
+    QList<QByteArray> tzIds = QTimeZone::availableTimeZoneIds();
+    QStringList tzStrings;
+    for (const QByteArray &id : tzIds)
+        tzStrings.append(QString::fromUtf8(id));
+    tzStrings.sort(Qt::CaseInsensitive);
+    for (const QString &id : tzStrings)
+        ui->timeZoneComboBox->addItem(id, id);
     if (m_core) {
         m_accountManager = m_core->createAccountManager(this);
         m_roleManager = m_core->createRoleManager(this);
@@ -68,6 +79,9 @@ void SettingsDialog::loadFromSettings()
     QString lang = sm->stringValue(SettingsKeys::Language, QString());
     const int idx = ui->languageComboBox->findData(lang);
     ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
+    QString tz = sm->stringValue(SettingsKeys::TimeZone, QString());
+    const int tzIdx = ui->timeZoneComboBox->findData(tz);
+    ui->timeZoneComboBox->setCurrentIndex(tzIdx >= 0 ? tzIdx : 0);
     ui->printAfterPayCheckBox->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
     ui->logPathEdit->setText(sm->stringValue(SettingsKeys::LogPath, QString()));
     updateDbLabel();
@@ -423,6 +437,7 @@ void SettingsDialog::accept()
                     << "(применится после перезапуска)";
         }
         sm->setValue(SettingsKeys::Language, lang);
+        sm->setValue(SettingsKeys::TimeZone, ui->timeZoneComboBox->currentData().toString());
         sm->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
         sm->setValue(SettingsKeys::LogPath, logPath);
         sm->sync();

@@ -1206,8 +1206,8 @@ Start a shift in the Work shifts window (File → Work shifts).</translation>
         <translation>Failed to create file.</translation>
     </message>
     <message>
-        <source>№;Время;Сумма;Скидка;Сотрудник\n</source>
-        <translation>No.;Time;Amount;Discount;Employee\n</translation>
+        <source>№;Время;Сумма;Скидка;Смена;Сотрудник\n</source>
+        <translation>No.;Time;Amount;Discount;Shift;Employee\n</translation>
     </message>
     <message>
         <source>Файл сохранён.</source>
@@ -1228,6 +1228,10 @@ Start a shift in the Work shifts window (File → Work shifts).</translation>
     <message>
         <source>Скидка</source>
         <translation>Discount</translation>
+    </message>
+    <message>
+        <source>Смена</source>
+        <translation>Shift</translation>
     </message>
     <message>
         <source>Сотрудник</source>
