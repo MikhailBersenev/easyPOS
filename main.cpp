@@ -2,6 +2,7 @@
 #include "ui/authwindow.h"
 #include "ui/setupwizard.h"
 #include "easyposcore.h"
+#include "logging/logmanager.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -19,6 +20,9 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName(QStringLiteral("easyPOS"));
     QCoreApplication::setApplicationName(QStringLiteral("easyPOS"));
+
+    LogManager::init();
+    qInfo() << "easyPOS started, log file:" << LogManager::logFilePath();
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

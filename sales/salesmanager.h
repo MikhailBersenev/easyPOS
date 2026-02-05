@@ -18,7 +18,8 @@ public:
     void setStockManager(class StockManager *stockManager);
 
     // Чек
-    SaleOperationResult createCheck(qint64 employeeId);
+    /** Создать чек. shiftId — ID активной смены сотрудника (обязательно для привязки чека к смене). */
+    SaleOperationResult createCheck(qint64 employeeId, qint64 shiftId = 0);
     Check getCheck(qint64 checkId, bool includeDeleted = false);
     QList<Check> getChecks(const QDate &dateFrom, const QDate &dateTo,
                            qint64 employeeId = -1, bool includeDeleted = false);

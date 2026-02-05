@@ -3,7 +3,7 @@
 
 #include <QString>
 #include <QDate>
-#include <QDateTime>
+#include <QDate>
 #include <QTime>
 #include <QSqlError>
 
@@ -14,7 +14,8 @@ struct Stock {
     QString goodName;       // Название товара (для удобства)
     double quantity;        // Количество товара
     double reservedQuantity; // Зарезервированное количество
-    QDateTime updateDate;   // Дата последнего обновления
+    QDate updateDate;   // Дата последнего обновления
+    QTime updateTime;  // Время последнего обновления
     bool isDeleted;         // Флаг удаления
     
     Stock() : id(0), goodId(0), quantity(0.0), reservedQuantity(0.0), isDeleted(false) {}
@@ -38,6 +39,7 @@ struct Check {
     double totalAmount = 0.0;
     double discountAmount = 0.0;
     qint64 employeeId = 0;
+    qint64 shiftId = 0;  // смена, в которой создан чек
     QString employeeName;
     bool isDeleted = false;
 };

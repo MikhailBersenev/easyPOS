@@ -61,9 +61,10 @@ qt_add_executable(easyPOS
     ui/productionrundialog.h ui/productionrundialog.cpp ui/productionrundialog.ui
     ui/stockbalancedialog.h ui/stockbalancedialog.cpp
     ui/batcheditdialog.h ui/batcheditdialog.cpp ui/batcheditdialog.ui
-
-
-
+    shifts/structures.h
+    shifts/shiftmanager.h shifts/shiftmanager.cpp
+    ui/shiftsdialog.h ui/shiftsdialog.cpp ui/shiftsdialog.ui
+    logging/logmanager.h logging/logmanager.cpp
 )
 
 # qt_add_translations(
@@ -71,6 +72,8 @@ qt_add_executable(easyPOS
 #     TS_FILES easyPOS_ru_RU.ts
 # )
 # Примечание: временно отключено из-за проблемы с путями в Qt6 CMake
+
+target_include_directories(easyPOS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(easyPOS
     PRIVATE
@@ -124,10 +127,11 @@ qt_add_executable(unit_tests
     sales/stockmanager.h sales/stockmanager.cpp
     sales/salesmanager.h sales/salesmanager.cpp
     production/structures.h production/productionmanager.h production/productionmanager.cpp
+    shifts/structures.h shifts/shiftmanager.h shifts/shiftmanager.cpp
     settings/settingsmanager.h settings/settingsmanager.cpp
     easyposcore.cpp easyposcore.h
 )
-
+target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unit_tests
     PRIVATE
         Qt::Core

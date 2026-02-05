@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ShiftsDialog</class>
+ <widget class="QDialog" name="ShiftsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Учёт рабочих смен</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="periodLayout">
+     <item>
+      <widget class="QLabel" name="dateFromLabel">
+       <property name="text">
+        <string>С:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateEdit" name="dateFromEdit"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="dateToLabel">
+       <property name="text">
+        <string>По:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateEdit" name="dateToEdit"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="text">
+        <string>Обновить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="currentShiftLabel">
+     <property name="text">
+      <string>Текущая смена: не начата</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsShiftLayout">
+     <item>
+      <widget class="QPushButton" name="startShiftButton">
+       <property name="text">
+        <string>Начать смену</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="endShiftButton">
+       <property name="text">
+        <string>Завершить смену</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="tableLabel">
+     <property name="text">
+      <string>История смен</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="shiftsTable">
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <column>
+      <property name="text">
+       <string>Сотрудник</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Начало</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Конец</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Длительность</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

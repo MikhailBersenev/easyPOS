@@ -78,7 +78,9 @@ Stock StockManager::getStockByGoodId(int goodId, bool includeDeleted)
         stock.goodName = q.value(QStringLiteral("goodname")).toString();
         stock.quantity = q.value(QStringLiteral("quantity")).toDouble();
         stock.reservedQuantity = q.value(QStringLiteral("reservedquantity")).toDouble();
-        stock.updateDate = q.value(QStringLiteral("updatedate")).toDateTime();
+        stock.updateDate = q.value(QStringLiteral("updatedate")).toDate();
+        QTime t = q.value(QStringLiteral("updatedate")).toTime();
+        stock.updateTime = t.isValid() ? t : QTime(0, 0);
         stock.isDeleted = false;
     }
     return stock;
@@ -127,7 +129,9 @@ QList<Stock> StockManager::getAllStocks(bool includeDeleted)
         s.goodName = q.value(QStringLiteral("goodname")).toString();
         s.quantity = q.value(QStringLiteral("quantity")).toDouble();
         s.reservedQuantity = q.value(QStringLiteral("reservedquantity")).toDouble();
-        s.updateDate = q.value(QStringLiteral("updatedate")).toDateTime();
+        s.updateDate = q.value(QStringLiteral("updatedate")).toDate();
+        QTime ut = q.value(QStringLiteral("updatedate")).toTime();
+        s.updateTime = ut.isValid() ? ut : QTime(0, 0);
         s.isDeleted = false;
         list.append(s);
     }

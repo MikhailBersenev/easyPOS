@@ -2,6 +2,8 @@
 #define RBAC_STRUCTURES_H
 
 #include <QString>
+#include <QDate>
+#include <QTime>
 #include <QDateTime>
 #include <QList>
 #include <QSqlError>
@@ -50,8 +52,10 @@ struct UserSession {
     int userId;
     QString username;
     Role role;
-    QDateTime loginTime;
-    QDateTime lastActivity;
+    QDate loginDate;
+    QTime loginTime;
+    QDate lastActivityDate;
+    QTime lastActivityTime;
     QString sessionToken;   // Токен сессии для безопасности
     
     UserSession() : userId(0) {}
@@ -61,10 +65,11 @@ struct UserSession {
     }
     
     bool isExpired(int timeoutMinutes = 30) const {
-        if (!lastActivity.isValid()) {
+        if (!lastActivityDate.isValid() || !lastActivityTime.isValid()) {
             return true;
         }
-        return lastActivity.secsTo(QDateTime::currentDateTime()) > (timeoutMinutes * 60);
+        QDateTime lastDt(lastActivityDate, lastActivityTime);
+        return lastDt.secsTo(QDateTime::currentDateTime()) > (timeoutMinutes * 60);
     }
 };
 

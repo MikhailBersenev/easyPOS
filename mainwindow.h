@@ -44,6 +44,7 @@ private slots:
     void on_actionLogout_triggered();
     void on_actionSaveCheckToPdf_triggered();
     void on_actionCheckHistory_triggered();
+    void on_actionShifts_triggered();
     void on_actionPrintAfterPay_triggered();
     void on_actionSettings_triggered();
     void on_actionDbConnection_triggered();

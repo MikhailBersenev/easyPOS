@@ -19,6 +19,10 @@
 #include "ui/recipesdialog.h"
 #include "ui/productionrundialog.h"
 #include "ui/stockbalancedialog.h"
+#include "ui/shiftsdialog.h"
+#include "shifts/shiftmanager.h"
+#include "shifts/structures.h"
+#include "logging/logmanager.h"
 #include "ui/paymentdialog.h"
 #include "ui/windowcreator.h"
 #include <QMessageBox>
@@ -38,6 +42,7 @@
 #include <QKeyEvent>
 #include <QApplication>
 #include <QTimer>
+#include <QPushButton>
 
 MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const UserSession &session)
     : QMainWindow(parent)
@@ -267,12 +272,38 @@ void MainWindow::on_newCheckButton_clicked()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
     if (!m_salesManager || m_employeeId <= 0) return;
-    SaleOperationResult r = m_salesManager->createCheck(m_employeeId);
+
+    ShiftManager *shiftMgr = m_core ? m_core->getShiftManager() : nullptr;
+    if (!shiftMgr) {
+        LOG_WARNING() << "MainWindow::on_newCheckButton_clicked: менеджер смен недоступен";
+        QMessageBox::critical(this, tr("Ошибка"), tr("Менеджер смен недоступен."));
+        return;
+    }
+    WorkShift currentShift = shiftMgr->getCurrentShift(m_employeeId);
+    if (currentShift.id <= 0) {
+        LOG_INFO() << "MainWindow::on_newCheckButton_clicked: отказ — нет активной смены, employeeId=" << m_employeeId;
+        QMessageBox msg(this);
+        msg.setWindowTitle(tr("Нет активной смены"));
+        msg.setText(tr("У вас нет открытой смены. Продажи возможны только во время активной смены.\n\n"
+                       "Начните смену в окне «Учёт смен» (Файл → Учёт смен)."));
+        msg.setIcon(QMessageBox::Warning);
+        QPushButton *openShifts = msg.addButton(tr("Открыть учёт смен"), QMessageBox::ActionRole);
+        msg.addButton(QMessageBox::Ok);
+        msg.exec();
+        if (msg.clickedButton() == openShifts)
+            on_actionShifts_triggered();
+        return;
+    }
+
+    LOG_INFO() << "MainWindow::on_newCheckButton_clicked: создание чека employeeId=" << m_employeeId << "shiftId=" << currentShift.id;
+    SaleOperationResult r = m_salesManager->createCheck(m_employeeId, currentShift.id);
     if (!r.success) {
+        LOG_WARNING() << "MainWindow::on_newCheckButton_clicked: ошибка создания чека" << r.message;
         QMessageBox::critical(this, tr("Ошибка"), r.message);
         return;
     }
     m_currentCheckId = r.checkId;
+    LOG_INFO() << "MainWindow::on_newCheckButton_clicked: чек создан checkId=" << m_currentCheckId;
     updateCheckNumberLabel();
     refreshCart();
     ui->checkWidget->setFocus(); // фокус на таблицу — тогда ввод сканера перехватывается
@@ -718,6 +749,13 @@ void MainWindow::on_actionCheckHistory_triggered()
     }
     CheckHistoryDialog dlg(this, m_core);
     dlg.exec();
+}
+
+void MainWindow::on_actionShifts_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    ShiftsDialog *dlg = WindowCreator::Create<ShiftsDialog>(this, m_core, false);
+    if (dlg) dlg->exec();
 }
 
 void MainWindow::on_actionPrintAfterPay_triggered()

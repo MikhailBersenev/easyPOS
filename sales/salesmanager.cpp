@@ -165,7 +165,7 @@ void SalesManager::recalcCheckTotal(qint64 checkId)
     q.exec();
 }
 
-SaleOperationResult SalesManager::createCheck(qint64 employeeId)
+SaleOperationResult SalesManager::createCheck(qint64 employeeId, qint64 shiftId)
 {
     SaleOperationResult r;
     if (!dbOk(m_dbConnection, r, m_lastError))
@@ -176,11 +176,12 @@ SaleOperationResult SalesManager::createCheck(qint64 employeeId)
 
     QSqlQuery q(m_dbConnection->getDatabase());
     q.prepare(QStringLiteral(
-        "INSERT INTO checks (date, \"time\", totalamount, discountamount, employeeid, isdeleted) "
-        "VALUES (:date, :time, 0, 0, :eid, false) RETURNING id"));
+        "INSERT INTO checks (date, \"time\", totalamount, discountamount, employeeid, shiftid, isdeleted) "
+        "VALUES (:date, :time, 0, 0, :eid, :shiftid, false) RETURNING id"));
     q.bindValue(QStringLiteral(":date"), d);
     q.bindValue(QStringLiteral(":time"), t);
     q.bindValue(QStringLiteral(":eid"), employeeId);
+    q.bindValue(QStringLiteral(":shiftid"), shiftId > 0 ? shiftId : QVariant());
 
     if (!q.exec()) {
         m_lastError = q.lastError();
@@ -210,7 +211,7 @@ Check SalesManager::getCheck(qint64 checkId, bool includeDeleted)
         return c;
 
     QString sql = QStringLiteral(
-        "SELECT ch.id, ch.date, ch.\"time\", ch.totalamount, ch.discountamount, ch.employeeid, ch.isdeleted, "
+        "SELECT ch.id, ch.date, ch.\"time\", ch.totalamount, ch.discountamount, ch.employeeid, ch.shiftid, ch.isdeleted, "
         "e.lastname || ' ' || e.firstname AS empname "
         "FROM checks ch "
         "LEFT JOIN employees e ON e.id = ch.employeeid "
@@ -230,6 +231,7 @@ Check SalesManager::getCheck(qint64 checkId, bool includeDeleted)
     c.totalAmount = q.value(QStringLiteral("totalamount")).toDouble();
     c.discountAmount = q.value(QStringLiteral("discountamount")).toDouble();
     c.employeeId = q.value(QStringLiteral("employeeid")).toLongLong();
+    c.shiftId = q.value(QStringLiteral("shiftid")).toLongLong();
     c.employeeName = q.value(QStringLiteral("empname")).toString().trimmed();
     c.isDeleted = q.value(QStringLiteral("isdeleted")).toBool();
     return c;
@@ -243,7 +245,7 @@ QList<Check> SalesManager::getChecks(const QDate &dateFrom, const QDate &dateTo,
         return list;
 
     QString sql = QStringLiteral(
-        "SELECT ch.id, ch.date, ch.\"time\", ch.totalamount, ch.discountamount, ch.employeeid, ch.isdeleted, "
+        "SELECT ch.id, ch.date, ch.\"time\", ch.totalamount, ch.discountamount, ch.employeeid, ch.shiftid, ch.isdeleted, "
         "e.lastname || ' ' || e.firstname AS empname "
         "FROM checks ch "
         "LEFT JOIN employees e ON e.id = ch.employeeid "
@@ -272,6 +274,7 @@ QList<Check> SalesManager::getChecks(const QDate &dateFrom, const QDate &dateTo,
         c.totalAmount = q.value(QStringLiteral("totalamount")).toDouble();
         c.discountAmount = q.value(QStringLiteral("discountamount")).toDouble();
         c.employeeId = q.value(QStringLiteral("employeeid")).toLongLong();
+        c.shiftId = q.value(QStringLiteral("shiftid")).toLongLong();
         c.employeeName = q.value(QStringLiteral("empname")).toString().trimmed();
         c.isDeleted = q.value(QStringLiteral("isdeleted")).toBool();
         list.append(c);

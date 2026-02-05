@@ -1,6 +1,8 @@
 #include "authmanager.h"
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QDate>
+#include <QTime>
 #include <QUuid>
 #include <QDebug>
 
@@ -216,7 +218,7 @@ AuthResult AuthManager::authenticate(const QString &username, const QString &pas
     qDebug() << "Имя пользователя:" << username;
     qDebug() << "Роль:" << role.name;
     qDebug() << "Токен сессии:" << result.session.sessionToken;
-    qDebug() << "Время входа:" << result.session.loginTime.toString(Qt::ISODate);
+    qDebug() << "Время входа:" << result.session.loginDate.toString(Qt::ISODate) << result.session.loginTime.toString(Qt::ISODate);
     qDebug() << "========================================";
     
     emit userAuthenticated(userId, username);
@@ -363,17 +365,20 @@ UserSession AuthManager::getSessionByToken(const QString &token) const
     QSqlDatabase db = m_dbConnection->getDatabase();
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
-        "SELECT userid, logintime, lastactivity FROM usersessions "
+        "SELECT userid, logindate, logintime, lastactivitydate, lastactivitytime FROM usersessions "
         "WHERE token = :token"));
     q.bindValue(QStringLiteral(":token"), token);
     if (!q.exec() || !q.next())
         return UserSession();
 
     int userId = q.value(0).toInt();
-    QDateTime lastActivity = q.value(2).toDateTime();
+    QDate lastActivityDate = q.value(3).toDate();
+    QTime lastActivityTime = q.value(4).toTime();
     int timeoutMinutes = 30;
-    if (lastActivity.secsTo(QDateTime::currentDateTime()) > timeoutMinutes * 60)
-        return UserSession();  // Сессия истекла
+    if (lastActivityDate.isValid() && lastActivityTime.isValid()) {
+        if (QDateTime(lastActivityDate, lastActivityTime).secsTo(QDateTime::currentDateTime()) > timeoutMinutes * 60)
+            return UserSession();  // Сессия истекла
+    }
 
     QSqlQuery userQ(db);
     userQ.prepare(QStringLiteral("SELECT name, roleid FROM users WHERE id = :id"));
@@ -391,8 +396,10 @@ UserSession AuthManager::getSessionByToken(const QString &token) const
     session.userId = userId;
     session.username = username;
     session.role = role;
-    session.loginTime = q.value(1).toDateTime();
-    session.lastActivity = lastActivity;
+    session.loginDate = q.value(1).toDate();
+    session.loginTime = q.value(2).toTime();
+    session.lastActivityDate = lastActivityDate;
+    session.lastActivityTime = lastActivityTime;
     session.sessionToken = token;
     // Добавляем в кэш для последующих вызовов getSession(userId)
     m_activeSessions[userId] = session;
@@ -418,14 +425,15 @@ bool AuthManager::isSessionValid(const UserSession &session) const
 void AuthManager::updateSessionActivity(int userId)
 {
     if (m_activeSessions.contains(userId)) {
-        m_activeSessions[userId].lastActivity = QDateTime::currentDateTime();
-        // Обновляем last_activity в БД
+        m_activeSessions[userId].lastActivityDate = QDate::currentDate();
+        m_activeSessions[userId].lastActivityTime = QTime::currentTime();
         if (m_dbConnection && m_dbConnection->isConnected()) {
             QSqlDatabase db = m_dbConnection->getDatabase();
             QSqlQuery q(db);
             q.prepare(QStringLiteral(
-                "UPDATE usersessions SET lastactivity = :now WHERE userid = :userid"));
-            q.bindValue(QStringLiteral(":now"), QDateTime::currentDateTime());
+                "UPDATE usersessions SET lastactivitydate = :d, lastactivitytime = :t WHERE userid = :userid"));
+            q.bindValue(QStringLiteral(":d"), QDate::currentDate());
+            q.bindValue(QStringLiteral(":t"), QTime::currentTime());
             q.bindValue(QStringLiteral(":userid"), userId);
             q.exec();
         }
@@ -536,8 +544,10 @@ UserSession AuthManager::createSession(int userId, const QString &username, cons
     session.userId = userId;
     session.username = username;
     session.role = role;
-    session.loginTime = QDateTime::currentDateTime();
-    session.lastActivity = QDateTime::currentDateTime();
+    session.loginDate = QDate::currentDate();
+    session.loginTime = QTime::currentTime();
+    session.lastActivityDate = QDate::currentDate();
+    session.lastActivityTime = QTime::currentTime();
     session.sessionToken = generateSessionToken();
     
     return session;
@@ -559,12 +569,14 @@ bool AuthManager::saveSessionToDb(const UserSession &session) const
     QSqlDatabase db = m_dbConnection->getDatabase();
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
-        "INSERT INTO usersessions (userid, token, logintime, lastactivity) "
-        "VALUES (:userid, :token, :logintime, :lastactivity)"));
+        "INSERT INTO usersessions (userid, token, logindate, logintime, lastactivitydate, lastactivitytime) "
+        "VALUES (:userid, :token, :logindate, :logintime, :lastactivitydate, :lastactivitytime)"));
     q.bindValue(QStringLiteral(":userid"), session.userId);
     q.bindValue(QStringLiteral(":token"), session.sessionToken);
+    q.bindValue(QStringLiteral(":logindate"), session.loginDate);
     q.bindValue(QStringLiteral(":logintime"), session.loginTime);
-    q.bindValue(QStringLiteral(":lastactivity"), session.lastActivity);
+    q.bindValue(QStringLiteral(":lastactivitydate"), session.lastActivityDate);
+    q.bindValue(QStringLiteral(":lastactivitytime"), session.lastActivityTime);
 
     if (!q.exec()) {
         m_lastError = q.lastError();

@@ -233,6 +233,7 @@
     </property>
    <addaction name="actionCheckHistory"/>
    <addaction name="actionSalesReport"/>
+   <addaction name="actionShifts"/>
    <addaction name="actionSaveCheckToPdf"/>
    <addaction name="actionLogout"/>
    </widget>
@@ -318,6 +319,11 @@
   <action name="actionCheckHistory">
    <property name="text">
     <string>История чеков</string>
+   </property>
+  </action>
+  <action name="actionShifts">
+   <property name="text">
+    <string>Учёт смен</string>
    </property>
   </action>
   <action name="actionPrintAfterPay">

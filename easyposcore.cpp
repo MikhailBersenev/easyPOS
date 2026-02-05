@@ -6,6 +6,7 @@
 #include "sales/stockmanager.h"
 #include "sales/salesmanager.h"
 #include "production/productionmanager.h"
+#include "shifts/shiftmanager.h"
 #include "settings/settingsmanager.h"
 #include <QDebug>
 #include <QSqlQuery>
@@ -14,6 +15,7 @@ EasyPOSCore::EasyPOSCore()
     : databaseConnection(nullptr)
     , stockManager(nullptr)
     , productionManager(nullptr)
+    , shiftManager(nullptr)
     , settingsManager(nullptr)
     , authManager(nullptr)
 {
@@ -52,7 +54,9 @@ void EasyPOSCore::ensureDbConnection()
         productionManager = new ProductionManager(this);
         productionManager->setDatabaseConnection(databaseConnection);
         productionManager->setStockManager(stockManager);
-        qDebug() << "StockManager и ProductionManager созданы в EasyPOSCore";
+        shiftManager = new ShiftManager(this);
+        shiftManager->setDatabaseConnection(databaseConnection);
+        qDebug() << "StockManager, ProductionManager, ShiftManager созданы в EasyPOSCore";
     }
 }
 
@@ -174,6 +178,20 @@ SalesManager* EasyPOSCore::createSalesManager(QObject *parent)
     
     qDebug() << "SalesManager создан через фабричный метод";
     return salesManager;
+}
+
+ShiftManager* EasyPOSCore::createShiftManager(QObject *parent)
+{
+    if (!databaseConnection || !databaseConnection->isConnected()) {
+        qDebug() << "Не удалось создать ShiftManager: нет подключения к БД";
+        return nullptr;
+    }
+    if (shiftManager)
+        return shiftManager;
+    shiftManager = new ShiftManager(parent ? parent : this);
+    shiftManager->setDatabaseConnection(databaseConnection);
+    qDebug() << "ShiftManager создан через фабричный метод";
+    return shiftManager;
 }
 
 bool EasyPOSCore::isDatabaseConnected() const

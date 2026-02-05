@@ -13,6 +13,7 @@ class StockManager;
 class SalesManager;
 class ProductionManager;
 class SettingsManager;
+class ShiftManager;
 
 class EasyPOSCore : public QObject
 {
@@ -31,7 +32,8 @@ public:
     RoleManager* createRoleManager(QObject *parent = nullptr);
     StockManager* createStockManager(QObject *parent = nullptr);
     SalesManager* createSalesManager(QObject *parent = nullptr);
-    
+    ShiftManager* createShiftManager(QObject *parent = nullptr);
+
     // Получение менеджера настроек (создаётся при первом вызове createSettingsManager)
     SettingsManager* getSettingsManager() const { return settingsManager; }
     
@@ -40,6 +42,7 @@ public:
 
     // Получение единственного экземпляра ProductionManager
     ProductionManager* getProductionManager() const { return productionManager; }
+    ShiftManager* getShiftManager() const { return shiftManager; }
 
     /**
      * @brief Инициализация подключения к БД (вызывать после первоначальной настройки)
@@ -75,6 +78,7 @@ private:
     DatabaseConnection* databaseConnection;
     StockManager* stockManager;
     ProductionManager* productionManager;
+    ShiftManager* shiftManager;
     SettingsManager* settingsManager;
     AuthManager* authManager;
     UserSession m_currentSession;
