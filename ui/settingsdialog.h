@@ -21,7 +21,9 @@ private slots:
     void onRolesEditClicked();
     void onRolesDeleteClicked();
     void onUsersAddClicked();
+    void onUsersEditClicked();
     void onUsersDeleteClicked();
+    void onUsersRestoreClicked();
     void accept() override;
 
 private:

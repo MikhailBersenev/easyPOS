@@ -17,7 +17,9 @@ AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore
     , m_authManager(nullptr)
 {
     ui->setupUi(this);
-    
+    connect(ui->badgeLineEdit, &QLineEdit::returnPressed, this, &AuthWindow::on_badgeReturnPressed);
+    connect(ui->badgeSignInButton, &QPushButton::clicked, this, &AuthWindow::on_badgeReturnPressed);
+
     // Создаем AuthManager через фабричный метод
     if (m_easyPOSCore) {
         m_authManager = m_easyPOSCore->createAuthManager(this);
@@ -57,6 +59,32 @@ AuthWindow::~AuthWindow()
 {
     // AuthManager будет удален автоматически, так как this является его родителем
     delete ui;
+}
+
+void AuthWindow::on_badgeReturnPressed()
+{
+    const QString code = ui->badgeLineEdit->text().trimmed();
+    ui->badgeLineEdit->clear();
+    if (code.isEmpty()) return;
+    if (!m_authManager) {
+        QMessageBox::critical(this, tr("Ошибка"), tr("Менеджер авторизации не инициализирован"));
+        return;
+    }
+    AuthResult result = m_authManager->authenticateByBadgeBarcode(code);
+    if (result.success) {
+        if (m_easyPOSCore) {
+            m_easyPOSCore->setCurrentSession(result.session);
+            if (auto *sm = m_easyPOSCore->getSettingsManager()) {
+                sm->setValue(SettingsKeys::SessionToken, result.session.sessionToken);
+                sm->sync();
+            }
+        }
+        MainWindow *mw = WindowCreator::Create<MainWindow>(this, m_easyPOSCore);
+        if (mw) hide();
+        else QMessageBox::critical(this, tr("Ошибка"), tr("Не удалось создать главное окно."));
+    } else {
+        QMessageBox::warning(this, tr("Вход по бейджу"), result.message);
+    }
 }
 
 void AuthWindow::on_signInButton_clicked()

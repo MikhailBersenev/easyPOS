@@ -25,7 +25,10 @@ public:
     
     // Авторизация пользователя
     AuthResult authenticate(const QString &username, const QString &password);
-    
+
+    /** Авторизация по штрихкоду бейджа сотрудника (без пароля) */
+    AuthResult authenticateByBadgeBarcode(const QString &badgeBarcode);
+
     // Выход из системы
     bool logout(int userId);
     

@@ -224,6 +224,67 @@ AuthResult AuthManager::authenticate(const QString &username, const QString &pas
     return result;
 }
 
+AuthResult AuthManager::authenticateByBadgeBarcode(const QString &badgeBarcode)
+{
+    AuthResult result;
+    const QString code = badgeBarcode.trimmed();
+    if (code.isEmpty()) {
+        result.message = "Штрихкод бейджа не указан";
+        return result;
+    }
+
+    if (!m_dbConnection || !m_dbConnection->isConnected()) {
+        result.message = "Нет подключения к базе данных";
+        m_lastError = QSqlError("No database connection", result.message, QSqlError::ConnectionError);
+        result.error = m_lastError;
+        return result;
+    }
+
+    QSqlDatabase db = m_dbConnection->getDatabase();
+    QSqlQuery q(db);
+    q.prepare(QStringLiteral(
+        "SELECT e.userid, u.name, u.roleid FROM employees e "
+        "JOIN users u ON u.id = e.userid AND (u.isdeleted IS NULL OR u.isdeleted = false) "
+        "WHERE e.badgecode = :code AND (e.isdeleted IS NULL OR e.isdeleted = false)"));
+    q.bindValue(QStringLiteral(":code"), code);
+    if (!q.exec()) {
+        m_lastError = q.lastError();
+        result.message = "Ошибка при поиске сотрудника: " + m_lastError.text();
+        result.error = m_lastError;
+        return result;
+    }
+    if (!q.next()) {
+        result.message = "Сотрудник с таким штрихкодом бейджа не найден или не привязан к пользователю";
+        return result;
+    }
+
+    const int userId = q.value(0).toInt();
+    const QString username = q.value(1).toString();
+    const int roleId = q.value(2).toInt();
+    if (userId <= 0 || username.isEmpty()) {
+        result.message = "Некорректные данные пользователя для сотрудника";
+        return result;
+    }
+
+    Role role = loadUserRole(roleId);
+    if (role.id == 0) {
+        result.message = "Роль пользователя не найдена";
+        return result;
+    }
+
+    result.session = createSession(userId, username, role);
+    m_activeSessions[userId] = result.session;
+    if (!saveSessionToDb(result.session)) {
+        result.message = "Ошибка сохранения сессии";
+        return result;
+    }
+
+    result.success = true;
+    result.message = "Вход по бейджу выполнен";
+    emit userAuthenticated(userId, username);
+    return result;
+}
+
 bool AuthManager::logout(int userId)
 {
     if (m_activeSessions.contains(userId)) {

@@ -190,17 +190,28 @@
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="usersLabel">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Пользователи</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="usersHeaderLayout">
+         <item>
+          <widget class="QLabel" name="usersLabel">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Пользователи</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showDeletedUsersCheckBox">
+           <property name="text">
+            <string>Показать удалённых</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QTableWidget" name="usersTable">
@@ -226,6 +237,11 @@
            <string>Роль</string>
           </property>
          </column>
+         <column>
+          <property name="text">
+           <string>Бейдж</string>
+          </property>
+         </column>
         </widget>
        </item>
        <item>
@@ -238,9 +254,26 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="usersEditBtn">
+           <property name="text">
+            <string>Изменить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="usersDeleteBtn">
            <property name="text">
             <string>Удалить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="usersRestoreBtn">
+           <property name="text">
+            <string>Восстановить</string>
+           </property>
+           <property name="toolTip">
+            <string>Показать удалённых и восстановить выбранного</string>
            </property>
           </widget>
          </item>

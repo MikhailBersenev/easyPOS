@@ -31,12 +31,16 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     loadUsersTable();
     ui->rolesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->usersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->usersTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
     connect(ui->dbSettingsButton, &QPushButton::clicked, this, &SettingsDialog::onDbSettingsClicked);
     connect(ui->rolesAddBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesAddClicked);
     connect(ui->rolesEditBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesEditClicked);
     connect(ui->rolesDeleteBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesDeleteClicked);
     connect(ui->usersAddBtn, &QPushButton::clicked, this, &SettingsDialog::onUsersAddClicked);
+    connect(ui->usersEditBtn, &QPushButton::clicked, this, &SettingsDialog::onUsersEditClicked);
     connect(ui->usersDeleteBtn, &QPushButton::clicked, this, &SettingsDialog::onUsersDeleteClicked);
+    connect(ui->usersRestoreBtn, &QPushButton::clicked, this, &SettingsDialog::onUsersRestoreClicked);
+    connect(ui->showDeletedUsersCheckBox, &QCheckBox::toggled, this, [this]() { loadUsersTable(); });
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &SettingsDialog::accept);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
@@ -98,13 +102,19 @@ void SettingsDialog::loadUsersTable()
     ui->usersTable->setRowCount(0);
     if (!m_accountManager || !m_core->getDatabaseConnection() || !m_core->getDatabaseConnection()->isConnected())
         return;
-    const QList<User> users = m_accountManager->getAllUsers(false);
+    const bool includeDeleted = ui->showDeletedUsersCheckBox->isChecked();
+    const QList<User> users = m_accountManager->getAllUsers(includeDeleted);
     for (const User &u : users) {
         const int row = ui->usersTable->rowCount();
         ui->usersTable->insertRow(row);
-        ui->usersTable->setItem(row, 0, new QTableWidgetItem(u.name));
+        QString nameDisplay = u.name;
+        if (u.isDeleted) nameDisplay += tr(" (удалён)");
+        ui->usersTable->setItem(row, 0, new QTableWidgetItem(nameDisplay));
         ui->usersTable->setItem(row, 1, new QTableWidgetItem(u.role.name));
+        const QString badge = m_accountManager->getEmployeeBadgeCode(u.id);
+        ui->usersTable->setItem(row, 2, new QTableWidgetItem(badge));
         ui->usersTable->item(row, 0)->setData(Qt::UserRole, u.id);
+        ui->usersTable->item(row, 0)->setData(Qt::UserRole + 1, u.isDeleted);
     }
 }
 
@@ -245,6 +255,74 @@ void SettingsDialog::onUsersAddClicked()
     }
 }
 
+void SettingsDialog::onUsersEditClicked()
+{
+    if (!m_accountManager || !m_roleManager) return;
+    const int row = ui->usersTable->currentRow();
+    if (row < 0) {
+        QMessageBox::information(this, tr("Пользователи"), tr("Выберите пользователя для редактирования."));
+        return;
+    }
+    QTableWidgetItem *first = ui->usersTable->item(row, 0);
+    if (!first) return;
+    const int userId = first->data(Qt::UserRole).toInt();
+    if (first->data(Qt::UserRole + 1).toBool()) {
+        QMessageBox::information(this, tr("Пользователи"), tr("Сначала восстановите удалённого пользователя."));
+        return;
+    }
+    User u = m_accountManager->getUser(userId, false);
+    if (u.id == 0) return;
+    const QList<Role> roles = m_roleManager->getAllRoles(false);
+    if (roles.isEmpty()) return;
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Изменить пользователя"));
+    auto *nameEdit = new QLineEdit(&dlg);
+    nameEdit->setReadOnly(true);
+    nameEdit->setText(u.name);
+    auto *roleCombo = new QComboBox(&dlg);
+    int roleIndex = 0;
+    for (int i = 0; i < roles.size(); ++i) {
+        roleCombo->addItem(roles[i].name, roles[i].id);
+        if (roles[i].id == u.role.id) roleIndex = i;
+    }
+    roleCombo->setCurrentIndex(roleIndex);
+    auto *passwordEdit = new QLineEdit(&dlg);
+    passwordEdit->setEchoMode(QLineEdit::Password);
+    passwordEdit->setPlaceholderText(tr("Оставить без изменений"));
+    auto *badgeEdit = new QLineEdit(&dlg);
+    badgeEdit->setText(m_accountManager->getEmployeeBadgeCode(userId));
+    badgeEdit->setPlaceholderText(tr("Штрихкод бейджа для входа"));
+    auto *form = new QFormLayout(&dlg);
+    form->addRow(tr("Имя пользователя:"), nameEdit);
+    form->addRow(tr("Роль:"), roleCombo);
+    form->addRow(tr("Новый пароль:"), passwordEdit);
+    form->addRow(tr("Штрихкод бейджа:"), badgeEdit);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+    form->addRow(buttons);
+    if (dlg.exec() != QDialog::Accepted) return;
+    UserOperationResult r = m_accountManager->updateUserRole(userId, roleCombo->currentData().toInt());
+    if (!r.success) {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+        return;
+    }
+    if (!passwordEdit->text().isEmpty()) {
+        r = m_accountManager->updateUserPassword(userId, passwordEdit->text());
+        if (!r.success) {
+            QMessageBox::warning(this, tr("Ошибка"), r.message);
+            return;
+        }
+    }
+    r = m_accountManager->setEmployeeBadgeCode(userId, badgeEdit->text().trimmed());
+    if (!r.success) {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+        return;
+    }
+    QMessageBox::information(this, tr("Пользователи"), tr("Данные пользователя обновлены."));
+    loadUsersTable();
+}
+
 void SettingsDialog::onUsersDeleteClicked()
 {
     if (!m_accountManager) return;
@@ -255,13 +333,42 @@ void SettingsDialog::onUsersDeleteClicked()
     }
     QTableWidgetItem *first = ui->usersTable->item(row, 0);
     if (!first) return;
+    if (first->data(Qt::UserRole + 1).toBool()) {
+        QMessageBox::information(this, tr("Пользователи"), tr("Пользователь уже удалён. Используйте «Восстановить»."));
+        return;
+    }
     const int userId = first->data(Qt::UserRole).toInt();
     QString name = first->text();
+    if (name.endsWith(tr(" (удалён)"))) name.chop(tr(" (удалён)").length());
     if (QMessageBox::question(this, tr("Удаление пользователя"),
             tr("Пометить пользователя «%1» как удалённого?").arg(name),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
         return;
     UserOperationResult r = m_accountManager->deleteUser(userId);
+    if (r.success) {
+        QMessageBox::information(this, tr("Пользователи"), r.message);
+        loadUsersTable();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+    }
+}
+
+void SettingsDialog::onUsersRestoreClicked()
+{
+    if (!m_accountManager) return;
+    const int row = ui->usersTable->currentRow();
+    if (row < 0) {
+        QMessageBox::information(this, tr("Пользователи"), tr("Выберите удалённого пользователя для восстановления."));
+        return;
+    }
+    QTableWidgetItem *first = ui->usersTable->item(row, 0);
+    if (!first) return;
+    if (!first->data(Qt::UserRole + 1).toBool()) {
+        QMessageBox::information(this, tr("Пользователи"), tr("Включите «Показать удалённых» и выберите пользователя с пометкой «(удалён)»."));
+        return;
+    }
+    const int userId = first->data(Qt::UserRole).toInt();
+    UserOperationResult r = m_accountManager->restoreUser(userId);
     if (r.success) {
         QMessageBox::information(this, tr("Пользователи"), r.message);
         loadUsersTable();

@@ -50,7 +50,14 @@ public:
     
     // Получение всех пользователей
     QList<User> getAllUsers(bool includeDeleted = false);
-    
+
+    // Редактирование пользователя
+    UserOperationResult updateUserRole(int userId, int roleId);
+    UserOperationResult updateUserPassword(int userId, const QString &newPassword);
+    /** Штрихкод бейджа сотрудника, привязанного к пользователю (из employees.badgecode) */
+    QString getEmployeeBadgeCode(int userId) const;
+    UserOperationResult setEmployeeBadgeCode(int userId, const QString &badgeCode);
+
     // Получение последней ошибки
     QSqlError lastError() const;
 

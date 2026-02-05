@@ -4,6 +4,7 @@
 #include <QSqlQuery>
 #include <QSqlDatabase>
 #include <QList>
+#include <QVariant>
 
 AccountManager::AccountManager(QObject *parent)
     : QObject{parent}
@@ -394,6 +395,100 @@ QList<User> AccountManager::getAllUsers(bool includeDeleted)
     }
     
     return users;
+}
+
+UserOperationResult AccountManager::updateUserRole(int userId, int roleId)
+{
+    UserOperationResult result;
+    if (!m_dbConnection || !m_dbConnection->isConnected()) {
+        result.message = "Нет подключения к базе данных";
+        result.error = m_lastError;
+        return result;
+    }
+    if (!roleExists(roleId)) {
+        result.message = tr("Роль не найдена");
+        return result;
+    }
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral("UPDATE users SET roleid = :roleid WHERE id = :id AND (isdeleted IS NULL OR isdeleted = false)"));
+    q.bindValue(QStringLiteral(":roleid"), roleId);
+    q.bindValue(QStringLiteral(":id"), userId);
+    if (!q.exec()) {
+        m_lastError = q.lastError();
+        result.message = tr("Ошибка обновления роли: %1").arg(m_lastError.text());
+        result.error = m_lastError;
+        return result;
+    }
+    result.success = true;
+    result.userId = userId;
+    result.message = tr("Роль обновлена");
+    return result;
+}
+
+UserOperationResult AccountManager::updateUserPassword(int userId, const QString &newPassword)
+{
+    UserOperationResult result;
+    if (!m_dbConnection || !m_dbConnection->isConnected()) {
+        result.message = "Нет подключения к базе данных";
+        result.error = m_lastError;
+        return result;
+    }
+    if (newPassword.isEmpty()) {
+        result.success = true;
+        result.userId = userId;
+        return result;
+    }
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral("UPDATE users SET password = :pwd WHERE id = :id"));
+    q.bindValue(QStringLiteral(":pwd"), hashPassword(newPassword));
+    q.bindValue(QStringLiteral(":id"), userId);
+    if (!q.exec()) {
+        m_lastError = q.lastError();
+        result.message = tr("Ошибка смены пароля: %1").arg(m_lastError.text());
+        result.error = m_lastError;
+        return result;
+    }
+    result.success = true;
+    result.userId = userId;
+    result.message = tr("Пароль обновлён");
+    return result;
+}
+
+QString AccountManager::getEmployeeBadgeCode(int userId) const
+{
+    if (!m_dbConnection || !m_dbConnection->isConnected() || userId <= 0)
+        return QString();
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral("SELECT badgecode FROM employees WHERE userid = :uid AND (isdeleted IS NULL OR isdeleted = false) LIMIT 1"));
+    q.bindValue(QStringLiteral(":uid"), userId);
+    if (!q.exec() || !q.next())
+        return QString();
+    return q.value(0).toString();
+}
+
+UserOperationResult AccountManager::setEmployeeBadgeCode(int userId, const QString &badgeCode)
+{
+    UserOperationResult result;
+    if (!m_dbConnection || !m_dbConnection->isConnected()) {
+        result.message = "Нет подключения к базе данных";
+        result.error = m_lastError;
+        return result;
+    }
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral(
+        "UPDATE employees SET badgecode = :code, updatedate = CURRENT_DATE WHERE userid = :uid"));
+    q.bindValue(QStringLiteral(":code"), badgeCode.trimmed().isEmpty() ? QVariant() : badgeCode.trimmed());
+    q.bindValue(QStringLiteral(":uid"), userId);
+    if (!q.exec()) {
+        m_lastError = q.lastError();
+        result.message = tr("Ошибка сохранения штрихкода бейджа: %1").arg(m_lastError.text());
+        result.error = m_lastError;
+        return result;
+    }
+    result.success = true;
+    result.userId = userId;
+    result.message = tr("Штрихкод бейджа сохранён");
+    return result;
 }
 
 QSqlError AccountManager::lastError() const

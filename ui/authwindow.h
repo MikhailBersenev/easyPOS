@@ -33,10 +33,9 @@ public:
     bool isSessionRestored() const { return m_sessionRestored; }
 
 private slots:
+    void on_badgeReturnPressed();
     void on_signInButton_clicked();
-
     void on_signUpButton_clicked();
-
     void on_showPasswordCheckBox_checkStateChanged(const Qt::CheckState &arg1);
 
 private:
