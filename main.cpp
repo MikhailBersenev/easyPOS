@@ -80,18 +80,26 @@ int main(int argc, char *argv[])
     applyLanguage(a);
 
     std::shared_ptr<EasyPOSCore> easyPOSCore = std::make_shared<EasyPOSCore>();
+    qInfo() << "EasyPOSCore created";
 
     // Проверяем, нужна ли первоначальная настройка
     if (SetupWizard::setupRequired(easyPOSCore)) {
+        qInfo() << "Setup required, showing SetupWizard";
         SetupWizard wizard(easyPOSCore);
-        if (wizard.exec() != QDialog::Accepted)
+        if (wizard.exec() != QDialog::Accepted) {
+            qInfo() << "SetupWizard cancelled, exiting";
             return 0;  // Пользователь закрыл мастер — выходим
+        }
+        qInfo() << "SetupWizard completed";
     }
 
     easyPOSCore->ensureDbConnection();
+    qInfo() << "DB connection ensured";
 
     AuthWindow authWindow(nullptr, easyPOSCore);
     if (!authWindow.isSessionRestored())
         authWindow.show();
+    else
+        qInfo() << "Session restored, main window shown";
     return a.exec();
 }

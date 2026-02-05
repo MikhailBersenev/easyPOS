@@ -1,6 +1,7 @@
 #include "referencedialog.h"
 #include "ui_referencedialog.h"
 #include "../easyposcore.h"
+#include "../logging/logmanager.h"
 #include <QMessageBox>
 #include <QHeaderView>
 #include <QTableWidgetItem>
@@ -14,6 +15,7 @@ ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> c
     , ui(new Ui::ReferenceDialog)
     , m_core(core)
 {
+    qDebug() << "ReferenceDialog::ReferenceDialog" << "title=" << title;
     ui->setupUi(this);
     setWindowTitle(title);
     
@@ -41,11 +43,13 @@ ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> c
 
 ReferenceDialog::~ReferenceDialog()
 {
+    qDebug() << "ReferenceDialog::~ReferenceDialog";
     delete ui;
 }
 
 void ReferenceDialog::setupShortcuts()
 {
+    qDebug() << "ReferenceDialog::setupShortcuts";
     // Insert - добавить
     QShortcut *insertShortcut = new QShortcut(QKeySequence(Qt::Key_Insert), this);
     connect(insertShortcut, &QShortcut::activated, this, &ReferenceDialog::on_addButton_clicked);
@@ -69,17 +73,21 @@ void ReferenceDialog::setupShortcuts()
 
 void ReferenceDialog::setupColumns(const QStringList &columns, const QList<int> &widths)
 {
+    qDebug() << "ReferenceDialog::setupColumns" << "cols=" << columns.size();
     ui->tableWidget->setColumnCount(columns.size());
     ui->tableWidget->setHorizontalHeaderLabels(columns);
     
     if (!widths.isEmpty()) {
+        qDebug() << "ReferenceDialog::setupColumns: branch set_widths";
         for (int i = 0; i < widths.size() && i < columns.size(); ++i) {
             ui->tableWidget->setColumnWidth(i, widths[i]);
         }
     }
     // Скрываем колонку ID (индекс 0)
-    if (columns.size() > 0)
+    if (columns.size() > 0) {
+        qDebug() << "ReferenceDialog::setupColumns: branch hide_id_column";
         ui->tableWidget->setColumnHidden(0, true);
+    }
 }
 
 int ReferenceDialog::currentRow() const
@@ -135,6 +143,7 @@ bool ReferenceDialog::askConfirmation(const QString &message)
 
 void ReferenceDialog::updateRecordCount()
 {
+    qDebug() << "ReferenceDialog::updateRecordCount";
     const int total = ui->tableWidget->rowCount();
     int visible = 0;
     for (int i = 0; i < total; ++i) {
@@ -142,22 +151,28 @@ void ReferenceDialog::updateRecordCount()
             ++visible;
     }
     
-    if (visible == total)
+    if (visible == total) {
+        qDebug() << "ReferenceDialog::updateRecordCount: branch all_visible";
         ui->statusLabel->setText(tr("Записей: %1").arg(total));
-    else
+    } else {
+        qDebug() << "ReferenceDialog::updateRecordCount: branch filtered" << visible << total;
         ui->statusLabel->setText(tr("Записей: %1 из %2").arg(visible).arg(total));
+    }
 }
 
 void ReferenceDialog::on_addButton_clicked()
 {
-    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
+    qDebug() << "ReferenceDialog::on_addButton_clicked";
+    if (!m_core || !m_core->ensureSessionValid()) { qDebug() << "ReferenceDialog::on_addButton_clicked: branch session_invalid"; reject(); return; }
     addRecord();
 }
 
 void ReferenceDialog::on_editButton_clicked()
 {
-    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
+    qDebug() << "ReferenceDialog::on_editButton_clicked";
+    if (!m_core || !m_core->ensureSessionValid()) { qDebug() << "ReferenceDialog::on_editButton_clicked: branch session_invalid"; reject(); return; }
     if (currentRow() < 0) {
+        qDebug() << "ReferenceDialog::on_editButton_clicked: branch no_selection";
         showWarning(tr("Выберите запись для редактирования."));
         return;
     }
@@ -166,8 +181,10 @@ void ReferenceDialog::on_editButton_clicked()
 
 void ReferenceDialog::on_deleteButton_clicked()
 {
-    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
+    qDebug() << "ReferenceDialog::on_deleteButton_clicked";
+    if (!m_core || !m_core->ensureSessionValid()) { qDebug() << "ReferenceDialog::on_deleteButton_clicked: branch session_invalid"; reject(); return; }
     if (currentRow() < 0) {
+        qDebug() << "ReferenceDialog::on_deleteButton_clicked: branch no_selection";
         showWarning(tr("Выберите запись для удаления."));
         return;
     }
@@ -176,12 +193,14 @@ void ReferenceDialog::on_deleteButton_clicked()
 
 void ReferenceDialog::on_closeButton_clicked()
 {
+    qDebug() << "ReferenceDialog::on_closeButton_clicked";
     accept();
 }
 
 void ReferenceDialog::on_refreshButton_clicked()
 {
-    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
+    qDebug() << "ReferenceDialog::on_refreshButton_clicked";
+    if (!m_core || !m_core->ensureSessionValid()) { qDebug() << "ReferenceDialog::on_refreshButton_clicked: branch session_invalid"; reject(); return; }
     loadTable(false);  // false = не показывать удалённые
 }
 
@@ -206,19 +225,26 @@ void ReferenceDialog::on_searchEdit_returnPressed()
 void ReferenceDialog::on_tableWidget_doubleClicked(const QModelIndex &index)
 {
     Q_UNUSED(index);
-    if (!m_core || !m_core->ensureSessionValid()) { reject(); return; }
-    if (currentRow() >= 0)
+    qDebug() << "ReferenceDialog::on_tableWidget_doubleClicked";
+    if (!m_core || !m_core->ensureSessionValid()) { qDebug() << "ReferenceDialog::on_tableWidget_doubleClicked: branch session_invalid"; reject(); return; }
+    if (currentRow() >= 0) {
+        qDebug() << "ReferenceDialog::on_tableWidget_doubleClicked: branch edit";
         editRecord();
+    } else {
+        qDebug() << "ReferenceDialog::on_tableWidget_doubleClicked: branch no_row";
+    }
 }
 
 void ReferenceDialog::on_tableWidget_customContextMenuRequested(const QPoint &pos)
 {
+    qDebug() << "ReferenceDialog::on_tableWidget_customContextMenuRequested";
     QMenu menu(this);
     
     QAction *addAction = menu.addAction(tr("Добавить"));
     connect(addAction, &QAction::triggered, this, &ReferenceDialog::on_addButton_clicked);
     
     if (currentRow() >= 0) {
+        qDebug() << "ReferenceDialog::on_tableWidget_customContextMenuRequested: branch has_selection";
         QAction *editAction = menu.addAction(tr("Изменить"));
         connect(editAction, &QAction::triggered, this, &ReferenceDialog::on_editButton_clicked);
         
@@ -226,6 +252,8 @@ void ReferenceDialog::on_tableWidget_customContextMenuRequested(const QPoint &po
         connect(deleteAction, &QAction::triggered, this, &ReferenceDialog::on_deleteButton_clicked);
         
         menu.addSeparator();
+    } else {
+        qDebug() << "ReferenceDialog::on_tableWidget_customContextMenuRequested: branch no_selection";
     }
     
     QAction *refreshAction = menu.addAction(tr("Обновить"));
@@ -236,6 +264,7 @@ void ReferenceDialog::on_tableWidget_customContextMenuRequested(const QPoint &po
 
 void ReferenceDialog::applyFilter(const QString &searchText)
 {
+    qDebug() << "ReferenceDialog::applyFilter" << "text.length=" << searchText.length();
     const QString lowerSearch = searchText.toLower();
     
     for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {

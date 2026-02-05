@@ -23,7 +23,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="generalTab">
       <attribute name="title">
@@ -48,26 +48,63 @@
             <property name="text">
              <string>По умолчанию (система)</string>
             </property>
-            <property name="userData">
-             <string></string>
-            </property>
            </item>
            <item>
             <property name="text">
              <string>English</string>
-            </property>
-            <property name="userData">
-             <string>en</string>
             </property>
            </item>
            <item>
             <property name="text">
              <string>Русский</string>
             </property>
-            <property name="userData">
-             <string>ru</string>
-            </property>
            </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="logPathFormLayout">
+         <item row="0" column="1">
+          <widget class="QWidget" name="logPathWidget" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QHBoxLayout" name="logPathLayout">
+            <item>
+             <widget class="QLineEdit" name="logPathEdit">
+              <property name="toolTip">
+               <string>Каталог для файлов логов. Имя файла: easypos_дата_время_хост.txt</string>
+              </property>
+              <property name="placeholderText">
+               <string>по умолчанию</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="logPathBrowseButton">
+              <property name="toolTip">
+               <string>Выбрать каталог для сохранения логов</string>
+              </property>
+              <property name="text">
+               <string>Обзор…</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="logPathLabel">
+           <property name="toolTip">
+            <string>Пустой = по умолчанию. При каждом запуске создаётся новый файл (дата, время, хост сервера). Применится после перезапуска.</string>
+           </property>
+           <property name="text">
+            <string>Каталог логов:</string>
+           </property>
           </widget>
          </item>
         </layout>
@@ -311,11 +348,11 @@
          </item>
          <item>
           <widget class="QPushButton" name="usersRestoreBtn">
-           <property name="text">
-            <string>Восстановить</string>
-           </property>
            <property name="toolTip">
             <string>Показать удалённых и восстановить выбранного</string>
+           </property>
+           <property name="text">
+            <string>Восстановить</string>
            </property>
           </widget>
          </item>

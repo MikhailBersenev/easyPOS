@@ -1,6 +1,7 @@
 #include "productionmanager.h"
 #include "../sales/stockmanager.h"
 #include "../sales/structures.h"
+#include "../logging/logmanager.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDate>
@@ -9,19 +10,23 @@
 ProductionManager::ProductionManager(QObject *parent)
     : QObject(parent)
 {
+    qDebug() << "ProductionManager::ProductionManager";
 }
 
 ProductionManager::~ProductionManager()
 {
+    qDebug() << "ProductionManager::~ProductionManager";
 }
 
 void ProductionManager::setDatabaseConnection(DatabaseConnection *dbConnection)
 {
+    qDebug() << "ProductionManager::setDatabaseConnection" << (dbConnection ? "set" : "null");
     m_dbConnection = dbConnection;
 }
 
 void ProductionManager::setStockManager(StockManager *stockManager)
 {
+    qDebug() << "ProductionManager::setStockManager" << (stockManager ? "set" : "null");
     m_stockManager = stockManager;
 }
 
@@ -32,22 +37,29 @@ bool ProductionManager::dbOk() const
 
 QList<ProductionRecipe> ProductionManager::getRecipes(bool includeDeleted)
 {
+    qDebug() << "ProductionManager::getRecipes" << "includeDeleted=" << includeDeleted;
     QList<ProductionRecipe> list;
-    if (!dbOk())
+    if (!dbOk()) {
+        qDebug() << "ProductionManager::getRecipes: branch no_db";
         return list;
+    }
 
     QString sql = QStringLiteral(
         "SELECT r.id, r.name, r.outputgoodid, g.name AS output_good_name, "
         "r.outputquantity, r.updatedate, r.employeeid, r.isdeleted "
         "FROM productionrecipes r "
         "JOIN goods g ON g.id = r.outputgoodid ");
-    if (!includeDeleted)
+    if (!includeDeleted) {
+        qDebug() << "ProductionManager::getRecipes: branch exclude_deleted";
         sql += QStringLiteral("WHERE (r.isdeleted IS NULL OR r.isdeleted = false) ");
+    }
     sql += QStringLiteral("ORDER BY r.name");
 
     QSqlQuery q(m_dbConnection->getDatabase());
-    if (!q.exec(sql))
+    if (!q.exec(sql)) {
+        qDebug() << "ProductionManager::getRecipes: branch query_failed" << q.lastError().text();
         return list;
+    }
 
     while (q.next()) {
         ProductionRecipe r;
@@ -66,9 +78,12 @@ QList<ProductionRecipe> ProductionManager::getRecipes(bool includeDeleted)
 
 ProductionRecipe ProductionManager::getRecipe(qint64 recipeId)
 {
+    qDebug() << "ProductionManager::getRecipe" << "recipeId=" << recipeId;
     ProductionRecipe r;
-    if (!dbOk() || recipeId <= 0)
+    if (!dbOk() || recipeId <= 0) {
+        qDebug() << "ProductionManager::getRecipe: branch no_db_or_bad_id";
         return r;
+    }
 
     QSqlQuery q(m_dbConnection->getDatabase());
     q.prepare(QStringLiteral(
@@ -76,8 +91,10 @@ ProductionRecipe ProductionManager::getRecipe(qint64 recipeId)
         "r.updatedate, r.employeeid, r.isdeleted "
         "FROM productionrecipes r JOIN goods g ON g.id = r.outputgoodid WHERE r.id = :id"));
     q.bindValue(QStringLiteral(":id"), recipeId);
-    if (!q.exec() || !q.next())
+    if (!q.exec() || !q.next()) {
+        qDebug() << "ProductionManager::getRecipe: branch no_row" << q.lastError().text();
         return r;
+    }
 
     r.id = q.value(0).toLongLong();
     r.name = q.value(1).toString();
@@ -93,15 +110,19 @@ ProductionRecipe ProductionManager::getRecipe(qint64 recipeId)
 qint64 ProductionManager::createRecipe(const QString &name, qint64 outputGoodId, double outputQuantity,
                                        qint64 employeeId, QString *outError)
 {
+    qDebug() << "ProductionManager::createRecipe" << "name=" << name << "outputGoodId=" << outputGoodId;
     if (!dbOk()) {
+        qDebug() << "ProductionManager::createRecipe: branch no_db";
         if (outError) *outError = QStringLiteral("Нет подключения к БД");
         return 0;
     }
     if (name.trimmed().isEmpty()) {
+        qDebug() << "ProductionManager::createRecipe: branch empty_name";
         if (outError) *outError = QStringLiteral("Название рецепта не задано");
         return 0;
     }
     if (outputGoodId <= 0 || outputQuantity <= 0) {
+        qDebug() << "ProductionManager::createRecipe: branch bad_output";
         if (outError) *outError = QStringLiteral("Укажите товар на выходе и количество");
         return 0;
     }
@@ -116,11 +137,13 @@ qint64 ProductionManager::createRecipe(const QString &name, qint64 outputGoodId,
     q.bindValue(QStringLiteral(":updatedate"), QDate::currentDate());
     q.bindValue(QStringLiteral(":empid"), employeeId);
     if (!q.exec()) {
+        qDebug() << "ProductionManager::createRecipe: branch insert_failed" << q.lastError().text();
         m_lastError = q.lastError();
         if (outError) *outError = m_lastError.text();
         return 0;
     }
     if (q.next()) {
+        qDebug() << "ProductionManager::createRecipe: branch success";
         const qint64 newId = q.value(0).toLongLong();
         emit recipeAdded(newId);
         return newId;

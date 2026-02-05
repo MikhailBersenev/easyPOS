@@ -676,17 +676,20 @@ void MainWindow::on_payButton_clicked()
     const QList<CheckPaymentRow> payments = payDlg.getPayments();
     SaleOperationResult payResult = m_salesManager->recordCheckPayments(m_currentCheckId, payments);
     if (!payResult.success) {
+        qWarning() << "MainWindow: recordCheckPayments failed, checkId=" << m_currentCheckId << payResult.message;
         QMessageBox::warning(this, tr("Ошибка"), payResult.message);
         return;
     }
 
     SaleOperationResult result = m_salesManager->finalizeCheck(m_currentCheckId);
     if (!result.success) {
+        qWarning() << "MainWindow: finalizeCheck failed, checkId=" << m_currentCheckId << result.message;
         QMessageBox::warning(this, tr("Ошибка"),
             tr("Не удалось финализировать чек: %1").arg(result.message));
         return;
     }
 
+    qInfo() << "MainWindow: check closed, checkId=" << m_currentCheckId << "toPay=" << toPay;
     const qint64 closedCheckId = m_currentCheckId;
     m_currentCheckId = 0;
     updateCheckNumberLabel();
@@ -770,6 +773,7 @@ void MainWindow::on_actionSettings_triggered()
         QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав. Только администратор."));
         return;
     }
+    qInfo() << "MainWindow: opening Settings dialog";
     SettingsDialog dlg(this, m_core);
     dlg.exec();
     if (auto *sm = m_core->getSettingsManager())
@@ -858,6 +862,7 @@ void MainWindow::on_actionLogout_triggered()
     if (QMessageBox::question(this, tr("Выход"), tr("Выйти из учётной записи?"),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
         return;
+    qInfo() << "MainWindow: user requested logout";
     if (m_core)
         m_core->logout();
 }

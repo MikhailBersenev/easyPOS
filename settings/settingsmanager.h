@@ -93,6 +93,9 @@ namespace SettingsKeys {
     // Печать чека после оплаты
     constexpr const char *PrintAfterPay = "pos/printAfterPay";
 
+    // Путь к файлу логов (пустой = по умолчанию, применится после перезапуска)
+    constexpr const char *LogPath = "logging/path";
+
     // Геометрия главного окна
     constexpr const char *MainWindowGeometry = "mainwindow/geometry";
 }

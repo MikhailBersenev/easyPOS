@@ -3,6 +3,7 @@
 #include "dbsettingsdialog.h"
 #include "../easyposcore.h"
 #include "../settings/settingsmanager.h"
+#include "../logging/logmanager.h"
 #include "../RBAC/accountmanager.h"
 #include "../RBAC/rolemanager.h"
 #include "../RBAC/structures.h"
@@ -15,6 +16,7 @@
 #include <QComboBox>
 #include <QCheckBox>
 #include <QTableWidgetItem>
+#include <QFileDialog>
 
 SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : QDialog(parent)
@@ -39,6 +41,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     ui->usersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->usersTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
     connect(ui->dbSettingsButton, &QPushButton::clicked, this, &SettingsDialog::onDbSettingsClicked);
+    ui->logPathBrowseButton->setAutoDefault(false);
+    ui->logPathBrowseButton->setDefault(false);
     connect(ui->rolesAddBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesAddClicked);
     connect(ui->rolesEditBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesEditClicked);
     connect(ui->rolesDeleteBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesDeleteClicked);
@@ -65,6 +69,7 @@ void SettingsDialog::loadFromSettings()
     const int idx = ui->languageComboBox->findData(lang);
     ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
     ui->printAfterPayCheckBox->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
+    ui->logPathEdit->setText(sm->stringValue(SettingsKeys::LogPath, QString()));
     updateDbLabel();
 }
 
@@ -88,6 +93,25 @@ void SettingsDialog::onDbSettingsClicked()
     DbSettingsDialog dlg(this, m_core);
     if (dlg.exec() == QDialog::Accepted)
         updateDbLabel();
+}
+
+void SettingsDialog::on_logPathBrowseButton_clicked()
+{
+    QString current = ui->logPathEdit->text().trimmed();
+    if (!QDir(current).exists())
+        current = QDir::homePath();
+
+    QString dir = QFileDialog::getExistingDirectory(
+        this,
+        tr("Выбрать каталог логов"),
+        current,
+        QFileDialog::DontUseNativeDialog
+        );
+
+    if (!dir.isEmpty()) {
+        ui->logPathEdit->setText(QDir::toNativeSeparators(dir));
+        ui->logPathEdit->setFocus();
+    }
 }
 
 void SettingsDialog::loadRolesTable()
@@ -389,10 +413,20 @@ void SettingsDialog::onUsersRestoreClicked()
 void SettingsDialog::accept()
 {
     if (m_core && m_core->getSettingsManager()) {
+        auto *sm = m_core->getSettingsManager();
         QString lang = ui->languageComboBox->currentData().toString();
-        m_core->getSettingsManager()->setValue(SettingsKeys::Language, lang);
-        m_core->getSettingsManager()->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
-        m_core->getSettingsManager()->sync();
+        QString logPath = ui->logPathEdit->text().trimmed();
+        QString prevLogPath = sm->stringValue(SettingsKeys::LogPath, QString());
+        if (prevLogPath != logPath) {
+            qInfo() << "SettingsDialog: смена каталога логов:" << (prevLogPath.isEmpty() ? "по умолчанию" : prevLogPath)
+                    << "->" << (logPath.isEmpty() ? "по умолчанию" : logPath)
+                    << "(применится после перезапуска)";
+        }
+        sm->setValue(SettingsKeys::Language, lang);
+        sm->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
+        sm->setValue(SettingsKeys::LogPath, logPath);
+        sm->sync();
+        qInfo() << "SettingsDialog: settings saved (language=" << lang << "logPath=" << (logPath.isEmpty() ? "default" : logPath) << ")";
     }
     QDialog::accept();
 }

@@ -2,6 +2,7 @@
 #include "ui_dbsettingsdialog.h"
 #include "../easyposcore.h"
 #include "../settings/settingsmanager.h"
+#include "../logging/logmanager.h"
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
 #include <QMessageBox>
@@ -85,8 +86,10 @@ void DbSettingsDialog::on_testButton_clicked()
     DatabaseConnection conn;
     if (conn.connect(auth)) {
         conn.disconnect();
+        qInfo() << "DbSettingsDialog: test connection OK," << auth.host << auth.database;
         setResult(tr("Подключение успешно."), true);
     } else {
+        qWarning() << "DbSettingsDialog: test connection failed," << conn.lastError().text();
         setResult(tr("Ошибка: %1").arg(conn.lastError().text()), false);
     }
 }
@@ -108,6 +111,7 @@ void DbSettingsDialog::on_buttonBox_accepted()
     }
 
     saveToSettings();
+    qInfo() << "DbSettingsDialog: DB settings saved, host=" << auth.host << "db=" << auth.database;
     QMessageBox::information(this, windowTitle(),
         tr("Настройки сохранены.\nДля применения нового подключения перезапустите приложение."));
     accept();

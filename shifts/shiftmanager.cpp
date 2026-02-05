@@ -7,11 +7,13 @@ ShiftManager::ShiftManager(QObject *parent) : QObject(parent), m_db(nullptr) {}
 
 void ShiftManager::setDatabaseConnection(DatabaseConnection *conn)
 {
+    qDebug() << "ShiftManager::setDatabaseConnection" << (conn ? "set" : "null");
     m_db = conn;
 }
 
 bool ShiftManager::startShift(qint64 employeeId, const QString &comment)
 {
+    qDebug() << "ShiftManager::startShift" << "employeeId=" << employeeId;
     if (!m_db || !m_db->isConnected() || employeeId <= 0) {
         LOG_WARNING() << "ShiftManager::startShift: нет БД или employeeId" << employeeId;
         return false;
@@ -19,6 +21,7 @@ bool ShiftManager::startShift(qint64 employeeId, const QString &comment)
     WorkShift current = getCurrentShift(employeeId);
     if (current.id != 0) {
         LOG_INFO() << "ShiftManager::startShift: у сотрудника" << employeeId << "уже есть открытая смена id=" << current.id;
+        qDebug() << "ShiftManager::startShift: branch already_open";
         return false; // уже есть открытая смена
     }
     QSqlQuery q(m_db->getDatabase());
@@ -28,9 +31,11 @@ bool ShiftManager::startShift(qint64 employeeId, const QString &comment)
     q.bindValue(QStringLiteral(":comment"), comment.trimmed());
     if (!q.exec() || !q.next()) {
         LOG_WARNING() << "ShiftManager::startShift: ошибка INSERT для employeeId" << employeeId << q.lastError().text();
+        qDebug() << "ShiftManager::startShift: branch insert_failed";
         return false;
     }
     qint64 shiftId = q.value(0).toLongLong();
+    qDebug() << "ShiftManager::startShift: branch success shiftId=" << shiftId;
     LOG_INFO() << "ShiftManager::startShift: смена начата employeeId=" << employeeId << "shiftId=" << shiftId;
     emit shiftStarted(employeeId, shiftId);
     return true;
@@ -38,6 +43,7 @@ bool ShiftManager::startShift(qint64 employeeId, const QString &comment)
 
 bool ShiftManager::endCurrentShift(qint64 employeeId, const QString &comment)
 {
+    qDebug() << "ShiftManager::endCurrentShift" << "employeeId=" << employeeId;
     if (!m_db || !m_db->isConnected() || employeeId <= 0) {
         LOG_WARNING() << "ShiftManager::endCurrentShift: нет БД или employeeId" << employeeId;
         return false;
@@ -45,6 +51,7 @@ bool ShiftManager::endCurrentShift(qint64 employeeId, const QString &comment)
     WorkShift current = getCurrentShift(employeeId);
     if (current.id == 0) {
         LOG_INFO() << "ShiftManager::endCurrentShift: у сотрудника" << employeeId << "нет открытой смены";
+        qDebug() << "ShiftManager::endCurrentShift: branch no_open_shift";
         return false;
     }
     QSqlQuery q(m_db->getDatabase());
@@ -54,8 +61,10 @@ bool ShiftManager::endCurrentShift(qint64 employeeId, const QString &comment)
     q.bindValue(QStringLiteral(":id"), current.id);
     if (!q.exec()) {
         LOG_WARNING() << "ShiftManager::endCurrentShift: ошибка UPDATE shiftId=" << current.id << q.lastError().text();
+        qDebug() << "ShiftManager::endCurrentShift: branch update_failed";
         return false;
     }
+    qDebug() << "ShiftManager::endCurrentShift: branch success";
     LOG_INFO() << "ShiftManager::endCurrentShift: смена завершена employeeId=" << employeeId << "shiftId=" << current.id;
     emit shiftEnded(employeeId, current.id);
     return true;
@@ -63,8 +72,12 @@ bool ShiftManager::endCurrentShift(qint64 employeeId, const QString &comment)
 
 WorkShift ShiftManager::getCurrentShift(qint64 employeeId) const
 {
+    qDebug() << "ShiftManager::getCurrentShift" << "employeeId=" << employeeId;
     WorkShift s;
-    if (!m_db || !m_db->isConnected() || employeeId <= 0) return s;
+    if (!m_db || !m_db->isConnected() || employeeId <= 0) {
+        qDebug() << "ShiftManager::getCurrentShift: branch skip (no db or bad id)";
+        return s;
+    }
     QSqlQuery q(m_db->getDatabase());
     q.prepare(QStringLiteral(
         "SELECT ws.id, ws.employeeid, ws.starteddate, ws.startedtime, ws.endeddate, ws.endedtime, ws.comment, "
@@ -72,7 +85,10 @@ WorkShift ShiftManager::getCurrentShift(qint64 employeeId) const
         "FROM workshifts ws LEFT JOIN employees e ON e.id = ws.employeeid "
         "WHERE ws.employeeid = :eid AND ws.endeddate IS NULL ORDER BY ws.starteddate DESC, ws.startedtime DESC LIMIT 1"));
     q.bindValue(QStringLiteral(":eid"), employeeId);
-    if (!q.exec() || !q.next()) return s;
+    if (!q.exec() || !q.next()) {
+        qDebug() << "ShiftManager::getCurrentShift: branch no_row";
+        return s;
+    }
     s.id = q.value(0).toLongLong();
     s.employeeId = q.value(1).toLongLong();
     s.startedDate = q.value(2).toDate();
@@ -87,14 +103,19 @@ WorkShift ShiftManager::getCurrentShift(qint64 employeeId) const
 
 QList<WorkShift> ShiftManager::getShifts(qint64 employeeId, const QDate &dateFrom, const QDate &dateTo) const
 {
+    qDebug() << "ShiftManager::getShifts" << "employeeId=" << employeeId << "from=" << dateFrom << "to=" << dateTo;
     QList<WorkShift> list;
-    if (!m_db || !m_db->isConnected()) return list;
+    if (!m_db || !m_db->isConnected()) {
+        qDebug() << "ShiftManager::getShifts: branch no_db";
+        return list;
+    }
     QSqlQuery q(m_db->getDatabase());
     QString sql = QStringLiteral(
         "SELECT ws.id, ws.employeeid, ws.starteddate, ws.startedtime, ws.endeddate, ws.endedtime, ws.comment, "
         "TRIM(COALESCE(e.lastname,'') || ' ' || COALESCE(e.firstname,'')) AS empname "
         "FROM workshifts ws LEFT JOIN employees e ON e.id = ws.employeeid WHERE 1=1 ");
     if (employeeId > 0) {
+        qDebug() << "ShiftManager::getShifts: branch filter_by_employee";
         sql += QStringLiteral("AND ws.employeeid = :eid ");
     }
     sql += QStringLiteral("AND ws.starteddate BETWEEN :dfrom AND :dto ORDER BY ws.starteddate DESC, ws.startedtime DESC");
@@ -102,7 +123,10 @@ QList<WorkShift> ShiftManager::getShifts(qint64 employeeId, const QDate &dateFro
     if (employeeId > 0) q.bindValue(QStringLiteral(":eid"), employeeId);
     q.bindValue(QStringLiteral(":dfrom"), dateFrom);
     q.bindValue(QStringLiteral(":dto"), dateTo);
-    if (!q.exec()) return list;
+    if (!q.exec()) {
+        qDebug() << "ShiftManager::getShifts: branch query_failed";
+        return list;
+    }
     while (q.next()) {
         WorkShift s;
         s.id = q.value(0).toLongLong();

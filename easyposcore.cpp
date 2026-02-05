@@ -7,8 +7,7 @@
 #include "sales/salesmanager.h"
 #include "production/productionmanager.h"
 #include "shifts/shiftmanager.h"
-#include "settings/settingsmanager.h"
-#include <QDebug>
+#include "logging/logmanager.h"
 #include <QSqlQuery>
 
 EasyPOSCore::EasyPOSCore()
@@ -19,7 +18,7 @@ EasyPOSCore::EasyPOSCore()
     , settingsManager(nullptr)
     , authManager(nullptr)
 {
-    qDebug() << "EasyPOSCore::EasyPOSCore()";
+    qInfo() << "EasyPOSCore::EasyPOSCore()";
     createSettingsManager(this);
 }
 
@@ -28,7 +27,7 @@ SettingsManager* EasyPOSCore::createSettingsManager(QObject *parent)
     if (settingsManager)
         return settingsManager;
     settingsManager = new SettingsManager(parent ? parent : this);
-    qDebug() << "SettingsManager создан через фабричный метод";
+    qInfo() << "EasyPOSCore: SettingsManager created";
     return settingsManager;
 }
 
@@ -56,7 +55,7 @@ void EasyPOSCore::ensureDbConnection()
         productionManager->setStockManager(stockManager);
         shiftManager = new ShiftManager(this);
         shiftManager->setDatabaseConnection(databaseConnection);
-        qDebug() << "StockManager, ProductionManager, ShiftManager созданы в EasyPOSCore";
+        qInfo() << "EasyPOSCore: StockManager, ProductionManager, ShiftManager created";
     }
 }
 
@@ -71,7 +70,7 @@ void EasyPOSCore::CreateDbConnection(PostgreSQLAuth authConfig)
 {
 #if 0
     if(databaseConnection) {
-        qDebug() << "database connection is already initialized";
+        qInfo() << "database connection is already initialized";
         delete databaseConnection;
         return;
     }
@@ -79,13 +78,10 @@ void EasyPOSCore::CreateDbConnection(PostgreSQLAuth authConfig)
     databaseConnection = new DatabaseConnection();
     // Попытка подключения
     if (databaseConnection->connect(authConfig)) {
-        qDebug() << "Успешное подключение к базе данных";
-        qDebug() << "Имя подключения:" << databaseConnection->connectionName();
+        qInfo() << "EasyPOSCore: DB connected," << databaseConnection->connectionName();
     } else {
-        qDebug() << "Ошибка подключения к базе данных:";
         QSqlError error = databaseConnection->lastError();
-        qDebug() << "Текст ошибки:" << error.text();
-        qDebug() << "Тип ошибки:" << error.type();
+        qWarning() << "EasyPOSCore: DB connect failed:" << error.text();
         // Приложение продолжит работу даже при ошибке подключения
     }
 }
@@ -93,10 +89,10 @@ void EasyPOSCore::CreateDbConnection(PostgreSQLAuth authConfig)
 void EasyPOSCore::CloseDbConnection()
 {
     if(!databaseConnection) {
-        qDebug() << "database connection is not initialized";
         return;
     }
     if(databaseConnection->isConnected()) {
+        qInfo() << "EasyPOSCore: closing DB connection";
         databaseConnection->disconnect();
     }
     delete databaseConnection;
@@ -107,63 +103,63 @@ AuthManager* EasyPOSCore::createAuthManager(QObject *parent)
 {
     Q_UNUSED(parent);
     if (!databaseConnection || !databaseConnection->isConnected()) {
-        qDebug() << "Не удалось создать AuthManager: нет подключения к БД";
+        qWarning() << "EasyPOSCore: cannot create AuthManager, no DB connection";
         return nullptr;
     }
     if (authManager)
         return authManager;
     authManager = new AuthManager(this);
     authManager->setDatabaseConnection(databaseConnection);
-    qDebug() << "AuthManager создан через фабричный метод";
+    qInfo() << "AuthManager создан через фабричный метод";
     return authManager;
 }
 
 AccountManager* EasyPOSCore::createAccountManager(QObject *parent)
 {
     if (!databaseConnection || !databaseConnection->isConnected()) {
-        qDebug() << "Не удалось создать AccountManager: нет подключения к БД";
+        qWarning() << "EasyPOSCore: cannot create AccountManager, no DB connection";
         return nullptr;
     }
     
     AccountManager* accountManager = new AccountManager(parent ? parent : this);
     accountManager->setDatabaseConnection(databaseConnection);
     
-    qDebug() << "AccountManager создан через фабричный метод";
+    qInfo() << "AccountManager создан через фабричный метод";
     return accountManager;
 }
 
 RoleManager* EasyPOSCore::createRoleManager(QObject *parent)
 {
     if (!databaseConnection || !databaseConnection->isConnected()) {
-        qDebug() << "Не удалось создать RoleManager: нет подключения к БД";
+        qWarning() << "EasyPOSCore: cannot create RoleManager, no DB connection";
         return nullptr;
     }
     
     RoleManager* roleManager = new RoleManager(parent ? parent : this);
     roleManager->setDatabaseConnection(databaseConnection);
     
-    qDebug() << "RoleManager создан через фабричный метод";
+    qInfo() << "RoleManager создан через фабричный метод";
     return roleManager;
 }
 
 StockManager* EasyPOSCore::createStockManager(QObject *parent)
 {
     if (!databaseConnection || !databaseConnection->isConnected()) {
-        qDebug() << "Не удалось создать StockManager: нет подключения к БД";
+        qWarning() << "EasyPOSCore: cannot create StockManager, no DB connection";
         return nullptr;
     }
     
     StockManager* stockManager = new StockManager(parent ? parent : this);
     stockManager->setDatabaseConnection(databaseConnection);
     
-    qDebug() << "StockManager создан через фабричный метод";
+    qInfo() << "StockManager создан через фабричный метод";
     return stockManager;
 }
 
 SalesManager* EasyPOSCore::createSalesManager(QObject *parent)
 {
     if (!databaseConnection || !databaseConnection->isConnected()) {
-        qDebug() << "Не удалось создать SalesManager: нет подключения к БД";
+        qWarning() << "EasyPOSCore: cannot create SalesManager, no DB connection";
         return nullptr;
     }
     
@@ -173,24 +169,24 @@ SalesManager* EasyPOSCore::createSalesManager(QObject *parent)
     // Передаем StockManager в SalesManager
     if (stockManager) {
         salesManager->setStockManager(stockManager);
-        qDebug() << "StockManager передан в SalesManager";
+        qInfo() << "StockManager передан в SalesManager";
     }
     
-    qDebug() << "SalesManager создан через фабричный метод";
+    qInfo() << "SalesManager создан через фабричный метод";
     return salesManager;
 }
 
 ShiftManager* EasyPOSCore::createShiftManager(QObject *parent)
 {
     if (!databaseConnection || !databaseConnection->isConnected()) {
-        qDebug() << "Не удалось создать ShiftManager: нет подключения к БД";
+        qWarning() << "EasyPOSCore: cannot create ShiftManager, no DB connection";
         return nullptr;
     }
     if (shiftManager)
         return shiftManager;
     shiftManager = new ShiftManager(parent ? parent : this);
     shiftManager->setDatabaseConnection(databaseConnection);
-    qDebug() << "ShiftManager создан через фабричный метод";
+    qInfo() << "ShiftManager создан через фабричный метод";
     return shiftManager;
 }
 
@@ -234,6 +230,7 @@ bool EasyPOSCore::ensureSessionValid()
     QString token = settingsManager->stringValue(SettingsKeys::SessionToken);
     if (token.isEmpty()) {
         if (m_currentSession.userId > 0) {
+            qInfo() << "EasyPOSCore::ensureSessionValid: no token, invalidating session";
             m_currentSession = UserSession();
             emit sessionInvalidated();
         }
@@ -244,6 +241,7 @@ bool EasyPOSCore::ensureSessionValid()
         return false;
     UserSession s = am->getSessionByToken(token);
     if (!s.isValid() || s.isExpired()) {
+        qInfo() << "EasyPOSCore::ensureSessionValid: token invalid or expired, invalidating session";
         settingsManager->remove(SettingsKeys::SessionToken);
         settingsManager->sync();
         m_currentSession = UserSession();
@@ -257,6 +255,8 @@ bool EasyPOSCore::ensureSessionValid()
 
 void EasyPOSCore::logout()
 {
+    if (m_currentSession.userId > 0)
+        qInfo() << "EasyPOSCore::logout: user=" << m_currentSession.username << "userId=" << m_currentSession.userId;
     if (authManager && m_currentSession.userId > 0) {
         authManager->logout(m_currentSession.userId);
     }

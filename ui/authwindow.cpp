@@ -4,11 +4,11 @@
 #include "../RBAC/authmanager.h"
 #include "../RBAC/structures.h"
 #include "../settings/settingsmanager.h"
+#include "../logging/logmanager.h"
 #include "windowcreator.h"
 #include "signupwindow.h"
 #include "../mainwindow.h"
 #include <QMessageBox>
-#include <QDebug>
 
 AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore)
     : QDialog(parent)
@@ -40,18 +40,21 @@ bool AuthWindow::tryRestoreSession()
 
     UserSession session = m_authManager->getSessionByToken(token);
     if (!session.isValid() || session.isExpired()) {
+        qInfo() << "AuthWindow: session restore failed (invalid or expired token)";
         sm->remove(SettingsKeys::SessionToken);
         sm->sync();
         return false;
     }
 
     m_easyPOSCore->setCurrentSession(session);
+    qInfo() << "AuthWindow: session restored, user=" << session.username;
     MainWindow *mw = WindowCreator::Create<MainWindow>(this, m_easyPOSCore);
     if (mw) {
         m_sessionRestored = true;
         hide();
         return true;
     }
+    qWarning() << "AuthWindow: failed to create MainWindow after session restore";
     return false;
 }
 
@@ -79,10 +82,15 @@ void AuthWindow::on_badgeReturnPressed()
                 sm->sync();
             }
         }
+        qInfo() << "AuthWindow: badge login success, user=" << result.session.username;
         MainWindow *mw = WindowCreator::Create<MainWindow>(this, m_easyPOSCore);
         if (mw) hide();
-        else QMessageBox::critical(this, tr("Ошибка"), tr("Не удалось создать главное окно."));
+        else {
+            qWarning() << "AuthWindow: failed to create MainWindow after badge login";
+            QMessageBox::critical(this, tr("Ошибка"), tr("Не удалось создать главное окно."));
+        }
     } else {
+        qWarning() << "AuthWindow: badge login failed:" << result.message;
         QMessageBox::warning(this, tr("Вход по бейджу"), result.message);
     }
 }
@@ -98,8 +106,7 @@ void AuthWindow::on_signInButton_clicked()
     AuthResult result = m_authManager->authenticate(ui->usernameEdit->text(), ui->passwordEdit->text());
     if (result.success) {
         UserSession session = result.session;
-        qDebug() << "Авторизован пользователь:" << session.username;
-        qDebug() << "Роль:" << session.role.name;
+        qInfo() << "AuthWindow: login success, user=" << session.username << "role=" << session.role.name;
         
         // Сохраняем сессию в EasyPOSCore
         if (m_easyPOSCore) {
@@ -122,10 +129,12 @@ void AuthWindow::on_signInButton_clicked()
         if (mw) {
             hide();
         } else {
+            qWarning() << "AuthWindow: failed to create MainWindow after login";
             QMessageBox::critical(this, "Ошибка", "Не удалось создать главное окно. Нет активной сессии.");
         }
     }
     else {
+        qWarning() << "AuthWindow: login failed, user=" << ui->usernameEdit->text() << "msg=" << result.message;
         QMessageBox::critical(this, "Ошибка", result.message);
     }
 }

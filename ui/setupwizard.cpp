@@ -2,6 +2,7 @@
 #include "setupdbpage.h"
 #include "../easyposcore.h"
 #include "../settings/settingsmanager.h"
+#include "../logging/logmanager.h"
 #include "../db/databaseconnection.h"
 #include <QApplication>
 #include <QVBoxLayout>
@@ -169,5 +170,6 @@ void SetupWizard::accept()
     conn.disconnect();
 
     saveSettings();
+    qInfo() << "SetupWizard: setup completed, DB" << auth.host << auth.database;
     QWizard::accept();
 }

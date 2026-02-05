@@ -1,5 +1,6 @@
 #include "salesmanager.h"
 #include "stockmanager.h"
+#include "../logging/logmanager.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDate>
@@ -7,7 +8,6 @@
 #include <QDateTime>
 #include <QVariant>
 #include <QSet>
-#include <QDebug>
 
 SalesManager::SalesManager(QObject *parent)
     : QObject(parent)
@@ -187,12 +187,14 @@ SaleOperationResult SalesManager::createCheck(qint64 employeeId, qint64 shiftId)
         m_lastError = q.lastError();
         r.error = m_lastError;
         r.message = QStringLiteral("Ошибка создания чека: ") + m_lastError.text();
+        qWarning() << "SalesManager::createCheck failed:" << r.message;
         emit operationFailed(r.message);
         return r;
     }
 
     if (!q.next()) {
         r.message = QStringLiteral("Ошибка создания чека: не получен id");
+        qWarning() << "SalesManager::createCheck: no id returned";
         return r;
     }
 
@@ -200,6 +202,7 @@ SaleOperationResult SalesManager::createCheck(qint64 employeeId, qint64 shiftId)
     r.success = true;
     r.checkId = id;
     r.message = QStringLiteral("Чек создан");
+    qInfo() << "SalesManager::createCheck: checkId=" << id << "employeeId=" << employeeId << "shiftId=" << shiftId;
     emit checkCreated(id, employeeId);
     return r;
 }
@@ -382,12 +385,14 @@ SaleOperationResult SalesManager::finalizeCheck(qint64 checkId)
     Check ch = getCheck(checkId);
     if (ch.id == 0) {
         r.message = QStringLiteral("Чек не найден");
+        qWarning() << "SalesManager::finalizeCheck: check not found, checkId=" << checkId;
         return r;
     }
 
     QList<SaleRow> rows = getSalesByCheck(checkId, false);
     if (rows.isEmpty()) {
         r.message = QStringLiteral("Чек пуст");
+        qWarning() << "SalesManager::finalizeCheck: empty check, checkId=" << checkId;
         return r;
     }
 
@@ -409,6 +414,7 @@ SaleOperationResult SalesManager::finalizeCheck(qint64 checkId)
                         m_lastError = removeResult.error;
                         r.error = removeResult.error;
                         r.message = QStringLiteral("Ошибка списания товара при финализации чека: ") + removeResult.message;
+                        qWarning() << "SalesManager::finalizeCheck: removeStock failed" << removeResult.message;
                         emit operationFailed(r.message);
                         return r;
                     }
@@ -421,6 +427,7 @@ SaleOperationResult SalesManager::finalizeCheck(qint64 checkId)
     // В текущей схеме БД может не быть поля ispaid, поэтому просто завершаем операцию
     // Товар уже списан через StockManager
 
+    qInfo() << "SalesManager::finalizeCheck: checkId=" << checkId << "success";
     r.success = true;
     r.checkId = checkId;
     r.message = QStringLiteral("Чек финализирован");
@@ -1098,6 +1105,7 @@ SaleOperationResult SalesManager::recordCheckPayments(qint64 checkId, const QLis
         return r;
     if (checkId <= 0) {
         r.message = QStringLiteral("Неверный ID чека");
+        qWarning() << "SalesManager::recordCheckPayments: invalid checkId=" << checkId;
         return r;
     }
     QSqlQuery del(m_dbConnection->getDatabase());
@@ -1107,6 +1115,7 @@ SaleOperationResult SalesManager::recordCheckPayments(qint64 checkId, const QLis
         m_lastError = del.lastError();
         r.error = m_lastError;
         r.message = QStringLiteral("Ошибка очистки оплат: %1").arg(m_lastError.text());
+        qWarning() << "SalesManager::recordCheckPayments: delete failed" << m_lastError.text();
         return r;
     }
     for (const CheckPaymentRow &row : payments) {
@@ -1122,9 +1131,11 @@ SaleOperationResult SalesManager::recordCheckPayments(qint64 checkId, const QLis
             m_lastError = ins.lastError();
             r.error = m_lastError;
             r.message = QStringLiteral("Ошибка записи оплаты: %1").arg(m_lastError.text());
+            qWarning() << "SalesManager::recordCheckPayments: insert failed" << m_lastError.text();
             return r;
         }
     }
+    qInfo() << "SalesManager::recordCheckPayments: checkId=" << checkId << "rows=" << payments.size();
     r.success = true;
     r.checkId = checkId;
     r.message = QStringLiteral("Оплаты записаны");

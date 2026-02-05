@@ -1,5 +1,6 @@
 #include "categorymanager.h"
 #include "../db/databaseconnection.h"
+#include "../logging/logmanager.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
@@ -9,32 +10,41 @@ CategoryManager::CategoryManager(QObject *parent)
     : QObject(parent)
     , m_db(nullptr)
 {
+    qDebug() << "CategoryManager::CategoryManager";
 }
 
 CategoryManager::~CategoryManager()
 {
+    qDebug() << "CategoryManager::~CategoryManager";
 }
 
 void CategoryManager::setDatabaseConnection(DatabaseConnection *dbConnection)
 {
+    qDebug() << "CategoryManager::setDatabaseConnection" << (dbConnection ? "set" : "null");
     m_db = dbConnection;
 }
 
 QList<GoodCategory> CategoryManager::list(bool includeDeleted)
 {
+    qDebug() << "CategoryManager::list" << "includeDeleted=" << includeDeleted;
     QList<GoodCategory> result;
-    if (!m_db || !m_db->isConnected())
+    if (!m_db || !m_db->isConnected()) {
+        qDebug() << "CategoryManager::list: branch no_db";
         return result;
+    }
 
     QSqlDatabase db = m_db->getDatabase();
     QSqlQuery q(db);
     q.setForwardOnly(true);
     QString sql = QStringLiteral(
         "SELECT id, name, description, updatedate, isdeleted FROM goodcats");
-    if (!includeDeleted)
+    if (!includeDeleted) {
+        qDebug() << "CategoryManager::list: branch exclude_deleted";
         sql += QStringLiteral(" WHERE (isdeleted IS NULL OR isdeleted = false)");
+    }
     sql += QStringLiteral(" ORDER BY name");
     if (!q.exec(sql)) {
+        qDebug() << "CategoryManager::list: branch query_failed" << q.lastError().text();
         m_lastError = q.lastError();
         return result;
     }
@@ -54,8 +64,11 @@ QList<GoodCategory> CategoryManager::list(bool includeDeleted)
 
 bool CategoryManager::add(GoodCategory &cat)
 {
-    if (!m_db || !m_db->isConnected())
+    qDebug() << "CategoryManager::add" << "name=" << cat.name;
+    if (!m_db || !m_db->isConnected()) {
+        qDebug() << "CategoryManager::add: branch no_db";
         return false;
+    }
 
     QSqlDatabase db = m_db->getDatabase();
     QSqlQuery q(db);
@@ -66,18 +79,26 @@ bool CategoryManager::add(GoodCategory &cat)
     q.bindValue(QStringLiteral(":description"), cat.description);
     q.bindValue(QStringLiteral(":updatedate"), QDate::currentDate());
     if (!q.exec()) {
+        qDebug() << "CategoryManager::add: branch exec_failed" << q.lastError().text();
         m_lastError = q.lastError();
         return false;
     }
-    if (q.next())
+    if (q.next()) {
         cat.id = q.value(0).toInt();
+        qDebug() << "CategoryManager::add: branch success id=" << cat.id;
+    } else {
+        qDebug() << "CategoryManager::add: branch no_returning_id";
+    }
     return true;
 }
 
 bool CategoryManager::update(const GoodCategory &cat)
 {
-    if (!m_db || !m_db->isConnected() || cat.id <= 0)
+    qDebug() << "CategoryManager::update" << "id=" << cat.id;
+    if (!m_db || !m_db->isConnected() || cat.id <= 0) {
+        qDebug() << "CategoryManager::update: branch no_db_or_bad_id";
         return false;
+    }
 
     QSqlDatabase db = m_db->getDatabase();
     QSqlQuery q(db);
@@ -89,16 +110,21 @@ bool CategoryManager::update(const GoodCategory &cat)
     q.bindValue(QStringLiteral(":updatedate"), QDate::currentDate());
     q.bindValue(QStringLiteral(":id"), cat.id);
     if (!q.exec()) {
+        qDebug() << "CategoryManager::update: branch exec_failed" << q.lastError().text();
         m_lastError = q.lastError();
         return false;
     }
+    qDebug() << "CategoryManager::update: branch success";
     return true;
 }
 
 bool CategoryManager::setDeleted(int id, bool deleted)
 {
-    if (!m_db || !m_db->isConnected() || id <= 0)
+    qDebug() << "CategoryManager::setDeleted" << "id=" << id << "deleted=" << deleted;
+    if (!m_db || !m_db->isConnected() || id <= 0) {
+        qDebug() << "CategoryManager::setDeleted: branch no_db_or_bad_id";
         return false;
+    }
 
     QSqlDatabase db = m_db->getDatabase();
     QSqlQuery q(db);
@@ -106,8 +132,10 @@ bool CategoryManager::setDeleted(int id, bool deleted)
     q.bindValue(QStringLiteral(":deleted"), deleted);
     q.bindValue(QStringLiteral(":id"), id);
     if (!q.exec()) {
+        qDebug() << "CategoryManager::setDeleted: branch exec_failed" << q.lastError().text();
         m_lastError = q.lastError();
         return false;
     }
+    qDebug() << "CategoryManager::setDeleted: branch success";
     return true;
 }
