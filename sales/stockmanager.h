@@ -91,6 +91,8 @@ public:
 
     // Штрихкоды партии
     QList<BarcodeEntry> getBarcodesForBatch(qint64 batchId, bool includeDeleted = false);
+    /** Возвращает ID партии по штрихкоду или 0, если не найдена */
+    qint64 getBatchIdByBarcode(const QString &barcode);
     StockOperationResult addBarcodeToBatch(qint64 batchId, const QString &barcode);
     StockOperationResult removeBarcode(qint64 barcodeId);
     

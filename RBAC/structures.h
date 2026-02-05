@@ -16,11 +16,18 @@ struct Permission {
     Permission() : id(0), isActive(true) {}
 };
 
+// Уровни доступа: чем меньше число, тем выше права (0 = администратор).
+namespace AccessLevel {
+    constexpr int Admin   = 0;   // Всё: настройки, БД, пользователи, справочники, производство, отчёты, касса
+    constexpr int Manager = 10;  // Справочники, производство, отчёты, история чеков, настройка печати, касса
+    constexpr int Cashier = 50;  // Только касса, история чеков, сохранение чека в PDF
+}
+
 // Роль (соответствует таблице roles в БД)
 struct Role {
     int id;
     QString name;           // Например: "admin", "cashier", "manager"
-    int level;              // Уровень доступа (0 - самый секретный)
+    int level;              // Уровень доступа (0 = максимальные права, больше = меньше прав)
     bool isBlocked;         // Флаг блокировки
     bool isActive;          // Противоположно isdeleted
     
@@ -28,10 +35,13 @@ struct Role {
     
     // Проверка наличия разрешения (для обратной совместимости, но разрешения не используются)
     bool hasPermission(const QString &permissionName) const {
-        // В текущей структуре БД нет таблицы разрешений
-        // Можно реализовать проверку по уровню доступа
         Q_UNUSED(permissionName);
         return isActive && !isBlocked;
+    }
+
+    /// Доступ разрешён, если уровень роли не выше (число не больше) требуемого
+    bool hasAccessLevel(int requiredLevel) const {
+        return isActive && !isBlocked && level <= requiredLevel;
     }
 };
 

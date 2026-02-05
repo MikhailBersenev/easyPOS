@@ -762,6 +762,20 @@ QList<BarcodeEntry> StockManager::getBarcodesForBatch(qint64 batchId, bool inclu
     return list;
 }
 
+qint64 StockManager::getBatchIdByBarcode(const QString &barcode)
+{
+    const QString bc = barcode.trimmed();
+    if (bc.isEmpty() || !m_dbConnection || !m_dbConnection->isConnected())
+        return 0;
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral(
+        "SELECT batchid FROM barcodes WHERE barcode = :bc AND (isdeleted IS NULL OR isdeleted = false) LIMIT 1"));
+    q.bindValue(QStringLiteral(":bc"), bc);
+    if (!q.exec() || !q.next())
+        return 0;
+    return q.value(0).toLongLong();
+}
+
 StockOperationResult StockManager::addBarcodeToBatch(qint64 batchId, const QString &barcode)
 {
     StockOperationResult r;

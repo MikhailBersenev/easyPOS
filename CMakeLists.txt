@@ -40,6 +40,7 @@ qt_add_executable(easyPOS
     ui/discountdialog.h ui/discountdialog.cpp ui/discountdialog.ui
     ui/paymentdialog.h ui/paymentdialog.cpp ui/paymentdialog.ui
     ui/dbsettingsdialog.h ui/dbsettingsdialog.cpp ui/dbsettingsdialog.ui
+    ui/settingsdialog.h ui/settingsdialog.cpp ui/settingsdialog.ui
     ui/checkhistorydialog.h ui/checkhistorydialog.cpp ui/checkhistorydialog.ui
     ui/salesreportdialog.h ui/salesreportdialog.cpp ui/salesreportdialog.ui
     ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp ui/checkdetailsdialog.ui

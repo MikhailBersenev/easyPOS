@@ -1,0 +1,280 @@
+#include "settingsdialog.h"
+#include "ui_settingsdialog.h"
+#include "dbsettingsdialog.h"
+#include "../easyposcore.h"
+#include "../settings/settingsmanager.h"
+#include "../RBAC/accountmanager.h"
+#include "../RBAC/rolemanager.h"
+#include "../RBAC/structures.h"
+#include <QMessageBox>
+#include <QInputDialog>
+#include <QFormLayout>
+#include <QDialogButtonBox>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QTableWidgetItem>
+
+SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
+    : QDialog(parent)
+    , ui(new Ui::SettingsDialog)
+    , m_core(core)
+{
+    ui->setupUi(this);
+    if (m_core) {
+        m_accountManager = m_core->createAccountManager(this);
+        m_roleManager = m_core->createRoleManager(this);
+    }
+    loadFromSettings();
+    loadRolesTable();
+    loadUsersTable();
+    ui->rolesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->usersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    connect(ui->dbSettingsButton, &QPushButton::clicked, this, &SettingsDialog::onDbSettingsClicked);
+    connect(ui->rolesAddBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesAddClicked);
+    connect(ui->rolesEditBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesEditClicked);
+    connect(ui->rolesDeleteBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesDeleteClicked);
+    connect(ui->usersAddBtn, &QPushButton::clicked, this, &SettingsDialog::onUsersAddClicked);
+    connect(ui->usersDeleteBtn, &QPushButton::clicked, this, &SettingsDialog::onUsersDeleteClicked);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &SettingsDialog::accept);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+}
+
+SettingsDialog::~SettingsDialog()
+{
+    delete ui;
+}
+
+void SettingsDialog::loadFromSettings()
+{
+    if (!m_core || !m_core->getSettingsManager())
+        return;
+    auto *sm = m_core->getSettingsManager();
+    ui->printAfterPayCheckBox->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
+    updateDbLabel();
+}
+
+void SettingsDialog::updateDbLabel()
+{
+    QString text = tr("Текущее подключение: ");
+    if (m_core && m_core->getSettingsManager()) {
+        QString host = m_core->getSettingsManager()->stringValue(SettingsKeys::DbHost, QStringLiteral("localhost"));
+        QString db = m_core->getSettingsManager()->stringValue(SettingsKeys::DbName, QStringLiteral("pos_bakery"));
+        if (host.isEmpty()) host = QStringLiteral("localhost");
+        text += QStringLiteral("%1 / %2").arg(host, db);
+    } else {
+        text += tr("—");
+    }
+    ui->dbCurrentLabel->setText(text);
+}
+
+void SettingsDialog::onDbSettingsClicked()
+{
+    if (!m_core) return;
+    DbSettingsDialog dlg(this, m_core);
+    if (dlg.exec() == QDialog::Accepted)
+        updateDbLabel();
+}
+
+void SettingsDialog::loadRolesTable()
+{
+    ui->rolesTable->setRowCount(0);
+    if (!m_roleManager || !m_core->getDatabaseConnection() || !m_core->getDatabaseConnection()->isConnected())
+        return;
+    const QList<Role> roles = m_roleManager->getAllRoles(false);
+    for (const Role &r : roles) {
+        const int row = ui->rolesTable->rowCount();
+        ui->rolesTable->insertRow(row);
+        ui->rolesTable->setItem(row, 0, new QTableWidgetItem(r.name));
+        ui->rolesTable->setItem(row, 1, new QTableWidgetItem(QString::number(r.level)));
+        ui->rolesTable->setItem(row, 2, new QTableWidgetItem(r.isBlocked ? tr("Да") : tr("Нет")));
+        ui->rolesTable->item(row, 0)->setData(Qt::UserRole, r.id);
+    }
+}
+
+void SettingsDialog::loadUsersTable()
+{
+    ui->usersTable->setRowCount(0);
+    if (!m_accountManager || !m_core->getDatabaseConnection() || !m_core->getDatabaseConnection()->isConnected())
+        return;
+    const QList<User> users = m_accountManager->getAllUsers(false);
+    for (const User &u : users) {
+        const int row = ui->usersTable->rowCount();
+        ui->usersTable->insertRow(row);
+        ui->usersTable->setItem(row, 0, new QTableWidgetItem(u.name));
+        ui->usersTable->setItem(row, 1, new QTableWidgetItem(u.role.name));
+        ui->usersTable->item(row, 0)->setData(Qt::UserRole, u.id);
+    }
+}
+
+void SettingsDialog::onRolesAddClicked()
+{
+    if (!m_roleManager) return;
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Новая роль"));
+    auto *nameEdit = new QLineEdit(&dlg);
+    nameEdit->setPlaceholderText(tr("Название роли"));
+    auto *levelSpin = new QSpinBox(&dlg);
+    levelSpin->setRange(0, 999);
+    levelSpin->setValue(0);
+    auto *form = new QFormLayout(&dlg);
+    form->addRow(tr("Название:"), nameEdit);
+    form->addRow(tr("Уровень (0 — высший):"), levelSpin);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+    form->addRow(buttons);
+    if (dlg.exec() != QDialog::Accepted || nameEdit->text().trimmed().isEmpty()) return;
+    RoleOperationResult r = m_roleManager->createRole(nameEdit->text().trimmed(), levelSpin->value());
+    if (r.success) {
+        QMessageBox::information(this, tr("Роли"), r.message);
+        loadRolesTable();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+    }
+}
+
+void SettingsDialog::onRolesEditClicked()
+{
+    if (!m_roleManager) return;
+    const int row = ui->rolesTable->currentRow();
+    if (row < 0) {
+        QMessageBox::information(this, tr("Роли"), tr("Выберите роль для редактирования."));
+        return;
+    }
+    QTableWidgetItem *first = ui->rolesTable->item(row, 0);
+    if (!first) return;
+    const int roleId = first->data(Qt::UserRole).toInt();
+    Role role = m_roleManager->getRole(roleId, true);
+    if (role.id == 0) return;
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Изменить роль"));
+    auto *nameEdit = new QLineEdit(&dlg);
+    nameEdit->setText(role.name);
+    auto *levelSpin = new QSpinBox(&dlg);
+    levelSpin->setRange(0, 999);
+    levelSpin->setValue(role.level);
+    auto *blockedCheck = new QCheckBox(tr("Заблокирована"), &dlg);
+    blockedCheck->setChecked(role.isBlocked);
+    auto *form = new QFormLayout(&dlg);
+    form->addRow(tr("Название:"), nameEdit);
+    form->addRow(tr("Уровень:"), levelSpin);
+    form->addRow(blockedCheck);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+    form->addRow(buttons);
+    if (dlg.exec() != QDialog::Accepted || nameEdit->text().trimmed().isEmpty()) return;
+    RoleOperationResult r = m_roleManager->updateRole(roleId, nameEdit->text().trimmed(), levelSpin->value());
+    if (r.success) {
+        if (blockedCheck->isChecked() != role.isBlocked)
+            m_roleManager->blockRole(roleId, blockedCheck->isChecked());
+        QMessageBox::information(this, tr("Роли"), tr("Роль обновлена."));
+        loadRolesTable();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+    }
+}
+
+void SettingsDialog::onRolesDeleteClicked()
+{
+    if (!m_roleManager) return;
+    const int row = ui->rolesTable->currentRow();
+    if (row < 0) {
+        QMessageBox::information(this, tr("Роли"), tr("Выберите роль для удаления."));
+        return;
+    }
+    QTableWidgetItem *first = ui->rolesTable->item(row, 0);
+    if (!first) return;
+    const int roleId = first->data(Qt::UserRole).toInt();
+    QString name = first->text();
+    if (QMessageBox::question(this, tr("Удаление роли"),
+            tr("Пометить роль «%1» как удалённую?").arg(name),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+        return;
+    RoleOperationResult r = m_roleManager->deleteRole(roleId);
+    if (r.success) {
+        QMessageBox::information(this, tr("Роли"), r.message);
+        loadRolesTable();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+    }
+}
+
+void SettingsDialog::onUsersAddClicked()
+{
+    if (!m_accountManager || !m_roleManager) return;
+    const QList<Role> roles = m_roleManager->getAllRoles(false);
+    if (roles.isEmpty()) {
+        QMessageBox::warning(this, tr("Пользователи"), tr("Сначала создайте хотя бы одну роль."));
+        return;
+    }
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Новый пользователь"));
+    auto *nameEdit = new QLineEdit(&dlg);
+    nameEdit->setPlaceholderText(tr("Имя входа"));
+    auto *passwordEdit = new QLineEdit(&dlg);
+    passwordEdit->setEchoMode(QLineEdit::Password);
+    passwordEdit->setPlaceholderText(tr("Пароль"));
+    auto *roleCombo = new QComboBox(&dlg);
+    for (const Role &r : roles)
+        roleCombo->addItem(r.name, r.id);
+    auto *form = new QFormLayout(&dlg);
+    form->addRow(tr("Имя пользователя:"), nameEdit);
+    form->addRow(tr("Пароль:"), passwordEdit);
+    form->addRow(tr("Роль:"), roleCombo);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+    form->addRow(buttons);
+    if (dlg.exec() != QDialog::Accepted) return;
+    const QString username = nameEdit->text().trimmed();
+    const QString password = passwordEdit->text();
+    if (username.isEmpty() || password.isEmpty()) {
+        QMessageBox::warning(this, tr("Пользователи"), tr("Укажите имя и пароль."));
+        return;
+    }
+    const int roleId = roleCombo->currentData().toInt();
+    UserOperationResult r = m_accountManager->registerUser(username, password, roleId);
+    if (r.success) {
+        QMessageBox::information(this, tr("Пользователи"), r.message);
+        loadUsersTable();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+    }
+}
+
+void SettingsDialog::onUsersDeleteClicked()
+{
+    if (!m_accountManager) return;
+    const int row = ui->usersTable->currentRow();
+    if (row < 0) {
+        QMessageBox::information(this, tr("Пользователи"), tr("Выберите пользователя для удаления."));
+        return;
+    }
+    QTableWidgetItem *first = ui->usersTable->item(row, 0);
+    if (!first) return;
+    const int userId = first->data(Qt::UserRole).toInt();
+    QString name = first->text();
+    if (QMessageBox::question(this, tr("Удаление пользователя"),
+            tr("Пометить пользователя «%1» как удалённого?").arg(name),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+        return;
+    UserOperationResult r = m_accountManager->deleteUser(userId);
+    if (r.success) {
+        QMessageBox::information(this, tr("Пользователи"), r.message);
+        loadUsersTable();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), r.message);
+    }
+}
+
+void SettingsDialog::accept()
+{
+    if (m_core && m_core->getSettingsManager()) {
+        m_core->getSettingsManager()->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
+        m_core->getSettingsManager()->sync();
+    }
+    QDialog::accept();
+}

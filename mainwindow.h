@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QCloseEvent>
+#include <QTimer>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -24,6 +25,8 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
     void on_newCheckButton_clicked();
@@ -42,6 +45,7 @@ private slots:
     void on_actionSaveCheckToPdf_triggered();
     void on_actionCheckHistory_triggered();
     void on_actionPrintAfterPay_triggered();
+    void on_actionSettings_triggered();
     void on_actionDbConnection_triggered();
     void on_actionAbout_triggered();
     void on_actionShortcuts_triggered();
@@ -56,11 +60,13 @@ private:
     void updateItemsCountLabel();
     void updateDaySummary();
     void setPosEnabled(bool enabled);
+    void applyRoleAccess();
     void printCheck(qint64 checkId);
     bool saveCheckToPdf(qint64 checkId);
     void renderCheckContent(QPainter &painter, qint64 checkId, const Check &ch,
                            const QList<SaleRow> &rows, double toPay);
     void showCartContextMenu(const QPoint &pos);
+    void processBarcode(const QString &barcode);
 
     Ui::MainWindow *ui;
     std::shared_ptr<EasyPOSCore> m_core;
@@ -72,6 +78,8 @@ private:
     qint64 m_lastBatchId = 0;
     qint64 m_lastServiceId = 0;
     qint64 m_lastQnt = 1;
+    QString m_barcodeBuffer;
+    QTimer *m_barcodeTimer = nullptr;
 };
 
 #endif // MAINWINDOW_H

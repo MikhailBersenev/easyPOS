@@ -4,6 +4,7 @@
 #include "RBAC/structures.h"
 #include "settings/settingsmanager.h"
 #include "sales/salesmanager.h"
+#include "sales/stockmanager.h"
 #include "sales/structures.h"
 #include "ui/sales/goodfind.h"
 #include "ui/goodcatsdialog.h"
@@ -12,6 +13,7 @@
 #include "ui/vatratesdialog.h"
 #include "ui/discountdialog.h"
 #include "ui/dbsettingsdialog.h"
+#include "ui/settingsdialog.h"
 #include "ui/checkhistorydialog.h"
 #include "ui/salesreportdialog.h"
 #include "ui/recipesdialog.h"
@@ -33,6 +35,9 @@
 #include <QFileDialog>
 #include <QLocale>
 #include <QMenu>
+#include <QKeyEvent>
+#include <QApplication>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const UserSession &session)
     : QMainWindow(parent)
@@ -83,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
         setPosEnabled(true);
         ui->statusbar->showMessage(tr("Касса готова. Нажмите «Новый чек» для начала продажи."));
     }
+    applyRoleAccess();
     m_daySummaryLabel = new QLabel(this);
     ui->statusbar->addPermanentWidget(m_daySummaryLabel);
     ui->statusbar->addPermanentWidget(new QLabel(tr("Пользователь: %1").arg(m_session.username)));
@@ -95,7 +101,11 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
     ui->checkWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->checkWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::showCartContextMenu);
 
-    connect(ui->searchLineEdit, &QLineEdit::returnPressed, this, &MainWindow::on_findGoodButton_clicked);
+    m_barcodeTimer = new QTimer(this);
+    m_barcodeTimer->setSingleShot(true);
+    connect(m_barcodeTimer, &QTimer::timeout, this, [this]() { m_barcodeBuffer.clear(); });
+    qApp->installEventFilter(this);
+
     connect(ui->actionNewCheck, &QAction::triggered, this, &MainWindow::on_newCheckButton_clicked);
     connect(ui->actionFindGood, &QAction::triggered, this, &MainWindow::on_findGoodButton_clicked);
     connect(ui->actionPay, &QAction::triggered, this, &MainWindow::on_payButton_clicked);
@@ -107,6 +117,9 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
     updateCheckNumberLabel();
     refreshCart();
     updateDaySummary();
+
+    ui->checkWidget->setFocusPolicy(Qt::StrongFocus);
+    ui->checkWidget->setFocus();
 
     if (auto *sm = m_core->getSettingsManager()) {
         const QByteArray geo = sm->value(SettingsKeys::MainWindowGeometry).toByteArray();
@@ -122,6 +135,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
         m_core->getSettingsManager()->sync();
     }
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    if (m_currentCheckId > 0 && focusWidget() && (focusWidget()->inherits("QSpinBox") || focusWidget()->inherits("QLineEdit")))
+        ui->checkWidget->setFocus();
 }
 
 MainWindow::~MainWindow()
@@ -141,7 +161,35 @@ void MainWindow::setPosEnabled(bool enabled)
     ui->payButton->setEnabled(enabled);
     ui->checkWidget->setEnabled(enabled);
     ui->qtySpinBox->setEnabled(enabled);
-    ui->searchLineEdit->setEnabled(enabled);
+}
+
+void MainWindow::applyRoleAccess()
+{
+    const Role &role = m_session.role;
+    const bool isAdmin   = role.hasAccessLevel(AccessLevel::Admin);
+    const bool isManager = role.hasAccessLevel(AccessLevel::Manager);
+    const bool isCashier = role.hasAccessLevel(AccessLevel::Cashier);
+
+    ui->actionSettings->setVisible(isAdmin);
+    ui->actionDbConnection->setVisible(isAdmin);
+    ui->actionPrintAfterPay->setVisible(isCashier);
+
+    ui->actionCategories->setVisible(isManager);
+    ui->actionGoods->setVisible(isManager);
+    ui->actionServices->setVisible(isManager);
+    ui->actionVatRates->setVisible(isManager);
+    ui->actionStockBalance->setVisible(isManager);
+
+    ui->actionRecipes->setVisible(isManager);
+    ui->actionProductionRun->setVisible(isManager);
+
+    ui->actionCheckHistory->setVisible(isManager);
+    ui->actionSalesReport->setVisible(isManager);
+    ui->actionSaveCheckToPdf->setVisible(isCashier);
+
+    ui->actionNewCheck->setVisible(isCashier);
+    ui->actionFindGood->setVisible(isCashier);
+    ui->actionPay->setVisible(isCashier);
 }
 
 void MainWindow::refreshCart()
@@ -227,6 +275,7 @@ void MainWindow::on_newCheckButton_clicked()
     m_currentCheckId = r.checkId;
     updateCheckNumberLabel();
     refreshCart();
+    ui->checkWidget->setFocus(); // фокус на таблицу — тогда ввод сканера перехватывается
     ui->statusbar->showMessage(tr("Чек №%1 создан.").arg(m_currentCheckId));
 }
 
@@ -255,6 +304,102 @@ void MainWindow::on_repeatButton_clicked()
     refreshCart();
 }
 
+// Минимальная и максимальная длина штрихкода (EAN-8 и др.)
+static constexpr int BARCODE_MIN_LENGTH = 8;
+static constexpr int BARCODE_MAX_LENGTH = 32;
+
+void MainWindow::processBarcode(const QString &barcode)
+{
+    if (barcode.isEmpty())
+        return;
+    if (barcode.length() < BARCODE_MIN_LENGTH) {
+        QMessageBox::warning(this, tr("Штрихкод"),
+            tr("Слишком короткий штрихкод (минимум %1 символов).").arg(BARCODE_MIN_LENGTH));
+        return;
+    }
+    if (barcode.length() > BARCODE_MAX_LENGTH) {
+        QMessageBox::warning(this, tr("Штрихкод"),
+            tr("Слишком длинный штрихкод (максимум %1 символов).").arg(BARCODE_MAX_LENGTH));
+        return;
+    }
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_salesManager || m_currentCheckId <= 0) {
+        QMessageBox::warning(this, tr("Касса"), tr("Сначала нажмите «Новый чек»."));
+        return;
+    }
+    StockManager *sm = m_core->getStockManager();
+    if (!sm) {
+        QMessageBox::critical(this, tr("Ошибка"), tr("Недоступен менеджер склада."));
+        return;
+    }
+    const qint64 batchId = sm->getBatchIdByBarcode(barcode);
+    if (batchId <= 0) {
+        QMessageBox::warning(this, tr("Штрихкод"), tr("Товар с таким штрихкодом не найден. Добавьте товар через «Найти товар»."));
+        return;
+    }
+    const qint64 qnt = static_cast<qint64>(ui->qtySpinBox->value());
+    SaleOperationResult r = m_salesManager->addSaleByBatchId(m_currentCheckId, batchId, qnt);
+    if (!r.success) {
+        QMessageBox::critical(this, tr("Ошибка"), r.message);
+        return;
+    }
+    m_lastBatchId = batchId;
+    m_lastServiceId = 0;
+    m_lastQnt = qnt;
+    refreshCart();
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() != QEvent::KeyPress)
+        return false;
+    QWidget *receiver = qobject_cast<QWidget *>(watched);
+    if (!receiver || receiver->window() != this)
+        return false;
+    QWidget *focus = QApplication::focusWidget();
+    if (!focus || focus->window() != this)
+        return false;
+    const bool focusIsInput = focus->inherits("QLineEdit") || focus->inherits("QSpinBox")
+        || focus->inherits("QDoubleSpinBox") || focus->inherits("QComboBox")
+        || focus->inherits("QPlainTextEdit") || focus->inherits("QTextEdit");
+
+    QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+    if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+        if (!m_barcodeBuffer.isEmpty() && m_barcodeBuffer.length() >= BARCODE_MIN_LENGTH) {
+            const QString barcode = m_barcodeBuffer.trimmed();
+            m_barcodeBuffer.clear();
+            m_barcodeTimer->stop();
+            processBarcode(barcode);
+            if (focusIsInput && focus == ui->qtySpinBox)
+                ui->qtySpinBox->setValue(1);
+            return true;
+        }
+        m_barcodeBuffer.clear();
+        m_barcodeTimer->stop();
+        return false;
+    }
+    if (ke->key() == Qt::Key_Backspace) {
+        if (!m_barcodeBuffer.isEmpty()) {
+            m_barcodeBuffer.chop(1);
+            m_barcodeTimer->start(400);
+            return !focusIsInput;
+        }
+        return false;
+    }
+    QString text = ke->text();
+    QChar ch;
+    if (!text.isEmpty() && text.at(0).isPrint()) {
+        ch = text.at(0);
+    } else if (ke->key() >= Qt::Key_0 && ke->key() <= Qt::Key_9) {
+        ch = QChar(uchar('0' + (ke->key() - Qt::Key_0)));
+    } else {
+        return false;
+    }
+    m_barcodeBuffer += ch;
+    m_barcodeTimer->start(400);
+    return !focusIsInput;
+}
+
 void MainWindow::on_findGoodButton_clicked()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
@@ -263,12 +408,9 @@ void MainWindow::on_findGoodButton_clicked()
         return;
     }
     GoodFind *dlg = WindowCreator::Create<GoodFind>(this, m_core, false);
-    if (dlg && !ui->searchLineEdit->text().trimmed().isEmpty())
-        dlg->setInitialSearch(ui->searchLineEdit->text().trimmed());
     if (!dlg || dlg->exec() != QDialog::Accepted)
         return;
     if (!m_core->ensureSessionValid()) { close(); return; }
-    ui->searchLineEdit->clear();
     const qint64 qnt = static_cast<qint64>(ui->qtySpinBox->value());
     SaleOperationResult r;
     if (dlg->isBatchSelected()) {
@@ -555,6 +697,10 @@ void MainWindow::on_cancelCheckButton_clicked()
 void MainWindow::on_actionSaveCheckToPdf_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Cashier)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав."));
+        return;
+    }
     if (!m_salesManager || m_currentCheckId <= 0) {
         QMessageBox::warning(this, tr("PDF"), tr("Нет активного чека для сохранения."));
         return;
@@ -566,6 +712,10 @@ void MainWindow::on_actionSaveCheckToPdf_triggered()
 void MainWindow::on_actionCheckHistory_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для просмотра истории чеков."));
+        return;
+    }
     CheckHistoryDialog dlg(this, m_core);
     dlg.exec();
 }
@@ -575,9 +725,26 @@ void MainWindow::on_actionPrintAfterPay_triggered()
     // Обрабатывается через connect в конструкторе
 }
 
+void MainWindow::on_actionSettings_triggered()
+{
+    if (!m_core) return;
+    if (!m_session.role.hasAccessLevel(AccessLevel::Admin)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав. Только администратор."));
+        return;
+    }
+    SettingsDialog dlg(this, m_core);
+    dlg.exec();
+    if (auto *sm = m_core->getSettingsManager())
+        ui->actionPrintAfterPay->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
+}
+
 void MainWindow::on_actionDbConnection_triggered()
 {
     if (!m_core) return;
+    if (!m_session.role.hasAccessLevel(AccessLevel::Admin)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав. Только администратор."));
+        return;
+    }
     DbSettingsDialog dlg(this, m_core);
     dlg.exec();
 }
@@ -605,6 +772,10 @@ void MainWindow::on_actionShortcuts_triggered()
 void MainWindow::on_actionSalesReport_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для отчётов."));
+        return;
+    }
     SalesReportDialog dlg(this, m_core);
     dlg.exec();
 }
@@ -612,6 +783,10 @@ void MainWindow::on_actionSalesReport_triggered()
 void MainWindow::on_actionRecipes_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для рецептов производства."));
+        return;
+    }
     RecipesDialog *dlg = WindowCreator::Create<RecipesDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -620,6 +795,10 @@ void MainWindow::on_actionRecipes_triggered()
 void MainWindow::on_actionProductionRun_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для проведения производства."));
+        return;
+    }
     ProductionRunDialog dlg(this, m_core);
     dlg.exec();
 }
@@ -627,6 +806,10 @@ void MainWindow::on_actionProductionRun_triggered()
 void MainWindow::on_actionStockBalance_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для просмотра остатков."));
+        return;
+    }
     StockBalanceDialog *dlg = WindowCreator::Create<StockBalanceDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -644,6 +827,10 @@ void MainWindow::on_actionLogout_triggered()
 void MainWindow::on_actionCategories_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочников."));
+        return;
+    }
     GoodCatsDialog *dlg = WindowCreator::Create<GoodCatsDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -652,6 +839,10 @@ void MainWindow::on_actionCategories_triggered()
 void MainWindow::on_actionGoods_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочников."));
+        return;
+    }
     GoodsDialog *dlg = WindowCreator::Create<GoodsDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -660,6 +851,10 @@ void MainWindow::on_actionGoods_triggered()
 void MainWindow::on_actionServices_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочников."));
+        return;
+    }
     ServicesDialog *dlg = WindowCreator::Create<ServicesDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
@@ -668,6 +863,10 @@ void MainWindow::on_actionServices_triggered()
 void MainWindow::on_actionVatRates_triggered()
 {
     if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочников."));
+        return;
+    }
     VatRatesDialog *dlg = WindowCreator::Create<VatRatesDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
