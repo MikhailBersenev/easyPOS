@@ -22,6 +22,12 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     , m_core(core)
 {
     ui->setupUi(this);
+    // Qt не задаёт userData элементов комбобокса из .ui — задаём вручную, иначе смена языка не сохраняется
+    if (ui->languageComboBox->count() >= 3) {
+        ui->languageComboBox->setItemData(0, QStringLiteral(""));
+        ui->languageComboBox->setItemData(1, QStringLiteral("en"));
+        ui->languageComboBox->setItemData(2, QStringLiteral("ru"));
+    }
     if (m_core) {
         m_accountManager = m_core->createAccountManager(this);
         m_roleManager = m_core->createRoleManager(this);
@@ -55,6 +61,9 @@ void SettingsDialog::loadFromSettings()
     if (!m_core || !m_core->getSettingsManager())
         return;
     auto *sm = m_core->getSettingsManager();
+    QString lang = sm->stringValue(SettingsKeys::Language, QString());
+    const int idx = ui->languageComboBox->findData(lang);
+    ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
     ui->printAfterPayCheckBox->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
     updateDbLabel();
 }
@@ -380,6 +389,8 @@ void SettingsDialog::onUsersRestoreClicked()
 void SettingsDialog::accept()
 {
     if (m_core && m_core->getSettingsManager()) {
+        QString lang = ui->languageComboBox->currentData().toString();
+        m_core->getSettingsManager()->setValue(SettingsKeys::Language, lang);
         m_core->getSettingsManager()->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
         m_core->getSettingsManager()->sync();
     }

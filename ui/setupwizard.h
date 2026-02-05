@@ -40,6 +40,7 @@ private:
     std::shared_ptr<EasyPOSCore> m_core;
     class SetupDbPage *m_dbPage = nullptr;
     int m_dbPageId = -1;
+    class QComboBox *m_languageCombo = nullptr;
 };
 
 #endif // SETUPWIZARD_H

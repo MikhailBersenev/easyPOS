@@ -67,11 +67,14 @@ qt_add_executable(easyPOS
     logging/logmanager.h logging/logmanager.cpp
 )
 
-# qt_add_translations(
-#     easyPOS
-#     TS_FILES easyPOS_ru_RU.ts
-# )
-# Примечание: временно отключено из-за проблемы с путями в Qt6 CMake
+# Переводы: lrelease компилирует .ts в .qm (по умолчанию в build/)
+find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
+qt_add_lrelease(easyPOS
+    TS_FILES
+        easyPOS_ru_RU.ts
+        easyPOS_en.ts
+)
+add_dependencies(easyPOS easyPOS_lrelease)
 
 target_include_directories(easyPOS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

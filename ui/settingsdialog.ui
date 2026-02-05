@@ -31,6 +31,48 @@
       </attribute>
       <layout class="QVBoxLayout" name="generalLayout">
        <item>
+        <layout class="QFormLayout" name="languageFormLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="languageLabel">
+           <property name="text">
+            <string>Язык интерфейса:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="languageComboBox">
+           <property name="toolTip">
+            <string>Применится после перезапуска приложения</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>По умолчанию (система)</string>
+            </property>
+            <property name="userData">
+             <string></string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>English</string>
+            </property>
+            <property name="userData">
+             <string>en</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Русский</string>
+            </property>
+            <property name="userData">
+             <string>ru</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QCheckBox" name="printAfterPayCheckBox">
          <property name="toolTip">
           <string>Автоматически открывать диалог печати после закрытия чека</string>

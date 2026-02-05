@@ -72,6 +72,9 @@ private:
 
 // Константы ключей настроек
 namespace SettingsKeys {
+    // Язык интерфейса: "" = по системе, "ru" = русский, "en" = English
+    constexpr const char *Language = "ui/language";
+
     // Первоначальная настройка
     constexpr const char *SetupCompleted = "setup/completed";
 

@@ -9,6 +9,8 @@
 #include <QWizardPage>
 #include <QShowEvent>
 #include <QMessageBox>
+#include <QComboBox>
+#include <QFormLayout>
 
 SetupWizard::SetupWizard(std::shared_ptr<EasyPOSCore> core, QWidget *parent)
     : QWizard(parent)
@@ -42,10 +44,20 @@ bool SetupWizard::setupRequired(std::shared_ptr<EasyPOSCore> core)
 
 void SetupWizard::setupPages()
 {
-    // --- Страница 1: Приветствие ---
+    // --- Страница 1: Язык и приветствие ---
     QWizardPage *welcomePage = new QWizardPage(this);
     welcomePage->setTitle(tr("Добро пожаловать"));
     welcomePage->setSubTitle(tr("Мастер первоначальной настройки easyPOS"));
+
+    m_languageCombo = new QComboBox(welcomePage);
+    m_languageCombo->addItem(tr("По умолчанию (система)"), QStringLiteral(""));
+    m_languageCombo->addItem(QStringLiteral("English"), QStringLiteral("en"));
+    m_languageCombo->addItem(QStringLiteral("Русский"), QStringLiteral("ru"));
+    if (m_core && m_core->getSettingsManager()) {
+        QString saved = m_core->getSettingsManager()->stringValue(SettingsKeys::Language, QString());
+        int idx = m_languageCombo->findData(saved);
+        if (idx >= 0) m_languageCombo->setCurrentIndex(idx);
+    }
 
     QLabel *welcomeLabel = new QLabel(
         tr("Для начала работы необходимо настроить подключение к базе данных PostgreSQL.\n\n"
@@ -56,6 +68,9 @@ void SetupWizard::setupPages()
     welcomeLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     QVBoxLayout *welcomeLayout = new QVBoxLayout(welcomePage);
+    QFormLayout *langRow = new QFormLayout();
+    langRow->addRow(tr("Язык интерфейса:"), m_languageCombo);
+    welcomeLayout->addLayout(langRow);
     welcomeLayout->addWidget(welcomeLabel);
 
     addPage(welcomePage);
@@ -120,6 +135,10 @@ void SetupWizard::saveSettings()
     if (!m_core || !m_core->getSettingsManager() || !m_dbPage)
         return;
 
+    if (m_languageCombo) {
+        QString lang = m_languageCombo->currentData().toString();
+        m_core->getSettingsManager()->setValue(SettingsKeys::Language, lang);
+    }
     PostgreSQLAuth auth = m_dbPage->getAuth();
     m_core->getSettingsManager()->saveDatabaseSettings(auth);
     m_core->getSettingsManager()->setValue(SettingsKeys::SetupCompleted, true);
