@@ -13,6 +13,7 @@
 #include "ui/vatratesdialog.h"
 #include "ui/positionsdialog.h"
 #include "ui/employeesdialog.h"
+#include "ui/promotionsdialog.h"
 #include "ui/discountdialog.h"
 #include "ui/dbsettingsdialog.h"
 #include "ui/settingsdialog.h"
@@ -190,6 +191,7 @@ void MainWindow::applyRoleAccess()
     ui->actionGoods->setVisible(isManager);
     ui->actionServices->setVisible(isManager);
     ui->actionVatRates->setVisible(isManager);
+    ui->actionPromotions->setVisible(isManager);
     ui->actionPositions->setVisible(isManager);
     ui->actionEmployees->setVisible(isManager);
     ui->actionStockBalance->setVisible(isManager);
@@ -221,7 +223,8 @@ void MainWindow::refreshCart()
         ui->checkWidget->insertRow(row);
         ui->checkWidget->setItem(row, 0, new QTableWidgetItem(r.itemName));
         ui->checkWidget->setItem(row, 1, new QTableWidgetItem(QString::number(r.qnt)));
-        ui->checkWidget->setItem(row, 2, new QTableWidgetItem(QString::number(r.unitPrice, 'f', 2)));
+        const double priceToShow = r.originalUnitPrice > 0.0 ? r.originalUnitPrice : r.unitPrice;
+        ui->checkWidget->setItem(row, 2, new QTableWidgetItem(QString::number(priceToShow, 'f', 2)));
         ui->checkWidget->setItem(row, 3, new QTableWidgetItem(QString::number(r.sum, 'f', 2)));
         const QString vatName = m_salesManager->getVatRateName(r.vatRateId);
         ui->checkWidget->setItem(row, 4, new QTableWidgetItem(vatName.isEmpty() ? tr("—") : vatName));
@@ -236,19 +239,27 @@ void MainWindow::updateTotals()
 {
     double total = 0.0;
     double discount = 0.0;
+    double manualDiscount = 0.0;
     double vatTotal = 0.0;
     if (m_salesManager && m_currentCheckId > 0) {
         const Check ch = m_salesManager->getCheck(m_currentCheckId);
         total = ch.totalAmount;
-        discount = ch.discountAmount;
+        manualDiscount = ch.discountAmount;
         const QList<SaleRow> rows = m_salesManager->getSalesByCheck(m_currentCheckId);
+        double promotionDiscount = 0.0;
         for (const SaleRow &r : rows) {
+            if (r.originalUnitPrice > 0.0 && r.qnt > 0) {
+                const double lineFull = r.originalUnitPrice * static_cast<double>(r.qnt);
+                if (lineFull > r.sum)
+                    promotionDiscount += lineFull - r.sum;
+            }
             const double rate = m_salesManager->getVatRatePercent(r.vatRateId);
             if (rate > 0)
                 vatTotal += r.sum * rate / (100.0 + rate);
         }
+        discount = manualDiscount + promotionDiscount;
     }
-    const double toPay = (total - discount) < 0 ? 0 : (total - discount);
+    const double toPay = (total - manualDiscount) < 0 ? 0 : (total - manualDiscount);
     ui->totalLabel->setText(tr("Итого: %1 ₽").arg(QString::number(total, 'f', 2)));
     ui->discountLabel->setText(tr("Скидка: %1 ₽").arg(QString::number(discount, 'f', 2)));
     ui->vatTotalLabel->setText(tr("В т.ч. НДС: %1 ₽").arg(QString::number(vatTotal, 'f', 2)));
@@ -619,9 +630,10 @@ void MainWindow::renderCheckContent(QPainter &painter, qint64 checkId, const Che
 
     for (const SaleRow &r : rows) {
         const QString vatName = m_salesManager ? m_salesManager->getVatRateName(r.vatRateId) : QString();
+        const double priceToShow = r.originalUnitPrice > 0.0 ? r.originalUnitPrice : r.unitPrice;
         painter.drawText(leftMargin, y, r.itemName.left(35));
         painter.drawText(leftMargin + 250, y, QString::number(r.qnt));
-        painter.drawText(leftMargin + 320, y, QString::number(r.unitPrice, 'f', 2));
+        painter.drawText(leftMargin + 320, y, QString::number(priceToShow, 'f', 2));
         painter.drawText(leftMargin + 400, y, QString::number(r.sum, 'f', 2));
         painter.drawText(leftMargin + 480, y, vatName.isEmpty() ? tr("—") : vatName);
         y += lineHeight;
@@ -991,6 +1003,17 @@ void MainWindow::on_actionPositions_triggered()
         return;
     }
     PositionsDialog dlg(this, m_core);
+    dlg.exec();
+}
+
+void MainWindow::on_actionPromotions_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочника маркетинговых акций."));
+        return;
+    }
+    PromotionsDialog dlg(this, m_core);
     dlg.exec();
 }
 

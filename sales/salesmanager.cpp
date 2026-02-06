@@ -181,6 +181,46 @@ double SalesManager::getServicePrice(qint64 serviceId)
     return -1.0;
 }
 
+void SalesManager::getPromotionForGood(qint64 goodId, double *outPercent, double *outSum) const
+{
+    if (outPercent)
+        *outPercent = 0.0;
+    if (outSum)
+        *outSum = 0.0;
+    if (!m_dbConnection || !m_dbConnection->isConnected() || goodId <= 0)
+        return;
+    QSqlQuery q(m_dbConnection->getDatabase());
+    // Сначала получаем discountid у товара (на случай если колонка добавлена миграцией)
+    q.prepare(QStringLiteral("SELECT discountid FROM goods WHERE id = :goodId"));
+    q.bindValue(QStringLiteral(":goodId"), goodId);
+    if (!q.exec() || !q.next())
+        return;
+    const QVariant didVar = q.value(0);
+    if (didVar.isNull() || !didVar.isValid())
+        return;
+    const qint64 discountId = didVar.toLongLong();
+    if (discountId <= 0)
+        return;
+    q.prepare(QStringLiteral(
+        "SELECT percent, \"sum\" FROM discounts WHERE id = :did AND (isdeleted IS NULL OR isdeleted = false)"));
+    q.bindValue(QStringLiteral(":did"), discountId);
+    if (!q.exec() || !q.next())
+        return;
+    if (outPercent)
+        *outPercent = q.value(0).toDouble();
+    if (outSum)
+        *outSum = q.value(1).toDouble();
+}
+
+double SalesManager::applyPromotionToLineSum(double lineSum, qint64 qnt, double percent, double discountSumPerUnit)
+{
+    if (lineSum <= 0 || qnt <= 0)
+        return 0.0;
+    double discount = lineSum * (percent / 100.0) + discountSumPerUnit * static_cast<double>(qnt);
+    double result = lineSum - discount;
+    return result < 0.0 ? 0.0 : result;
+}
+
 void SalesManager::recalcCheckTotal(qint64 checkId)
 {
     if (!m_dbConnection || !m_dbConnection->isConnected())
@@ -540,6 +580,9 @@ SaleOperationResult SalesManager::addSaleByBatchId(qint64 checkId, qint64 batchI
     }
 
     double sum = price * static_cast<double>(qnt);
+    double pct = 0.0, discSum = 0.0;
+    getPromotionForGood(goodId, &pct, &discSum);
+    sum = applyPromotionToLineSum(sum, qnt, pct, discSum);
 
     q.prepare(QStringLiteral(
         "INSERT INTO sales (itemid, qnt, vatrateid, sum, comment, checkid, isdeleted) "
@@ -750,6 +793,11 @@ SaleOperationResult SalesManager::addSale(qint64 checkId, qint64 itemId, qint64 
     }
 
     double sum = price * static_cast<double>(qnt);
+    if (goodId > 0) {
+        double pct = 0.0, discSum = 0.0;
+        getPromotionForGood(goodId, &pct, &discSum);
+        sum = applyPromotionToLineSum(sum, qnt, pct, discSum);
+    }
 
     q.prepare(QStringLiteral(
         "INSERT INTO sales (itemid, qnt, vatrateid, sum, comment, checkid, isdeleted) "
@@ -955,7 +1003,8 @@ QList<SaleRow> SalesManager::getSalesByCheck(qint64 checkId, bool includeDeleted
         "SELECT s.id, s.itemid, s.qnt, s.vatrateid, s.sum, s.comment, s.checkid, s.isdeleted, "
         "i.batchid, i.serviceid, "
         "COALESCE(g.name, sv.name) AS itemname, "
-        "CASE WHEN s.qnt > 0 THEN s.sum / s.qnt ELSE 0 END AS unitprice "
+        "CASE WHEN s.qnt > 0 THEN s.sum / s.qnt ELSE 0 END AS unitprice, "
+        "COALESCE(b.price, sv.price) AS originalunitprice "
         "FROM sales s "
         "JOIN items i ON i.id = s.itemid "
         "LEFT JOIN batches b ON b.id = i.batchid "
@@ -986,6 +1035,7 @@ QList<SaleRow> SalesManager::getSalesByCheck(qint64 checkId, bool includeDeleted
         row.serviceId = q.value(QStringLiteral("serviceid")).toLongLong();
         row.itemName = q.value(QStringLiteral("itemname")).toString();
         row.unitPrice = q.value(QStringLiteral("unitprice")).toDouble();
+        row.originalUnitPrice = q.value(QStringLiteral("originalunitprice")).toDouble();
         list.append(row);
     }
     return list;
@@ -999,7 +1049,8 @@ SaleRow SalesManager::getSale(qint64 saleId, bool includeDeleted)
 
     QString sql = QStringLiteral(
         "SELECT s.id, s.itemid, s.qnt, s.vatrateid, s.sum, s.comment, s.checkid, s.isdeleted, "
-        "i.batchid, i.serviceid, COALESCE(g.name, sv.name) AS itemname "
+        "i.batchid, i.serviceid, COALESCE(g.name, sv.name) AS itemname, "
+        "COALESCE(b.price, sv.price) AS originalunitprice "
         "FROM sales s "
         "JOIN items i ON i.id = s.itemid "
         "LEFT JOIN batches b ON b.id = i.batchid "
@@ -1026,6 +1077,7 @@ SaleRow SalesManager::getSale(qint64 saleId, bool includeDeleted)
     row.batchId = q.value(QStringLiteral("batchid")).toLongLong();
     row.serviceId = q.value(QStringLiteral("serviceid")).toLongLong();
     row.itemName = q.value(QStringLiteral("itemname")).toString();
+    row.originalUnitPrice = q.value(QStringLiteral("originalunitprice")).toDouble();
     row.unitPrice = row.qnt > 0 ? row.sum / static_cast<double>(row.qnt) : 0.0;
     return row;
 }

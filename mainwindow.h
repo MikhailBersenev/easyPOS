@@ -41,6 +41,7 @@ private slots:
     void on_actionGoods_triggered();
     void on_actionServices_triggered();
     void on_actionVatRates_triggered();
+    void on_actionPromotions_triggered();
     void on_actionPositions_triggered();
     void on_actionEmployees_triggered();
     void on_actionLogout_triggered();

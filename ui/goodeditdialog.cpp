@@ -44,7 +44,16 @@ void GoodEditDialog::setCategories(const QList<int> &ids, const QStringList &nam
     ui->categoryCombo->addItems(names);
 }
 
-void GoodEditDialog::setData(const QString &name, const QString &description, int categoryId, bool isActive, const QString &imageUrl)
+void GoodEditDialog::setPromotions(const QList<int> &ids, const QStringList &names)
+{
+    m_promotionIds = ids;
+    ui->promotionCombo->clear();
+    ui->promotionCombo->addItem(tr("— Нет —"), 0);
+    for (int i = 0; i < ids.size() && i < names.size(); ++i)
+        ui->promotionCombo->addItem(names[i], ids[i]);
+}
+
+void GoodEditDialog::setData(const QString &name, const QString &description, int categoryId, bool isActive, const QString &imageUrl, int promotionId)
 {
     ui->nameEdit->setText(name);
     ui->descriptionEdit->setPlainText(description);
@@ -52,6 +61,8 @@ void GoodEditDialog::setData(const QString &name, const QString &description, in
     int idx = m_categoryIds.indexOf(categoryId);
     if (idx >= 0)
         ui->categoryCombo->setCurrentIndex(idx);
+    idx = ui->promotionCombo->findData(promotionId);
+    ui->promotionCombo->setCurrentIndex(idx >= 0 ? idx : 0);
     ui->imageUrlEdit->setText(imageUrl);
     updateIconPreview(imageUrl);
 }
@@ -82,6 +93,11 @@ bool GoodEditDialog::isActive() const
 QString GoodEditDialog::imageUrl() const
 {
     return ui->imageUrlEdit->text().trimmed();
+}
+
+int GoodEditDialog::promotionId() const
+{
+    return ui->promotionCombo->currentData().toInt();
 }
 
 void GoodEditDialog::updateIconPreview(const QString &path)

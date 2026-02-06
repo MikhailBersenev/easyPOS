@@ -58,7 +58,8 @@ struct SaleRow {
     QString itemName;   // название товара или услуги
     qint64 batchId = 0;
     qint64 serviceId = 0;
-    double unitPrice = 0.0;
+    double unitPrice = 0.0;       // цена за единицу с учётом скидки (sum/qnt)
+    double originalUnitPrice = 0.0; // цена за единицу без скидки (для отображения в чеке)
 };
 
 // Результат операции продаж

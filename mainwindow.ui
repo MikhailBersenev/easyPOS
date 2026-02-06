@@ -256,6 +256,7 @@
     <addaction name="actionGoods"/>
     <addaction name="actionServices"/>
     <addaction name="actionVatRates"/>
+    <addaction name="actionPromotions"/>
     <addaction name="actionPositions"/>
     <addaction name="actionEmployees"/>
     <addaction name="actionStockBalance"/>
@@ -307,6 +308,11 @@
   <action name="actionVatRates">
    <property name="text">
     <string>Ставки НДС</string>
+   </property>
+  </action>
+  <action name="actionPromotions">
+   <property name="text">
+    <string>Маркетинговые акции</string>
    </property>
   </action>
   <action name="actionPositions">

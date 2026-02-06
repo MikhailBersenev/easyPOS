@@ -3,6 +3,8 @@
 #include "../easyposcore.h"
 #include "../goods/categorymanager.h"
 #include "../goods/structures.h"
+#include "../promotions/promotionmanager.h"
+#include "../promotions/structures.h"
 #include "../alerts/alertkeys.h"
 #include "../alerts/alertsmanager.h"
 #include "../db/databaseconnection.h"
@@ -85,6 +87,7 @@ void GoodsDialog::addOrEditGood(int existingId)
     bool isActive = true;
 
     QString imageUrl;
+    int promotionId = 0;
     if (existingId > 0) {
         const int row = currentRow();
         if (row < 0) return;
@@ -92,11 +95,12 @@ void GoodsDialog::addOrEditGood(int existingId)
         description = cellText(row, 2);
         isActive = (cellText(row, 4) == tr("Да"));
         QSqlQuery sq(m_core->getDatabaseConnection()->getDatabase());
-        sq.prepare(QStringLiteral("SELECT categoryid, imageurl FROM goods WHERE id = :id"));
+        sq.prepare(QStringLiteral("SELECT categoryid, imageurl, discountid FROM goods WHERE id = :id"));
         sq.bindValue(QStringLiteral(":id"), existingId);
         if (sq.exec() && sq.next()) {
             categoryId = sq.value(0).toInt();
             imageUrl = sq.value(1).toString();
+            promotionId = sq.value(2).toInt();
         }
     }
 
@@ -121,9 +125,20 @@ void GoodsDialog::addOrEditGood(int existingId)
         return;
     }
 
+    PromotionManager promMgr(this);
+    promMgr.setDatabaseConnection(m_core->getDatabaseConnection());
+    const QList<Promotion> promotions = promMgr.list(false);
+    QList<int> promIds;
+    QStringList promNames;
+    for (const Promotion &p : promotions) {
+        promIds << p.id;
+        promNames << p.name;
+    }
+
     GoodEditDialog dlg(this);
     dlg.setCategories(catIds, catNames);
-    dlg.setData(name, description, categoryId, isActive, imageUrl);
+    dlg.setPromotions(promIds, promNames);
+    dlg.setData(name, description, categoryId, isActive, imageUrl, promotionId);
     dlg.setWindowTitle(existingId > 0 ? tr("Редактирование товара") : tr("Новый товар"));
     if (dlg.exec() != QDialog::Accepted)
         return;
@@ -133,6 +148,7 @@ void GoodsDialog::addOrEditGood(int existingId)
     categoryId = dlg.categoryId();
     isActive = dlg.isActive();
     imageUrl = dlg.imageUrl();
+    promotionId = dlg.promotionId();
 
     QSqlDatabase db = m_core->getDatabaseConnection()->getDatabase();
     QSqlQuery q(db);
@@ -140,12 +156,13 @@ void GoodsDialog::addOrEditGood(int existingId)
     if (existingId > 0) {
         q.prepare(QStringLiteral(
             "UPDATE goods SET name = :name, description = :desc, categoryid = :catid, "
-            "isactive = :active, imageurl = :imageurl, updatedate = :ud WHERE id = :id"));
+            "isactive = :active, imageurl = :imageurl, discountid = :discountid, updatedate = :ud WHERE id = :id"));
         q.bindValue(QStringLiteral(":name"), name);
         q.bindValue(QStringLiteral(":desc"), description);
         q.bindValue(QStringLiteral(":catid"), categoryId);
         q.bindValue(QStringLiteral(":active"), isActive);
         q.bindValue(QStringLiteral(":imageurl"), imageUrl.isEmpty() ? QVariant() : imageUrl);
+        q.bindValue(QStringLiteral(":discountid"), promotionId > 0 ? promotionId : QVariant());
         q.bindValue(QStringLiteral(":ud"), QDate::currentDate());
         q.bindValue(QStringLiteral(":id"), existingId);
         if (!q.exec()) {
@@ -160,13 +177,14 @@ void GoodsDialog::addOrEditGood(int existingId)
         showInfo(tr("Товар обновлён."));
     } else {
         q.prepare(QStringLiteral(
-            "INSERT INTO goods (name, description, categoryid, isactive, imageurl, updatedate, employeeid, isdeleted) "
-            "VALUES (:name, :desc, :catid, :active, :imageurl, :ud, :empid, false) RETURNING id"));
+            "INSERT INTO goods (name, description, categoryid, isactive, imageurl, discountid, updatedate, employeeid, isdeleted) "
+            "VALUES (:name, :desc, :catid, :active, :imageurl, :discountid, :ud, :empid, false) RETURNING id"));
         q.bindValue(QStringLiteral(":name"), name);
         q.bindValue(QStringLiteral(":desc"), description);
         q.bindValue(QStringLiteral(":catid"), categoryId);
         q.bindValue(QStringLiteral(":active"), isActive);
         q.bindValue(QStringLiteral(":imageurl"), imageUrl.isEmpty() ? QVariant() : imageUrl);
+        q.bindValue(QStringLiteral(":discountid"), promotionId > 0 ? promotionId : QVariant());
         q.bindValue(QStringLiteral(":ud"), QDate::currentDate());
         q.bindValue(QStringLiteral(":empid"), employeeId);
         if (!q.exec() || !q.next()) {

@@ -71,6 +71,9 @@ namespace AlertSignature {
     constexpr const char *PositionCreated = "position_created";
     constexpr const char *PositionUpdated = "position_updated";
     constexpr const char *PositionDeleted = "position_deleted";
+    constexpr const char *PromotionCreated = "promotion_created";
+    constexpr const char *PromotionUpdated = "promotion_updated";
+    constexpr const char *PromotionDeleted = "promotion_deleted";
 
     // --- System ---
     constexpr const char *DbConnected = "db_connected";

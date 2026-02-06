@@ -80,6 +80,10 @@ private:
     double getBatchPrice(qint64 batchId);
     double getServicePrice(qint64 serviceId);
     qint64 resolveVatRateId(qint64 vatRateId);
+    /** Получить скидку акции для товара (percent, sum). Если акции нет — (0, 0). */
+    void getPromotionForGood(qint64 goodId, double *outPercent, double *outSum) const;
+    /** Сумма позиции после применения маркетинговой акции (percent — скидка %, discountSumPerUnit — фикс. скидка в руб за единицу). */
+    static double applyPromotionToLineSum(double lineSum, qint64 qnt, double percent, double discountSumPerUnit);
 };
 
 #endif // SALESMANAGER_H

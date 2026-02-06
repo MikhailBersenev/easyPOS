@@ -34,9 +34,10 @@ static void renderCheckContent(QPainter &painter, qint64 checkId, const Check &c
         const double rate = sm ? sm->getVatRatePercent(r.vatRateId) : 0.0;
         const double vatAmt = rate > 0 ? r.sum * rate / (100.0 + rate) : 0.0;
         totalVat += vatAmt;
+        const double priceToShow = r.originalUnitPrice > 0.0 ? r.originalUnitPrice : r.unitPrice;
         painter.drawText(leftMargin, y, r.itemName.left(35));
         painter.drawText(leftMargin + 250, y, QString::number(r.qnt));
-        painter.drawText(leftMargin + 320, y, QString::number(r.unitPrice, 'f', 2));
+        painter.drawText(leftMargin + 320, y, QString::number(priceToShow, 'f', 2));
         painter.drawText(leftMargin + 400, y, QString::number(r.sum, 'f', 2));
         painter.drawText(leftMargin + 480, y, vatAmt > 0 ? QString::number(vatAmt, 'f', 2) : QLatin1String("—"));
         y += lineHeight;

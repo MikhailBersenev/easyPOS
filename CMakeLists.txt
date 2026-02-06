@@ -52,6 +52,10 @@ qt_add_executable(easyPOS
     ui/employeeeditdialog.h ui/employeeeditdialog.cpp ui/employeeeditdialog.ui
     ui/positionsdialog.h ui/positionsdialog.cpp
     ui/employeesdialog.h ui/employeesdialog.cpp
+    ui/promotioneditdialog.h ui/promotioneditdialog.cpp ui/promotioneditdialog.ui
+    ui/promotionsdialog.h ui/promotionsdialog.cpp
+    promotions/structures.h
+    promotions/promotionmanager.h promotions/promotionmanager.cpp
     goods/structures.h
     goods/categorymanager.h goods/categorymanager.cpp
     employees/structures.h
