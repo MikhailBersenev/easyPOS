@@ -7,6 +7,8 @@
 #include "../db/databaseconnection.h"
 #include "structures.h"
 
+class SettingsManager;
+
 class SalesManager : public QObject
 {
     Q_OBJECT
@@ -16,6 +18,8 @@ public:
 
     void setDatabaseConnection(DatabaseConnection *dbConnection);
     void setStockManager(class StockManager *stockManager);
+    /** Опционально: для использования ставки НДС по умолчанию из настроек */
+    void setSettingsManager(class SettingsManager *settingsManager);
 
     // Чек
     /** Создать чек. shiftId — ID активной смены сотрудника (обязательно для привязки чека к смене). */
@@ -43,6 +47,10 @@ public:
 
     // Справочники
     qint64 ensureDefaultVatRate();
+    /** Название ставки НДС по id (пустая строка или «—» если не найдена) */
+    QString getVatRateName(qint64 vatRateId) const;
+    /** Ставка НДС в процентах (0 если не найдена или без НДС). Для расчёта суммы НДС из суммы с НДС: sum * rate / (100 + rate). */
+    double getVatRatePercent(qint64 vatRateId) const;
     QList<BatchInfo> getAvailableBatches();
     QList<ServiceInfo> getAvailableServices();
 
@@ -63,6 +71,7 @@ signals:
 private:
     DatabaseConnection *m_dbConnection;
     class StockManager *m_stockManager;
+    class SettingsManager *m_settingsManager = nullptr;
     QSqlError m_lastError;
 
     void recalcCheckTotal(qint64 checkId);

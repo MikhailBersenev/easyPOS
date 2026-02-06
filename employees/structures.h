@@ -21,6 +21,7 @@ struct Employee {
     QString middleName;
     Position position;
     int userId;  // ID пользователя (вместо вложенного объекта User)
+    QString badgeCode;  // штрихкод бейджа для входа
     QDate updateDate;
     bool isDeleted;
     

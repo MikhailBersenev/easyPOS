@@ -5,6 +5,8 @@
 #include "../logging/logmanager.h"
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include <QMessageBox>
 
 DbSettingsDialog::DbSettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
@@ -111,6 +113,13 @@ void DbSettingsDialog::on_buttonBox_accepted()
     }
 
     saveToSettings();
+    if (auto *alerts = m_core->createAlertsManager()) {
+        qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+        qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+        alerts->log(AlertCategory::System, AlertSignature::DbSettingsChanged,
+                    tr("Настройки подключения к БД изменены: %1 / %2").arg(auth.host).arg(auth.database),
+                    uid, empId);
+    }
     qInfo() << "DbSettingsDialog: DB settings saved, host=" << auth.host << "db=" << auth.database;
     QMessageBox::information(this, windowTitle(),
         tr("Настройки сохранены.\nДля применения нового подключения перезапустите приложение."));

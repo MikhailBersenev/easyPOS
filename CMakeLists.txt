@@ -42,13 +42,21 @@ qt_add_executable(easyPOS
     ui/dbsettingsdialog.h ui/dbsettingsdialog.cpp ui/dbsettingsdialog.ui
     ui/settingsdialog.h ui/settingsdialog.cpp ui/settingsdialog.ui
     ui/checkhistorydialog.h ui/checkhistorydialog.cpp ui/checkhistorydialog.ui
+    ui/alertsdialog.h ui/alertsdialog.cpp ui/alertsdialog.ui
     ui/salesreportdialog.h ui/salesreportdialog.cpp ui/salesreportdialog.ui
     ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp ui/checkdetailsdialog.ui
     ui/checkpdfexporter.h ui/checkpdfexporter.cpp
     ui/servicesdialog.h ui/servicesdialog.cpp
     ui/vatratesdialog.h ui/vatratesdialog.cpp
+    ui/positioneditdialog.h ui/positioneditdialog.cpp ui/positioneditdialog.ui
+    ui/employeeeditdialog.h ui/employeeeditdialog.cpp ui/employeeeditdialog.ui
+    ui/positionsdialog.h ui/positionsdialog.cpp
+    ui/employeesdialog.h ui/employeesdialog.cpp
     goods/structures.h
     goods/categorymanager.h goods/categorymanager.cpp
+    employees/structures.h
+    employees/positionmanager.h employees/positionmanager.cpp
+    employees/employeemanager.h employees/employeemanager.cpp
     settings/settingsmanager.h settings/settingsmanager.cpp
     sales/structures.h
     sales/salesmanager.h sales/salesmanager.cpp
@@ -63,6 +71,9 @@ qt_add_executable(easyPOS
     ui/batcheditdialog.h ui/batcheditdialog.cpp ui/batcheditdialog.ui
     shifts/structures.h
     shifts/shiftmanager.h shifts/shiftmanager.cpp
+    alerts/structures.h
+    alerts/alertkeys.h
+    alerts/alertsmanager.h alerts/alertsmanager.cpp
     ui/shiftsdialog.h ui/shiftsdialog.cpp ui/shiftsdialog.ui
     logging/logmanager.h logging/logmanager.cpp
 )
@@ -131,6 +142,7 @@ qt_add_executable(unit_tests
     sales/salesmanager.h sales/salesmanager.cpp
     production/structures.h production/productionmanager.h production/productionmanager.cpp
     shifts/structures.h shifts/shiftmanager.h shifts/shiftmanager.cpp
+    alerts/structures.h alerts/alertkeys.h alerts/alertsmanager.h alerts/alertsmanager.cpp
     settings/settingsmanager.h settings/settingsmanager.cpp
     easyposcore.cpp easyposcore.h
 )

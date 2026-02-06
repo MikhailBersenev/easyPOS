@@ -41,9 +41,12 @@ private slots:
     void on_actionGoods_triggered();
     void on_actionServices_triggered();
     void on_actionVatRates_triggered();
+    void on_actionPositions_triggered();
+    void on_actionEmployees_triggered();
     void on_actionLogout_triggered();
     void on_actionSaveCheckToPdf_triggered();
     void on_actionCheckHistory_triggered();
+    void on_actionAlerts_triggered();
     void on_actionShifts_triggered();
     void on_actionPrintAfterPay_triggered();
     void on_actionSettings_triggered();

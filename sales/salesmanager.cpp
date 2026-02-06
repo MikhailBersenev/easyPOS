@@ -1,5 +1,6 @@
 #include "salesmanager.h"
 #include "stockmanager.h"
+#include "../settings/settingsmanager.h"
 #include "../logging/logmanager.h"
 #include <QSqlQuery>
 #include <QSqlError>
@@ -28,6 +29,11 @@ void SalesManager::setDatabaseConnection(DatabaseConnection *dbConnection)
 void SalesManager::setStockManager(StockManager *stockManager)
 {
     m_stockManager = stockManager;
+}
+
+void SalesManager::setSettingsManager(SettingsManager *settingsManager)
+{
+    m_settingsManager = settingsManager;
 }
 
 static bool dbOk(DatabaseConnection *c, SaleOperationResult &r, QSqlError &lastErr)
@@ -71,7 +77,36 @@ qint64 SalesManager::resolveVatRateId(qint64 vatRateId)
 {
     if (vatRateId > 0)
         return vatRateId;
+    if (m_settingsManager) {
+        const int sid = m_settingsManager->intValue(SettingsKeys::DefaultVatRateId, 0);
+        if (sid > 0)
+            return static_cast<qint64>(sid);
+    }
     return ensureDefaultVatRate();
+}
+
+QString SalesManager::getVatRateName(qint64 vatRateId) const
+{
+    if (!m_dbConnection || !m_dbConnection->isConnected() || vatRateId <= 0)
+        return QString();
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral("SELECT name FROM vatrates WHERE id = :id"));
+    q.bindValue(QStringLiteral(":id"), vatRateId);
+    if (q.exec() && q.next())
+        return q.value(0).toString();
+    return QString();
+}
+
+double SalesManager::getVatRatePercent(qint64 vatRateId) const
+{
+    if (!m_dbConnection || !m_dbConnection->isConnected() || vatRateId <= 0)
+        return 0.0;
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral("SELECT rate FROM vatrates WHERE id = :id"));
+    q.bindValue(QStringLiteral(":id"), vatRateId);
+    if (q.exec() && q.next())
+        return q.value(0).toDouble();
+    return 0.0;
 }
 
 qint64 SalesManager::getOrCreateItemForBatch(qint64 batchId)

@@ -3,6 +3,8 @@
 #include "../easyposcore.h"
 #include "../goods/categorymanager.h"
 #include "../goods/structures.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include "../db/databaseconnection.h"
 #include "../RBAC/structures.h"
 #include <QDate>
@@ -145,6 +147,11 @@ void GoodsDialog::addOrEditGood(int existingId)
             showError(tr("Ошибка сохранения: %1").arg(q.lastError().text()));
             return;
         }
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = session.userId;
+            alerts->log(AlertCategory::Reference, AlertSignature::GoodUpdated,
+                       tr("Товар обновлён: %1 (id=%2)").arg(name).arg(existingId), uid, employeeId);
+        }
         showInfo(tr("Товар обновлён."));
     } else {
         q.prepare(QStringLiteral(
@@ -159,6 +166,11 @@ void GoodsDialog::addOrEditGood(int existingId)
         if (!q.exec() || !q.next()) {
             showError(tr("Ошибка добавления: %1").arg(q.lastError().text()));
             return;
+        }
+        const int newId = q.value(0).toInt();
+        if (auto *alerts = m_core->createAlertsManager()) {
+            alerts->log(AlertCategory::Reference, AlertSignature::GoodCreated,
+                       tr("Товар добавлен: %1 (id=%2)").arg(name).arg(newId), session.userId, employeeId);
         }
         showInfo(tr("Товар добавлен."));
     }
@@ -189,7 +201,12 @@ void GoodsDialog::deleteRecord()
         showError(tr("Не удалось удалить: %1").arg(q.lastError().text()));
         return;
     }
-    
+    if (auto *alerts = m_core->createAlertsManager()) {
+        UserSession session = m_core->getCurrentSession();
+        qint64 employeeId = m_core->getEmployeeIdByUserId(session.userId);
+        alerts->log(AlertCategory::Reference, AlertSignature::GoodDeleted,
+                   tr("Товар помечен удалённым: %1 (id=%2)").arg(name).arg(id), session.userId, employeeId);
+    }
     showInfo(tr("Товар помечен как удалённый."));
     loadTable();
 }

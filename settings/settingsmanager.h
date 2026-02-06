@@ -100,6 +100,9 @@ namespace SettingsKeys {
     // Печать чека после оплаты
     constexpr const char *PrintAfterPay = "pos/printAfterPay";
 
+    /** Ставка НДС по умолчанию для новых позиций в чеке (id из vatrates; 0 = первая доступная) */
+    constexpr const char *DefaultVatRateId = "pos/defaultVatRateId";
+
     // Путь к файлу логов (пустой = по умолчанию, применится после перезапуска)
     constexpr const char *LogPath = "logging/path";
 

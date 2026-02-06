@@ -3,6 +3,8 @@
 #include "../easyposcore.h"
 #include "../shifts/shiftmanager.h"
 #include "../shifts/structures.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include "../RBAC/structures.h"
 #include "../logging/logmanager.h"
 #include "windowcreator.h"
@@ -124,6 +126,11 @@ void ShiftsDialog::on_startShiftButton_clicked()
         QMessageBox::warning(this, windowTitle(), tr("Не удалось начать смену. Проверьте подключение к базе данных."));
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager()) {
+        qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+        alerts->log(AlertCategory::Shift, AlertSignature::ShiftStarted,
+                    tr("Смена начата, employeeId=%1").arg(m_employeeId), uid, m_employeeId);
+    }
     LOG_INFO() << "ShiftsDialog: смена успешно начата";
     QMessageBox::information(this, windowTitle(), tr("Смена начата."));
     updateCurrentShiftLabel();
@@ -140,6 +147,11 @@ void ShiftsDialog::on_endShiftButton_clicked()
         LOG_INFO() << "ShiftsDialog: завершение смены — нет открытой смены";
         QMessageBox::warning(this, windowTitle(), tr("Нет открытой смены для завершения."));
         return;
+    }
+    if (auto *alerts = m_core->createAlertsManager()) {
+        qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+        alerts->log(AlertCategory::Shift, AlertSignature::ShiftEnded,
+                    tr("Смена завершена, employeeId=%1").arg(m_employeeId), uid, m_employeeId);
     }
     LOG_INFO() << "ShiftsDialog: смена успешно завершена";
     QMessageBox::information(this, windowTitle(), tr("Смена завершена."));

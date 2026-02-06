@@ -109,6 +109,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="vatTotalLabel">
+            <property name="text">
+             <string>В т.ч. НДС: 0,00 ₽</string>
+            </property>
+            <property name="toolTip">
+             <string>Сумма НДС по позициям чека (из суммы с НДС)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="toPayLabel">
             <property name="text">
              <string>К оплате: 0,00 ₽</string>
@@ -232,6 +242,7 @@
      <string>Файл</string>
     </property>
    <addaction name="actionCheckHistory"/>
+   <addaction name="actionAlerts"/>
    <addaction name="actionSalesReport"/>
    <addaction name="actionShifts"/>
    <addaction name="actionSaveCheckToPdf"/>
@@ -245,6 +256,8 @@
     <addaction name="actionGoods"/>
     <addaction name="actionServices"/>
     <addaction name="actionVatRates"/>
+    <addaction name="actionPositions"/>
+    <addaction name="actionEmployees"/>
     <addaction name="actionStockBalance"/>
    </widget>
    <widget class="QMenu" name="menuProduction">
@@ -296,6 +309,16 @@
     <string>Ставки НДС</string>
    </property>
   </action>
+  <action name="actionPositions">
+   <property name="text">
+    <string>Должности</string>
+   </property>
+  </action>
+  <action name="actionEmployees">
+   <property name="text">
+    <string>Сотрудники</string>
+   </property>
+  </action>
   <action name="actionStockBalance">
    <property name="text">
     <string>Остатки на складе</string>
@@ -319,6 +342,11 @@
   <action name="actionCheckHistory">
    <property name="text">
     <string>История чеков</string>
+   </property>
+  </action>
+  <action name="actionAlerts">
+   <property name="text">
+    <string>Справочник событий</string>
    </property>
   </action>
   <action name="actionShifts">

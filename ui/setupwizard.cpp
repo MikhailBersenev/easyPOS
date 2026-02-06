@@ -2,6 +2,8 @@
 #include "setupdbpage.h"
 #include "../easyposcore.h"
 #include "../settings/settingsmanager.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include "../logging/logmanager.h"
 #include "../db/databaseconnection.h"
 #include <QApplication>
@@ -144,6 +146,10 @@ void SetupWizard::saveSettings()
     m_core->getSettingsManager()->saveDatabaseSettings(auth);
     m_core->getSettingsManager()->setValue(SettingsKeys::SetupCompleted, true);
     m_core->getSettingsManager()->sync();
+    if (auto *alerts = m_core->createAlertsManager()) {
+        alerts->log(AlertCategory::System, AlertSignature::DbSettingsChanged,
+                    tr("Первоначальная настройка: БД %1 на %2").arg(auth.database).arg(auth.host), 0, 0);
+    }
 }
 
 void SetupWizard::accept()

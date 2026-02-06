@@ -7,6 +7,8 @@
 #include "sales/salesmanager.h"
 #include "production/productionmanager.h"
 #include "shifts/shiftmanager.h"
+#include "alerts/alertsmanager.h"
+#include "alerts/alertkeys.h"
 #include "logging/logmanager.h"
 #include <QSqlQuery>
 
@@ -15,6 +17,7 @@ EasyPOSCore::EasyPOSCore()
     , stockManager(nullptr)
     , productionManager(nullptr)
     , shiftManager(nullptr)
+    , alertsManager(nullptr)
     , settingsManager(nullptr)
     , authManager(nullptr)
 {
@@ -55,7 +58,11 @@ void EasyPOSCore::ensureDbConnection()
         productionManager->setStockManager(stockManager);
         shiftManager = new ShiftManager(this);
         shiftManager->setDatabaseConnection(databaseConnection);
-        qInfo() << "EasyPOSCore: StockManager, ProductionManager, ShiftManager created";
+        alertsManager = new AlertsManager(this);
+        alertsManager->setDatabaseConnection(databaseConnection);
+        alertsManager->log(AlertCategory::System, AlertSignature::DbConnected,
+                          QStringLiteral("Подключение к БД: %1").arg(authConfig.database));
+        qInfo() << "EasyPOSCore: StockManager, ProductionManager, ShiftManager, AlertsManager created";
     }
 }
 
@@ -171,7 +178,9 @@ SalesManager* EasyPOSCore::createSalesManager(QObject *parent)
         salesManager->setStockManager(stockManager);
         qInfo() << "StockManager передан в SalesManager";
     }
-    
+    if (settingsManager)
+        salesManager->setSettingsManager(settingsManager);
+
     qInfo() << "SalesManager создан через фабричный метод";
     return salesManager;
 }
@@ -188,6 +197,20 @@ ShiftManager* EasyPOSCore::createShiftManager(QObject *parent)
     shiftManager->setDatabaseConnection(databaseConnection);
     qInfo() << "ShiftManager создан через фабричный метод";
     return shiftManager;
+}
+
+AlertsManager* EasyPOSCore::createAlertsManager(QObject *parent)
+{
+    if (!databaseConnection || !databaseConnection->isConnected()) {
+        qWarning() << "EasyPOSCore: cannot create AlertsManager, no DB connection";
+        return nullptr;
+    }
+    if (alertsManager)
+        return alertsManager;
+    alertsManager = new AlertsManager(parent ? parent : this);
+    alertsManager->setDatabaseConnection(databaseConnection);
+    qInfo() << "AlertsManager создан через фабричный метод";
+    return alertsManager;
 }
 
 bool EasyPOSCore::isDatabaseConnected() const
@@ -230,6 +253,10 @@ bool EasyPOSCore::ensureSessionValid()
     QString token = settingsManager->stringValue(SettingsKeys::SessionToken);
     if (token.isEmpty()) {
         if (m_currentSession.userId > 0) {
+            if (alertsManager)
+                alertsManager->log(AlertCategory::Auth, AlertSignature::SessionExpired,
+                                  QStringLiteral("Сессия завершена (нет токена): %1").arg(m_currentSession.username),
+                                  m_currentSession.userId, getEmployeeIdByUserId(m_currentSession.userId));
             qInfo() << "EasyPOSCore::ensureSessionValid: no token, invalidating session";
             m_currentSession = UserSession();
             emit sessionInvalidated();
@@ -241,6 +268,10 @@ bool EasyPOSCore::ensureSessionValid()
         return false;
     UserSession s = am->getSessionByToken(token);
     if (!s.isValid() || s.isExpired()) {
+        if (alertsManager && m_currentSession.userId > 0)
+            alertsManager->log(AlertCategory::Auth, AlertSignature::SessionExpired,
+                              QStringLiteral("Сессия истекла или токен недействителен: %1").arg(m_currentSession.username),
+                              m_currentSession.userId, getEmployeeIdByUserId(m_currentSession.userId));
         qInfo() << "EasyPOSCore::ensureSessionValid: token invalid or expired, invalidating session";
         settingsManager->remove(SettingsKeys::SessionToken);
         settingsManager->sync();
@@ -257,6 +288,12 @@ void EasyPOSCore::logout()
 {
     if (m_currentSession.userId > 0)
         qInfo() << "EasyPOSCore::logout: user=" << m_currentSession.username << "userId=" << m_currentSession.userId;
+    if (alertsManager && m_currentSession.userId > 0) {
+        qint64 empId = getEmployeeIdByUserId(m_currentSession.userId);
+        alertsManager->log(AlertCategory::Auth, AlertSignature::Logout,
+                          QStringLiteral("Выход: %1").arg(m_currentSession.username),
+                          m_currentSession.userId, empId);
+    }
     if (authManager && m_currentSession.userId > 0) {
         authManager->logout(m_currentSession.userId);
     }

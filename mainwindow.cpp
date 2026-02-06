@@ -11,10 +11,13 @@
 #include "ui/goodsdialog.h"
 #include "ui/servicesdialog.h"
 #include "ui/vatratesdialog.h"
+#include "ui/positionsdialog.h"
+#include "ui/employeesdialog.h"
 #include "ui/discountdialog.h"
 #include "ui/dbsettingsdialog.h"
 #include "ui/settingsdialog.h"
 #include "ui/checkhistorydialog.h"
+#include "ui/alertsdialog.h"
 #include "ui/salesreportdialog.h"
 #include "ui/recipesdialog.h"
 #include "ui/productionrundialog.h"
@@ -22,6 +25,8 @@
 #include "ui/shiftsdialog.h"
 #include "shifts/shiftmanager.h"
 #include "shifts/structures.h"
+#include "alerts/alertkeys.h"
+#include "alerts/alertsmanager.h"
 #include "logging/logmanager.h"
 #include "ui/paymentdialog.h"
 #include "ui/windowcreator.h"
@@ -99,7 +104,9 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
     ui->statusbar->addPermanentWidget(new QLabel(tr("Пользователь: %1").arg(m_session.username)));
 
     ui->checkWidget->insertColumn(4);
-    ui->checkWidget->setColumnHidden(4, true);
+    ui->checkWidget->setHorizontalHeaderItem(4, new QTableWidgetItem(tr("НДС")));
+    ui->checkWidget->insertColumn(5);
+    ui->checkWidget->setColumnHidden(5, true);
     ui->checkWidget->setAlternatingRowColors(true);
     ui->checkWidget->horizontalHeader()->setStretchLastSection(false);
     ui->checkWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -183,12 +190,15 @@ void MainWindow::applyRoleAccess()
     ui->actionGoods->setVisible(isManager);
     ui->actionServices->setVisible(isManager);
     ui->actionVatRates->setVisible(isManager);
+    ui->actionPositions->setVisible(isManager);
+    ui->actionEmployees->setVisible(isManager);
     ui->actionStockBalance->setVisible(isManager);
 
     ui->actionRecipes->setVisible(isManager);
     ui->actionProductionRun->setVisible(isManager);
 
     ui->actionCheckHistory->setVisible(isManager);
+    ui->actionAlerts->setVisible(isManager);
     ui->actionSalesReport->setVisible(isManager);
     ui->actionSaveCheckToPdf->setVisible(isCashier);
 
@@ -213,8 +223,10 @@ void MainWindow::refreshCart()
         ui->checkWidget->setItem(row, 1, new QTableWidgetItem(QString::number(r.qnt)));
         ui->checkWidget->setItem(row, 2, new QTableWidgetItem(QString::number(r.unitPrice, 'f', 2)));
         ui->checkWidget->setItem(row, 3, new QTableWidgetItem(QString::number(r.sum, 'f', 2)));
+        const QString vatName = m_salesManager->getVatRateName(r.vatRateId);
+        ui->checkWidget->setItem(row, 4, new QTableWidgetItem(vatName.isEmpty() ? tr("—") : vatName));
         auto *idItem = new QTableWidgetItem(QString::number(r.id));
-        ui->checkWidget->setItem(row, 4, idItem);
+        ui->checkWidget->setItem(row, 5, idItem);
     }
     updateTotals();
     updateItemsCountLabel();
@@ -224,14 +236,22 @@ void MainWindow::updateTotals()
 {
     double total = 0.0;
     double discount = 0.0;
+    double vatTotal = 0.0;
     if (m_salesManager && m_currentCheckId > 0) {
         const Check ch = m_salesManager->getCheck(m_currentCheckId);
         total = ch.totalAmount;
         discount = ch.discountAmount;
+        const QList<SaleRow> rows = m_salesManager->getSalesByCheck(m_currentCheckId);
+        for (const SaleRow &r : rows) {
+            const double rate = m_salesManager->getVatRatePercent(r.vatRateId);
+            if (rate > 0)
+                vatTotal += r.sum * rate / (100.0 + rate);
+        }
     }
     const double toPay = (total - discount) < 0 ? 0 : (total - discount);
     ui->totalLabel->setText(tr("Итого: %1 ₽").arg(QString::number(total, 'f', 2)));
     ui->discountLabel->setText(tr("Скидка: %1 ₽").arg(QString::number(discount, 'f', 2)));
+    ui->vatTotalLabel->setText(tr("В т.ч. НДС: %1 ₽").arg(QString::number(vatTotal, 'f', 2)));
     ui->toPayLabel->setText(tr("К оплате: %1 ₽").arg(QString::number(toPay, 'f', 2)));
 }
 
@@ -304,6 +324,9 @@ void MainWindow::on_newCheckButton_clicked()
     }
     m_currentCheckId = r.checkId;
     LOG_INFO() << "MainWindow::on_newCheckButton_clicked: чек создан checkId=" << m_currentCheckId;
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::CheckCreated,
+                    tr("Чек №%1 создан").arg(m_currentCheckId), m_session.userId, m_employeeId);
     updateCheckNumberLabel();
     refreshCart();
     ui->checkWidget->setFocus(); // фокус на таблицу — тогда ввод сканера перехватывается
@@ -332,6 +355,10 @@ void MainWindow::on_repeatButton_clicked()
         QMessageBox::critical(this, tr("Ошибка"), r.message);
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::SaleAdded,
+                    tr("Повтор позиции в чек №%1, кол-во %2").arg(m_currentCheckId).arg(qnt),
+                    m_session.userId, m_employeeId);
     refreshCart();
 }
 
@@ -374,6 +401,10 @@ void MainWindow::processBarcode(const QString &barcode)
         QMessageBox::critical(this, tr("Ошибка"), r.message);
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::SaleAdded,
+                    tr("Добавлена позиция в чек №%1, batchId=%2, кол-во %3").arg(m_currentCheckId).arg(batchId).arg(qnt),
+                    m_session.userId, m_employeeId);
     m_lastBatchId = batchId;
     m_lastServiceId = 0;
     m_lastQnt = qnt;
@@ -468,7 +499,7 @@ void MainWindow::showCartContextMenu(const QPoint &pos)
     if (!m_salesManager || m_currentCheckId <= 0) return;
     const int row = ui->checkWidget->indexAt(pos).row();
     if (row < 0) return;
-    QTableWidgetItem *idItem = ui->checkWidget->item(row, 4);
+    QTableWidgetItem *idItem = ui->checkWidget->item(row, 5);
     if (!idItem) return;
     const qint64 saleId = idItem->text().toLongLong();
 
@@ -482,8 +513,12 @@ void MainWindow::showCartContextMenu(const QPoint &pos)
         SaleOperationResult r = m_salesManager->removeSale(saleId);
         if (!r.success)
             QMessageBox::critical(this, tr("Ошибка"), r.message);
-        else
+        else {
+            if (auto *alerts = m_core->createAlertsManager())
+                alerts->log(AlertCategory::Sales, AlertSignature::SaleRemoved,
+                            tr("Удалена позиция saleId=%1 из чека").arg(saleId), m_session.userId, m_employeeId);
             refreshCart();
+        }
         return;
     }
     if (chosen == actQty) {
@@ -511,7 +546,7 @@ void MainWindow::on_removeFromCartButton_clicked()
         QMessageBox::warning(this, tr("Касса"), tr("Выберите позицию в чеке."));
         return;
     }
-    QTableWidgetItem *idItem = ui->checkWidget->item(row, 4);
+    QTableWidgetItem *idItem = ui->checkWidget->item(row, 5);
     if (!idItem) return;
     const qint64 saleId = idItem->text().toLongLong();
     SaleOperationResult r = m_salesManager->removeSale(saleId);
@@ -519,6 +554,10 @@ void MainWindow::on_removeFromCartButton_clicked()
         QMessageBox::critical(this, tr("Ошибка"), r.message);
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::SaleRemoved,
+                    tr("Удалена позиция saleId=%1 из чека №%2").arg(saleId).arg(m_currentCheckId),
+                    m_session.userId, m_employeeId);
     refreshCart();
 }
 
@@ -540,6 +579,10 @@ void MainWindow::on_discountButton_clicked()
         QMessageBox::critical(this, tr("Ошибка"), r.message);
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::DiscountApplied,
+                    tr("Скидка по чеку №%1: %2 ₽").arg(m_currentCheckId).arg(v, 0, 'f', 2),
+                    m_session.userId, m_employeeId);
     updateTotals();
 }
 
@@ -571,13 +614,16 @@ void MainWindow::renderCheckContent(QPainter &painter, qint64 checkId, const Che
     painter.drawText(leftMargin + 250, y, tr("Кол-во"));
     painter.drawText(leftMargin + 320, y, tr("Цена"));
     painter.drawText(leftMargin + 400, y, tr("Сумма"));
+    painter.drawText(leftMargin + 480, y, tr("НДС"));
     y += lineHeight;
 
     for (const SaleRow &r : rows) {
+        const QString vatName = m_salesManager ? m_salesManager->getVatRateName(r.vatRateId) : QString();
         painter.drawText(leftMargin, y, r.itemName.left(35));
         painter.drawText(leftMargin + 250, y, QString::number(r.qnt));
         painter.drawText(leftMargin + 320, y, QString::number(r.unitPrice, 'f', 2));
         painter.drawText(leftMargin + 400, y, QString::number(r.sum, 'f', 2));
+        painter.drawText(leftMargin + 480, y, vatName.isEmpty() ? tr("—") : vatName);
         y += lineHeight;
     }
     y += lineHeight;
@@ -680,6 +726,10 @@ void MainWindow::on_payButton_clicked()
         QMessageBox::warning(this, tr("Ошибка"), payResult.message);
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::PaymentRecorded,
+                    tr("Оплата по чеку №%1: %2 ₽").arg(m_currentCheckId).arg(toPay, 0, 'f', 2),
+                    m_session.userId, m_employeeId);
 
     SaleOperationResult result = m_salesManager->finalizeCheck(m_currentCheckId);
     if (!result.success) {
@@ -691,6 +741,10 @@ void MainWindow::on_payButton_clicked()
 
     qInfo() << "MainWindow: check closed, checkId=" << m_currentCheckId << "toPay=" << toPay;
     const qint64 closedCheckId = m_currentCheckId;
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::CheckFinalized,
+                    tr("Чек №%1 закрыт, к оплате %2 ₽").arg(closedCheckId).arg(toPay, 0, 'f', 2),
+                    m_session.userId, m_employeeId);
     m_currentCheckId = 0;
     updateCheckNumberLabel();
     refreshCart();
@@ -722,6 +776,9 @@ void MainWindow::on_cancelCheckButton_clicked()
         QMessageBox::critical(this, tr("Ошибка"), r.message);
         return;
     }
+    if (auto *alerts = m_core->createAlertsManager())
+        alerts->log(AlertCategory::Sales, AlertSignature::CheckCancelled,
+                    tr("Чек №%1 отменён").arg(m_currentCheckId), m_session.userId, m_employeeId);
     m_currentCheckId = 0;
     updateCheckNumberLabel();
     refreshCart();
@@ -751,6 +808,17 @@ void MainWindow::on_actionCheckHistory_triggered()
         return;
     }
     CheckHistoryDialog dlg(this, m_core);
+    dlg.exec();
+}
+
+void MainWindow::on_actionAlerts_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для просмотра справочника событий."));
+        return;
+    }
+    AlertsDialog dlg(this, m_core);
     dlg.exec();
 }
 
@@ -913,5 +981,27 @@ void MainWindow::on_actionVatRates_triggered()
     VatRatesDialog *dlg = WindowCreator::Create<VatRatesDialog>(this, m_core, false);
     if (dlg)
         dlg->exec();
+}
+
+void MainWindow::on_actionPositions_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочника должностей."));
+        return;
+    }
+    PositionsDialog dlg(this, m_core);
+    dlg.exec();
+}
+
+void MainWindow::on_actionEmployees_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для справочника сотрудников."));
+        return;
+    }
+    EmployeesDialog dlg(this, m_core);
+    dlg.exec();
 }
 

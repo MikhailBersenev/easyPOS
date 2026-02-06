@@ -4,6 +4,8 @@
 #include "../RBAC/authmanager.h"
 #include "../RBAC/structures.h"
 #include "../settings/settingsmanager.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include "../logging/logmanager.h"
 #include "windowcreator.h"
 #include "signupwindow.h"
@@ -83,6 +85,12 @@ void AuthWindow::on_badgeReturnPressed()
             }
         }
         qInfo() << "AuthWindow: badge login success, user=" << result.session.username;
+        if (auto *alerts = m_easyPOSCore->createAlertsManager()) {
+            qint64 empId = m_easyPOSCore->getEmployeeIdByUserId(result.session.userId);
+            alerts->log(AlertCategory::Auth, AlertSignature::LoginSuccess,
+                        QStringLiteral("User %1 logged in (badge)").arg(result.session.username),
+                        result.session.userId, empId);
+        }
         MainWindow *mw = WindowCreator::Create<MainWindow>(this, m_easyPOSCore);
         if (mw) hide();
         else {
@@ -116,6 +124,12 @@ void AuthWindow::on_signInButton_clicked()
                 sm->setValue(SettingsKeys::SessionToken, session.sessionToken);
                 sm->sync();
             }
+            if (auto *alerts = m_easyPOSCore->createAlertsManager()) {
+                qint64 empId = m_easyPOSCore->getEmployeeIdByUserId(session.userId);
+                alerts->log(AlertCategory::Auth, AlertSignature::LoginSuccess,
+                            QStringLiteral("User %1 logged in").arg(session.username),
+                            session.userId, empId);
+            }
         }
         
 #if 0
@@ -135,6 +149,10 @@ void AuthWindow::on_signInButton_clicked()
     }
     else {
         qWarning() << "AuthWindow: login failed, user=" << ui->usernameEdit->text() << "msg=" << result.message;
+        if (auto *alerts = m_easyPOSCore->createAlertsManager()) {
+            alerts->log(AlertCategory::Auth, AlertSignature::LoginFailed,
+                        QStringLiteral("Login failed: %1 — %2").arg(ui->usernameEdit->text(), result.message));
+        }
         QMessageBox::critical(this, "Ошибка", result.message);
     }
 }

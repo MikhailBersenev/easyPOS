@@ -3,6 +3,9 @@
 #include "../RBAC/accountmanager.h"
 #include "../RBAC/rolemanager.h"
 #include "../RBAC/structures.h"
+#include "../easyposcore.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 
 #include <QMessageBox>
 
@@ -33,6 +36,12 @@ void SignupWindow::on_signupButton_clicked()
         RoleOperationResult roleResult = m_roleManager->createRole("Неподтвержденные пользователи", 99);
         if(roleResult.success)
             result = m_accountManager->registerUser(ui->usernameEdit->text(), ui->passwordEdit->text(), roleResult.roleId);
+        if (result.success && m_easyPOSCore) {
+            if (auto *alerts = m_easyPOSCore->createAlertsManager())
+                alerts->log(AlertCategory::Reference, AlertSignature::UserCreated,
+                            tr("Самостоятельная регистрация: %1").arg(ui->usernameEdit->text()),
+                            result.userId, m_easyPOSCore->getEmployeeIdByUserId(result.userId));
+        }
         QMessageBox::information(this, "Регистрация", result.message);
     }
     else {

@@ -3,6 +3,8 @@
 #include "dbsettingsdialog.h"
 #include "../easyposcore.h"
 #include "../settings/settingsmanager.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include "../logging/logmanager.h"
 #include "../RBAC/accountmanager.h"
 #include "../RBAC/rolemanager.h"
@@ -18,6 +20,7 @@
 #include <QTableWidgetItem>
 #include <QFileDialog>
 #include <QTimeZone>
+#include <QSqlQuery>
 
 SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : QDialog(parent)
@@ -50,7 +53,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     loadUsersTable();
     ui->rolesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->usersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    ui->usersTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->usersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     connect(ui->dbSettingsButton, &QPushButton::clicked, this, &SettingsDialog::onDbSettingsClicked);
     ui->logPathBrowseButton->setAutoDefault(false);
     ui->logPathBrowseButton->setDefault(false);
@@ -84,6 +87,21 @@ void SettingsDialog::loadFromSettings()
     ui->timeZoneComboBox->setCurrentIndex(tzIdx >= 0 ? tzIdx : 0);
     ui->printAfterPayCheckBox->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
     ui->logPathEdit->setText(sm->stringValue(SettingsKeys::LogPath, QString()));
+
+    // Ставка НДС по умолчанию
+    ui->defaultVatRateComboBox->clear();
+    ui->defaultVatRateComboBox->addItem(tr("По умолчанию (первая в списке)"), 0);
+    if (m_core && m_core->getDatabaseConnection() && m_core->getDatabaseConnection()->isConnected()) {
+        QSqlQuery q(m_core->getDatabaseConnection()->getDatabase());
+        if (q.exec(QStringLiteral("SELECT id, name FROM vatrates WHERE (isdeleted IS NULL OR isdeleted = false) ORDER BY name"))) {
+            while (q.next())
+                ui->defaultVatRateComboBox->addItem(q.value(1).toString(), q.value(0).toLongLong());
+        }
+    }
+    const qint64 savedVatId = sm->intValue(SettingsKeys::DefaultVatRateId, 0);
+    const int vatIdx = ui->defaultVatRateComboBox->findData(savedVatId);
+    ui->defaultVatRateComboBox->setCurrentIndex(vatIdx >= 0 ? vatIdx : 0);
+
     updateDbLabel();
 }
 
@@ -158,8 +176,6 @@ void SettingsDialog::loadUsersTable()
         if (u.isDeleted) nameDisplay += tr(" (удалён)");
         ui->usersTable->setItem(row, 0, new QTableWidgetItem(nameDisplay));
         ui->usersTable->setItem(row, 1, new QTableWidgetItem(u.role.name));
-        const QString badge = m_accountManager->getEmployeeBadgeCode(u.id);
-        ui->usersTable->setItem(row, 2, new QTableWidgetItem(badge));
         ui->usersTable->item(row, 0)->setData(Qt::UserRole, u.id);
         ui->usersTable->item(row, 0)->setData(Qt::UserRole + 1, u.isDeleted);
     }
@@ -185,6 +201,13 @@ void SettingsDialog::onRolesAddClicked()
     if (dlg.exec() != QDialog::Accepted || nameEdit->text().trimmed().isEmpty()) return;
     RoleOperationResult r = m_roleManager->createRole(nameEdit->text().trimmed(), levelSpin->value());
     if (r.success) {
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::Reference, AlertSignature::RoleCreated,
+                       tr("Роль создана: %1, уровень %2").arg(nameEdit->text().trimmed()).arg(levelSpin->value()),
+                       uid, empId);
+        }
         QMessageBox::information(this, tr("Роли"), r.message);
         loadRolesTable();
     } else {
@@ -225,8 +248,24 @@ void SettingsDialog::onRolesEditClicked()
     if (dlg.exec() != QDialog::Accepted || nameEdit->text().trimmed().isEmpty()) return;
     RoleOperationResult r = m_roleManager->updateRole(roleId, nameEdit->text().trimmed(), levelSpin->value());
     if (r.success) {
-        if (blockedCheck->isChecked() != role.isBlocked)
+        if (blockedCheck->isChecked() != role.isBlocked) {
             m_roleManager->blockRole(roleId, blockedCheck->isChecked());
+            if (auto *alerts = m_core->createAlertsManager()) {
+                qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+                qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+                alerts->log(AlertCategory::Reference, AlertSignature::RoleBlocked,
+                            blockedCheck->isChecked() ? tr("Роль «%1» заблокирована").arg(nameEdit->text().trimmed())
+                                                       : tr("Роль «%1» разблокирована").arg(nameEdit->text().trimmed()),
+                            uid, empId);
+            }
+        }
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::Reference, AlertSignature::RoleUpdated,
+                       tr("Роль обновлена: id=%1, %2").arg(roleId).arg(nameEdit->text().trimmed()),
+                       uid, empId);
+        }
         QMessageBox::information(this, tr("Роли"), tr("Роль обновлена."));
         loadRolesTable();
     } else {
@@ -252,6 +291,12 @@ void SettingsDialog::onRolesDeleteClicked()
         return;
     RoleOperationResult r = m_roleManager->deleteRole(roleId);
     if (r.success) {
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::Reference, AlertSignature::RoleDeleted,
+                       tr("Роль удалена: «%1», id=%2").arg(name).arg(roleId), uid, empId);
+        }
         QMessageBox::information(this, tr("Роли"), r.message);
         loadRolesTable();
     } else {
@@ -295,6 +340,12 @@ void SettingsDialog::onUsersAddClicked()
     const int roleId = roleCombo->currentData().toInt();
     UserOperationResult r = m_accountManager->registerUser(username, password, roleId);
     if (r.success) {
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::Reference, AlertSignature::UserCreated,
+                       tr("Пользователь создан: %1, рольId=%2").arg(username).arg(roleId), uid, empId);
+        }
         QMessageBox::information(this, tr("Пользователи"), r.message);
         loadUsersTable();
     } else {
@@ -336,14 +387,10 @@ void SettingsDialog::onUsersEditClicked()
     auto *passwordEdit = new QLineEdit(&dlg);
     passwordEdit->setEchoMode(QLineEdit::Password);
     passwordEdit->setPlaceholderText(tr("Оставить без изменений"));
-    auto *badgeEdit = new QLineEdit(&dlg);
-    badgeEdit->setText(m_accountManager->getEmployeeBadgeCode(userId));
-    badgeEdit->setPlaceholderText(tr("Штрихкод бейджа для входа"));
     auto *form = new QFormLayout(&dlg);
     form->addRow(tr("Имя пользователя:"), nameEdit);
     form->addRow(tr("Роль:"), roleCombo);
     form->addRow(tr("Новый пароль:"), passwordEdit);
-    form->addRow(tr("Штрихкод бейджа:"), badgeEdit);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
@@ -361,10 +408,11 @@ void SettingsDialog::onUsersEditClicked()
             return;
         }
     }
-    r = m_accountManager->setEmployeeBadgeCode(userId, badgeEdit->text().trimmed());
-    if (!r.success) {
-        QMessageBox::warning(this, tr("Ошибка"), r.message);
-        return;
+    if (auto *alerts = m_core->createAlertsManager()) {
+        qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+        qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+        alerts->log(AlertCategory::Reference, AlertSignature::UserUpdated,
+                    tr("Пользователь обновлён: %1 (роль, пароль)").arg(u.name), uid, empId);
     }
     QMessageBox::information(this, tr("Пользователи"), tr("Данные пользователя обновлены."));
     loadUsersTable();
@@ -393,6 +441,12 @@ void SettingsDialog::onUsersDeleteClicked()
         return;
     UserOperationResult r = m_accountManager->deleteUser(userId);
     if (r.success) {
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::Reference, AlertSignature::UserDeleted,
+                       tr("Пользователь удалён: «%1», id=%2").arg(name).arg(userId), uid, empId);
+        }
         QMessageBox::information(this, tr("Пользователи"), r.message);
         loadUsersTable();
     } else {
@@ -417,6 +471,12 @@ void SettingsDialog::onUsersRestoreClicked()
     const int userId = first->data(Qt::UserRole).toInt();
     UserOperationResult r = m_accountManager->restoreUser(userId);
     if (r.success) {
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::Reference, AlertSignature::UserRestored,
+                       tr("Пользователь восстановлен: id=%1").arg(userId), uid, empId);
+        }
         QMessageBox::information(this, tr("Пользователи"), r.message);
         loadUsersTable();
     } else {
@@ -439,8 +499,16 @@ void SettingsDialog::accept()
         sm->setValue(SettingsKeys::Language, lang);
         sm->setValue(SettingsKeys::TimeZone, ui->timeZoneComboBox->currentData().toString());
         sm->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
+        const qint64 vatId = ui->defaultVatRateComboBox->currentData().toLongLong();
+        sm->setValue(SettingsKeys::DefaultVatRateId, static_cast<int>(vatId));
         sm->setValue(SettingsKeys::LogPath, logPath);
         sm->sync();
+        if (auto *alerts = m_core->createAlertsManager()) {
+            qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+            qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+            alerts->log(AlertCategory::System, AlertSignature::SettingsChanged,
+                        tr("Настройки сохранены (язык, часовой пояс, НДС, печать, логи)"), uid, empId);
+        }
         qInfo() << "SettingsDialog: settings saved (language=" << lang << "logPath=" << (logPath.isEmpty() ? "default" : logPath) << ")";
     }
     QDialog::accept();

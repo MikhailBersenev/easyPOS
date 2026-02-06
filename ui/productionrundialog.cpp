@@ -3,6 +3,8 @@
 #include "../easyposcore.h"
 #include "../production/productionmanager.h"
 #include "../production/structures.h"
+#include "../alerts/alertkeys.h"
+#include "../alerts/alertsmanager.h"
 #include "../RBAC/structures.h"
 #include <QMessageBox>
 
@@ -100,6 +102,10 @@ void ProductionRunDialog::onRunClicked()
 
     ProductionRunResult result = pm->runProduction(recipeId, quantity, employeeId, price);
     if (result.success) {
+        if (auto *alerts = m_core->createAlertsManager())
+            alerts->log(AlertCategory::Production, AlertSignature::ProductionRunCompleted,
+                        tr("Производство: рецепт %1, кол-во %2, runId=%3").arg(recipeId).arg(quantity).arg(result.runId),
+                        session.userId, employeeId);
         QMessageBox::information(this, windowTitle(), result.message);
         loadRecipes();
         updateComponentsInfo();
