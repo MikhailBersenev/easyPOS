@@ -84,6 +84,7 @@ void GoodsDialog::addOrEditGood(int existingId)
     int categoryId = 1;
     bool isActive = true;
 
+    QString imageUrl;
     if (existingId > 0) {
         const int row = currentRow();
         if (row < 0) return;
@@ -91,10 +92,12 @@ void GoodsDialog::addOrEditGood(int existingId)
         description = cellText(row, 2);
         isActive = (cellText(row, 4) == tr("Да"));
         QSqlQuery sq(m_core->getDatabaseConnection()->getDatabase());
-        sq.prepare(QStringLiteral("SELECT categoryid FROM goods WHERE id = :id"));
+        sq.prepare(QStringLiteral("SELECT categoryid, imageurl FROM goods WHERE id = :id"));
         sq.bindValue(QStringLiteral(":id"), existingId);
-        if (sq.exec() && sq.next())
+        if (sq.exec() && sq.next()) {
             categoryId = sq.value(0).toInt();
+            imageUrl = sq.value(1).toString();
+        }
     }
 
     CategoryManager catMgr(this);
@@ -120,7 +123,7 @@ void GoodsDialog::addOrEditGood(int existingId)
 
     GoodEditDialog dlg(this);
     dlg.setCategories(catIds, catNames);
-    dlg.setData(name, description, categoryId, isActive);
+    dlg.setData(name, description, categoryId, isActive, imageUrl);
     dlg.setWindowTitle(existingId > 0 ? tr("Редактирование товара") : tr("Новый товар"));
     if (dlg.exec() != QDialog::Accepted)
         return;
@@ -129,6 +132,7 @@ void GoodsDialog::addOrEditGood(int existingId)
     description = dlg.description();
     categoryId = dlg.categoryId();
     isActive = dlg.isActive();
+    imageUrl = dlg.imageUrl();
 
     QSqlDatabase db = m_core->getDatabaseConnection()->getDatabase();
     QSqlQuery q(db);
@@ -136,11 +140,12 @@ void GoodsDialog::addOrEditGood(int existingId)
     if (existingId > 0) {
         q.prepare(QStringLiteral(
             "UPDATE goods SET name = :name, description = :desc, categoryid = :catid, "
-            "isactive = :active, updatedate = :ud WHERE id = :id"));
+            "isactive = :active, imageurl = :imageurl, updatedate = :ud WHERE id = :id"));
         q.bindValue(QStringLiteral(":name"), name);
         q.bindValue(QStringLiteral(":desc"), description);
         q.bindValue(QStringLiteral(":catid"), categoryId);
         q.bindValue(QStringLiteral(":active"), isActive);
+        q.bindValue(QStringLiteral(":imageurl"), imageUrl.isEmpty() ? QVariant() : imageUrl);
         q.bindValue(QStringLiteral(":ud"), QDate::currentDate());
         q.bindValue(QStringLiteral(":id"), existingId);
         if (!q.exec()) {
@@ -155,12 +160,13 @@ void GoodsDialog::addOrEditGood(int existingId)
         showInfo(tr("Товар обновлён."));
     } else {
         q.prepare(QStringLiteral(
-            "INSERT INTO goods (name, description, categoryid, isactive, updatedate, employeeid, isdeleted) "
-            "VALUES (:name, :desc, :catid, :active, :ud, :empid, false) RETURNING id"));
+            "INSERT INTO goods (name, description, categoryid, isactive, imageurl, updatedate, employeeid, isdeleted) "
+            "VALUES (:name, :desc, :catid, :active, :imageurl, :ud, :empid, false) RETURNING id"));
         q.bindValue(QStringLiteral(":name"), name);
         q.bindValue(QStringLiteral(":desc"), description);
         q.bindValue(QStringLiteral(":catid"), categoryId);
         q.bindValue(QStringLiteral(":active"), isActive);
+        q.bindValue(QStringLiteral(":imageurl"), imageUrl.isEmpty() ? QVariant() : imageUrl);
         q.bindValue(QStringLiteral(":ud"), QDate::currentDate());
         q.bindValue(QStringLiteral(":empid"), employeeId);
         if (!q.exec() || !q.next()) {

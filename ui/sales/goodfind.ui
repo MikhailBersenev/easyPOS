@@ -6,140 +6,208 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
-    <height>480</height>
+    <width>720</width>
+    <height>520</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>560</width>
+    <height>400</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Поиск товаров и услуг</string>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
-    <item>
-     <layout class="QHBoxLayout" name="searchLayout">
-      <item>
-       <widget class="QLabel" name="searchLabel">
-        <property name="text">
-         <string>Поиск:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="searchEdit">
-        <property name="placeholderText">
-         <string>Название или категория...</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="tabGoods" native="true">
-       <attribute name="title">
-        <string>Товары</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="tabGoodsLayout">
-        <item>
-         <widget class="QTableWidget" name="tableWidget">
-          <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
-          </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::SingleSelection</enum>
-          </property>
-          <column>
-           <property name="text">
-            <string>Название</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Категория</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Цена</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Кол-во</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-       </layout>
+   <item>
+    <layout class="QHBoxLayout" name="searchLayout">
+     <item>
+      <widget class="QLabel" name="searchLabel">
+       <property name="text">
+        <string>Поиск:</string>
+       </property>
       </widget>
-      <widget class="QWidget" name="tabServices" native="true">
-       <attribute name="title">
-        <string>Услуги</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="tabServicesLayout">
-        <item>
-         <widget class="QTableWidget" name="tableWidgetServices">
-          <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
-          </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::SingleSelection</enum>
-          </property>
-          <column>
-           <property name="text">
-            <string>Название</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Категория</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Цена</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-       </layout>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="searchEdit">
+       <property name="placeholderText">
+        <string>Название или категория...</string>
+       </property>
       </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabGoods" native="true">
+      <attribute name="title">
+       <string>Товары</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="tabGoodsLayout">
+       <item>
+        <widget class="QListWidget" name="listWidget">
+         <property name="viewMode">
+          <enum>QListView::IconMode</enum>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>72</width>
+           <height>72</height>
+          </size>
+         </property>
+         <property name="spacing">
+          <number>14</number>
+         </property>
+         <property name="gridSize">
+          <size>
+           <width>140</width>
+           <height>130</height>
+          </size>
+         </property>
+         <property name="movement">
+          <enum>QListView::Static</enum>
+         </property>
+         <property name="flow">
+          <enum>QListView::LeftToRight</enum>
+         </property>
+         <property name="resizeMode">
+          <enum>QListView::Adjust</enum>
+         </property>
+         <property name="uniformItemSizes">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectItems</enum>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QListWidget::item {
+    background: palette(base);
+    border: 1px solid palette(mid);
+    border-radius: 10px;
+    padding: 8px;
+    margin: 3px;
+    min-width: 134px;
+    min-height: 124px;
+}
+QListWidget::item:hover {
+    background: palette(alternate-base);
+    border-color: palette(highlight);
+}
+QListWidget::item:selected {
+    background: palette(highlight);
+    color: palette(highlighted-text);
+    border-color: palette(highlight);
+}</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="buttonsLayout">
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="selectButton">
-        <property name="text">
-         <string>Выбрать</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="cancelButton">
-        <property name="text">
-         <string>Отмена</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-   </layout>
+     <widget class="QWidget" name="tabServices" native="true">
+      <attribute name="title">
+       <string>Услуги</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="tabServicesLayout">
+       <item>
+        <widget class="QListWidget" name="listWidgetServices">
+         <property name="viewMode">
+          <enum>QListView::IconMode</enum>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>72</width>
+           <height>72</height>
+          </size>
+         </property>
+         <property name="spacing">
+          <number>14</number>
+         </property>
+         <property name="gridSize">
+          <size>
+           <width>140</width>
+           <height>130</height>
+          </size>
+         </property>
+         <property name="movement">
+          <enum>QListView::Static</enum>
+         </property>
+         <property name="flow">
+          <enum>QListView::LeftToRight</enum>
+         </property>
+         <property name="uniformItemSizes">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectItems</enum>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QListWidget::item {
+    background: palette(base);
+    border: 1px solid palette(mid);
+    border-radius: 10px;
+    padding: 8px;
+    margin: 3px;
+    min-width: 134px;
+    min-height: 124px;
+}
+QListWidget::item:hover {
+    background: palette(alternate-base);
+    border-color: palette(highlight);
+}
+QListWidget::item:selected {
+    background: palette(highlight);
+    color: palette(highlighted-text);
+    border-color: palette(highlight);
+}</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="selectButton">
+       <property name="text">
+        <string>Выбрать</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelButton">
+       <property name="text">
+        <string>Отмена</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

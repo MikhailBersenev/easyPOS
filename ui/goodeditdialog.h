@@ -13,13 +13,18 @@ public:
     explicit GoodEditDialog(QWidget *parent = nullptr);
     ~GoodEditDialog();
     void setCategories(const QList<int> &ids, const QStringList &names);
-    void setData(const QString &name, const QString &description, int categoryId, bool isActive);
+    void setData(const QString &name, const QString &description, int categoryId, bool isActive, const QString &imageUrl = QString());
     QString name() const;
     QString description() const;
     int categoryId() const;
     bool isActive() const;
+    QString imageUrl() const;
+
+private slots:
+    void on_browseImage_clicked();
 
 private:
+    void updateIconPreview(const QString &path);
     Ui::GoodEditDialog *ui;
     QList<int> m_categoryIds;
 };

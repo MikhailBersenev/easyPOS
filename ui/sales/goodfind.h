@@ -2,10 +2,12 @@
 #define GOODFIND_H
 
 #include <QDialog>
-#include <QTableWidgetItem>
+#include <QList>
+#include <QListWidgetItem>
 #include <memory>
 
 class EasyPOSCore;
+#include "../../sales/structures.h"
 
 namespace Ui {
 class GoodFind;
@@ -31,7 +33,7 @@ private slots:
     void on_searchEdit_textChanged(const QString &text);
     void on_selectButton_clicked();
     void on_cancelButton_clicked();
-    void on_tableWidget_itemDoubleClicked(QTableWidgetItem *item);
+    void on_itemDoubleClicked(QListWidgetItem *item);
 
 private:
     void fillTable();
@@ -40,6 +42,8 @@ private:
 
     Ui::GoodFind *ui;
     std::shared_ptr<EasyPOSCore> m_core;
+    QList<BatchInfo> m_batches;
+    QList<ServiceInfo> m_services;
     bool m_isBatch = false;
     qint64 m_batchId = 0;
     qint64 m_serviceId = 0;
