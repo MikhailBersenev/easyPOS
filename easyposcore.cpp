@@ -23,6 +23,7 @@ EasyPOSCore::EasyPOSCore()
 {
     qInfo() << "EasyPOSCore::EasyPOSCore()";
     createSettingsManager(this);
+    m_productVersion = "26.02";
 }
 
 SettingsManager* EasyPOSCore::createSettingsManager(QObject *parent)
@@ -211,6 +212,13 @@ AlertsManager* EasyPOSCore::createAlertsManager(QObject *parent)
     alertsManager->setDatabaseConnection(databaseConnection);
     qInfo() << "AlertsManager создан через фабричный метод";
     return alertsManager;
+}
+
+QString EasyPOSCore::getProductVersion()
+{
+    qInfo() << QString("getProductVersion %1").arg(m_productVersion);
+    return m_productVersion;
+
 }
 
 bool EasyPOSCore::isDatabaseConnected() const

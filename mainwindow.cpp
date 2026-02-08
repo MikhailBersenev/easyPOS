@@ -721,7 +721,7 @@ void MainWindow::on_payButton_clicked()
     QList<PaymentMethodInfo> methods = m_salesManager->getPaymentMethods();
     if (methods.isEmpty()) {
         QMessageBox::warning(this, tr("Оплата"),
-            tr("Нет способов оплаты. Выполните миграцию db/migrate_add_payment_methods.sql"));
+            tr("Нет способов оплаты."));
         return;
     }
 
@@ -876,7 +876,7 @@ void MainWindow::on_actionAbout_triggered()
     QMessageBox::about(this, tr("О программе"),
         tr("<h3>easyPOS</h3>"
            "<p>Система автоматизации торговли (касса)</p>"
-           "<p>Версия: 1.0</p>"));
+           "<p>Версия: %1</p>").arg(m_core->getProductVersion()));
 }
 
 void MainWindow::on_actionShortcuts_triggered()

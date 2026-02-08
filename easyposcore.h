@@ -46,6 +46,7 @@ public:
     ProductionManager* getProductionManager() const { return productionManager; }
     ShiftManager* getShiftManager() const { return shiftManager; }
     AlertsManager* getAlertsManager() const { return alertsManager; }
+    QString getProductVersion();
 
     /**
      * @brief Инициализация подключения к БД (вызывать после первоначальной настройки)
@@ -86,6 +87,7 @@ private:
     SettingsManager* settingsManager;
     AuthManager* authManager;
     UserSession m_currentSession;
+    QString m_productVersion;
     
     void CreateDbConnection(PostgreSQLAuth authConfig);
     void CloseDbConnection();
