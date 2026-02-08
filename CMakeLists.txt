@@ -71,6 +71,7 @@ qt_add_executable(easyPOS
     ui/recipeeditdialog.h ui/recipeeditdialog.cpp ui/recipeeditdialog.ui
     ui/recipesdialog.h ui/recipesdialog.cpp
     ui/productionrundialog.h ui/productionrundialog.cpp ui/productionrundialog.ui
+    ui/productionhistorydialog.h ui/productionhistorydialog.cpp ui/productionhistorydialog.ui
     ui/stockbalancedialog.h ui/stockbalancedialog.cpp
     ui/batcheditdialog.h ui/batcheditdialog.cpp ui/batcheditdialog.ui
     shifts/structures.h

@@ -22,6 +22,7 @@
 #include "ui/salesreportdialog.h"
 #include "ui/recipesdialog.h"
 #include "ui/productionrundialog.h"
+#include "ui/productionhistorydialog.h"
 #include "ui/stockbalancedialog.h"
 #include "ui/shiftsdialog.h"
 #include "shifts/shiftmanager.h"
@@ -198,6 +199,7 @@ void MainWindow::applyRoleAccess()
 
     ui->actionRecipes->setVisible(isManager);
     ui->actionProductionRun->setVisible(isManager);
+    ui->actionProductionHistory->setVisible(isManager);
 
     ui->actionCheckHistory->setVisible(isManager);
     ui->actionAlerts->setVisible(isManager);
@@ -922,6 +924,17 @@ void MainWindow::on_actionProductionRun_triggered()
         return;
     }
     ProductionRunDialog dlg(this, m_core);
+    dlg.exec();
+}
+
+void MainWindow::on_actionProductionHistory_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для просмотра истории производств."));
+        return;
+    }
+    ProductionHistoryDialog dlg(this, m_core);
     dlg.exec();
 }
 

@@ -404,10 +404,11 @@ QList<ProductionRun> ProductionManager::getProductionRuns(const QDate &from, con
 
     QString sql = QStringLiteral(
         "SELECT pr.id, pr.recipeid, r.name AS recipe_name, pr.quantityproduced, pr.productiondate, "
-        "pr.employeeid, trim(COALESCE(e.lastname,'') || ' ' || COALESCE(e.firstname,'') || ' ' || COALESCE(e.middlename,'')) AS employee_name, pr.outputbatchid, pr.isdeleted "
+        "pr.employeeid, trim(COALESCE(e.lastname,'') || ' ' || COALESCE(e.firstname,'') || ' ' || COALESCE(e.middlename,'')) AS employee_name, pr.outputbatchid, COALESCE(b.batchnumber,'') AS batch_number, pr.isdeleted "
         "FROM productionruns pr "
         "JOIN productionrecipes r ON r.id = pr.recipeid "
         "LEFT JOIN employees e ON e.id = pr.employeeid "
+        "LEFT JOIN batches b ON b.id = pr.outputbatchid "
         "WHERE pr.productiondate BETWEEN :dfrom AND :dto ");
     if (recipeId > 0)
         sql += QStringLiteral("AND pr.recipeid = :rid ");
@@ -434,7 +435,8 @@ QList<ProductionRun> ProductionManager::getProductionRuns(const QDate &from, con
         run.employeeId = q.value(5).toLongLong();
         run.employeeName = q.value(6).toString();
         run.outputBatchId = q.value(7).toLongLong();
-        run.isDeleted = q.value(8).toBool();
+        run.outputBatchNumber = q.value(8).toString();
+        run.isDeleted = q.value(9).toBool();
         list.append(run);
     }
     return list;

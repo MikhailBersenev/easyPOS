@@ -267,6 +267,7 @@
     </property>
     <addaction name="actionRecipes"/>
     <addaction name="actionProductionRun"/>
+    <addaction name="actionProductionHistory"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -338,6 +339,11 @@
   <action name="actionProductionRun">
    <property name="text">
     <string>Провести производство</string>
+   </property>
+  </action>
+  <action name="actionProductionHistory">
+   <property name="text">
+    <string>История производств</string>
    </property>
   </action>
   <action name="actionSaveCheckToPdf">

@@ -39,6 +39,7 @@ struct ProductionRun {
     qint64 employeeId = 0;
     QString employeeName;
     qint64 outputBatchId = 0;
+    QString outputBatchNumber;  // номер партии для отображения
     bool isDeleted = false;
 
     ProductionRun() = default;
