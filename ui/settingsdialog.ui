@@ -63,19 +63,16 @@
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="timeZoneLabel">
-           <property name="text">
-            <string>Часовой пояс:</string>
-           </property>
            <property name="toolTip">
             <string>Используется для отображения времени в чеках, сменах и отчётах</string>
+           </property>
+           <property name="text">
+            <string>Часовой пояс:</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
           <widget class="QComboBox" name="timeZoneComboBox">
-           <property name="minimumWidth">
-            <number>280</number>
-           </property>
            <property name="toolTip">
             <string>По умолчанию — системный часовой пояс</string>
            </property>
@@ -83,20 +80,16 @@
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="defaultVatRateLabel">
-           <property name="text">
-            <string>Ставка НДС по умолчанию:</string>
-           </property>
            <property name="toolTip">
             <string>Используется при добавлении товара в чек, если ставка не задана иначе</string>
+           </property>
+           <property name="text">
+            <string>Ставка НДС по умолчанию:</string>
            </property>
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="defaultVatRateComboBox">
-           <property name="minimumWidth">
-            <number>200</number>
-           </property>
-          </widget>
+          <widget class="QComboBox" name="defaultVatRateComboBox"/>
          </item>
         </layout>
        </item>
@@ -111,6 +104,16 @@
             </sizepolicy>
            </property>
            <layout class="QHBoxLayout" name="logPathLayout">
+            <item>
+             <widget class="QLabel" name="logPathLabel">
+              <property name="toolTip">
+               <string>Пустой = по умолчанию. При каждом запуске создаётся новый файл (дата, время, хост сервера). Применится после перезапуска.</string>
+              </property>
+              <property name="text">
+               <string>Каталог логов:</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QLineEdit" name="logPathEdit">
               <property name="toolTip">
@@ -134,16 +137,6 @@
            </layout>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="logPathLabel">
-           <property name="toolTip">
-            <string>Пустой = по умолчанию. При каждом запуске создаётся новый файл (дата, время, хост сервера). Применится после перезапуска.</string>
-           </property>
-           <property name="text">
-            <string>Каталог логов:</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
@@ -161,6 +154,118 @@
        </item>
        <item>
         <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="brandingTab">
+      <attribute name="title">
+       <string>Брендирование</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="brandingLayout">
+       <item>
+        <widget class="QLabel" name="brandingDescriptionLabel">
+         <property name="text">
+          <string>Название и логотип отображаются в заголовках окон, в окне «О программе» и на печатных чеках.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="brandingFormLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="brandingAppNameLabel">
+           <property name="text">
+            <string>Название приложения:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="brandingAppNameEdit">
+           <property name="placeholderText">
+            <string>easyPOS</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="brandingLogoLabel">
+           <property name="toolTip">
+            <string>Путь к изображению (PNG, JPG). Используется как иконка окна и в «О программе».</string>
+           </property>
+           <property name="text">
+            <string>Логотип (файл):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QWidget" name="brandingLogoWidget" native="true">
+           <layout class="QHBoxLayout" name="brandingLogoLayout">
+            <item>
+             <widget class="QLineEdit" name="brandingLogoPathEdit">
+              <property name="placeholderText">
+               <string>не задан</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="brandingLogoBrowseButton">
+              <property name="text">
+               <string>Обзор…</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="brandingAddressLabel">
+           <property name="toolTip">
+            <string>Отображается на печатных чеках и в PDF</string>
+           </property>
+           <property name="text">
+            <string>Адрес:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="brandingAddressEdit">
+           <property name="placeholderText">
+            <string>г. Город, ул. Улица, д. 1</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="brandingLegalLabel">
+           <property name="toolTip">
+            <string>ИНН, ОГРН, наименование организации — на чеках</string>
+           </property>
+           <property name="text">
+            <string>Юридическая информация:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPlainTextEdit" name="brandingLegalEdit">
+           <property name="placeholderText">
+            <string>ИНН 1234567890, ОГРН 1234567890123</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="brandingSpacer">
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
          </property>

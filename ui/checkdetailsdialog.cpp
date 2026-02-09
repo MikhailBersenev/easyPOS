@@ -16,7 +16,8 @@ CheckDetailsDialog::CheckDetailsDialog(QWidget *parent, std::shared_ptr<EasyPOSC
     , m_checkId(checkId)
 {
     ui->setupUi(this);
-    setWindowTitle(tr("Детали чека №%1").arg(checkId));
+    QString appName = core ? core->getBrandingAppName() : QStringLiteral("easyPOS");
+    setWindowTitle(tr("%1 — Детали чека №%2").arg(appName).arg(checkId));
 
     if (core) {
         auto *sm = core->createSalesManager(this);
@@ -65,7 +66,8 @@ CheckDetailsDialog::~CheckDetailsDialog()
 
 void CheckDetailsDialog::onSaveToPdf()
 {
-    QString defaultName = tr("Чек_%1.pdf").arg(m_checkId);
+    QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+    QString defaultName = tr("%1_Чек_%2.pdf").arg(appName).arg(m_checkId);
     QString path = QFileDialog::getSaveFileName(this, tr("Сохранить чек в PDF"),
         defaultName, tr("PDF (*.pdf)"));
     if (path.isEmpty()) return;

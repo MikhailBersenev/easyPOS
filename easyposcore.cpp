@@ -218,7 +218,90 @@ QString EasyPOSCore::getProductVersion()
 {
     qInfo() << QString("getProductVersion %1").arg(m_productVersion);
     return m_productVersion;
+}
 
+namespace {
+const char *BRANDING_TABLE_SQL =
+    "CREATE TABLE IF NOT EXISTS branding (id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1), app_name VARCHAR(255) DEFAULT 'easyPOS', logo_path TEXT, address TEXT, legal_info TEXT)";
+} // namespace
+
+QString EasyPOSCore::getBrandingAppName() const
+{
+    if (!databaseConnection || !databaseConnection->isConnected())
+        return QStringLiteral("easyPOS");
+    QSqlQuery q(databaseConnection->getDatabase());
+    if (!q.exec(QLatin1String(BRANDING_TABLE_SQL)))
+        return QStringLiteral("easyPOS");
+    q.prepare(QStringLiteral("SELECT app_name FROM branding WHERE id = 1"));
+    if (!q.exec() || !q.next()) {
+        QString fallback = settingsManager
+            ? settingsManager->stringValue(SettingsKeys::BrandingAppName, QStringLiteral("easyPOS"))
+            : QStringLiteral("easyPOS");
+        return fallback.trimmed().isEmpty() ? QStringLiteral("easyPOS") : fallback.trimmed();
+    }
+    QString name = q.value(0).toString().trimmed();
+    return name.isEmpty() ? QStringLiteral("easyPOS") : name;
+}
+
+QString EasyPOSCore::getBrandingLogoPath() const
+{
+    if (!databaseConnection || !databaseConnection->isConnected())
+        return QString();
+    QSqlQuery q(databaseConnection->getDatabase());
+    if (!q.exec(QLatin1String(BRANDING_TABLE_SQL)))
+        return QString();
+    q.prepare(QStringLiteral("SELECT logo_path FROM branding WHERE id = 1"));
+    if (!q.exec() || !q.next()) {
+        return settingsManager
+            ? settingsManager->stringValue(SettingsKeys::BrandingLogoPath, QString()).trimmed()
+            : QString();
+    }
+    return q.value(0).toString().trimmed();
+}
+
+QString EasyPOSCore::getBrandingAddress() const
+{
+    if (!databaseConnection || !databaseConnection->isConnected())
+        return QString();
+    QSqlQuery q(databaseConnection->getDatabase());
+    if (!q.exec(QLatin1String(BRANDING_TABLE_SQL)))
+        return QString();
+    q.prepare(QStringLiteral("SELECT address FROM branding WHERE id = 1"));
+    if (!q.exec() || !q.next())
+        return QString();
+    return q.value(0).toString().trimmed();
+}
+
+QString EasyPOSCore::getBrandingLegalInfo() const
+{
+    if (!databaseConnection || !databaseConnection->isConnected())
+        return QString();
+    QSqlQuery q(databaseConnection->getDatabase());
+    if (!q.exec(QLatin1String(BRANDING_TABLE_SQL)))
+        return QString();
+    q.prepare(QStringLiteral("SELECT legal_info FROM branding WHERE id = 1"));
+    if (!q.exec() || !q.next())
+        return QString();
+    return q.value(0).toString().trimmed();
+}
+
+bool EasyPOSCore::saveBranding(const QString &appName, const QString &logoPath,
+                              const QString &address, const QString &legalInfo)
+{
+    if (!databaseConnection || !databaseConnection->isConnected())
+        return false;
+    QSqlQuery q(databaseConnection->getDatabase());
+    if (!q.exec(QLatin1String(BRANDING_TABLE_SQL)))
+        return false;
+    const QString name = appName.trimmed().isEmpty() ? QStringLiteral("easyPOS") : appName.trimmed();
+    q.prepare(QStringLiteral(
+        "INSERT INTO branding (id, app_name, logo_path, address, legal_info) VALUES (1, :appname, :logopath, :address, :legalinfo) "
+        "ON CONFLICT (id) DO UPDATE SET app_name = EXCLUDED.app_name, logo_path = EXCLUDED.logo_path, address = EXCLUDED.address, legal_info = EXCLUDED.legal_info"));
+    q.bindValue(QStringLiteral(":appname"), name);
+    q.bindValue(QStringLiteral(":logopath"), logoPath.trimmed());
+    q.bindValue(QStringLiteral(":address"), address.trimmed());
+    q.bindValue(QStringLiteral(":legalinfo"), legalInfo.trimmed());
+    return q.exec();
 }
 
 bool EasyPOSCore::isDatabaseConnected() const

@@ -108,6 +108,12 @@ namespace SettingsKeys {
 
     // Геометрия главного окна
     constexpr const char *MainWindowGeometry = "mainwindow/geometry";
+
+    // Брендирование
+    /** Отображаемое название приложения (заголовки окон, чеки, «О программе») */
+    constexpr const char *BrandingAppName = "branding/appName";
+    /** Путь к файлу логотипа (PNG/JPG); пустой — без логотипа */
+    constexpr const char *BrandingLogoPath = "branding/logoPath";
 }
 
 #endif // SETTINGSMANAGER_H

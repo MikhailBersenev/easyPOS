@@ -19,7 +19,7 @@ SetupWizard::SetupWizard(std::shared_ptr<EasyPOSCore> core, QWidget *parent)
     : QWizard(parent)
     , m_core(core)
 {
-    setWindowTitle(tr("Первоначальная настройка easyPOS"));
+    setWindowTitle(tr("Первоначальная настройка %1").arg(m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS")));
     setFixedSize(550, 450);
     setWindowFlags(windowFlags() & ~Qt::WindowMaximizeButtonHint);
     setWizardStyle(QWizard::ModernStyle);
@@ -50,7 +50,7 @@ void SetupWizard::setupPages()
     // --- Страница 1: Язык и приветствие ---
     QWizardPage *welcomePage = new QWizardPage(this);
     welcomePage->setTitle(tr("Добро пожаловать"));
-    welcomePage->setSubTitle(tr("Мастер первоначальной настройки easyPOS"));
+    welcomePage->setSubTitle(tr("Мастер первоначальной настройки %1").arg(m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS")));
 
     m_languageCombo = new QComboBox(welcomePage);
     m_languageCombo->addItem(tr("По умолчанию (система)"), QStringLiteral(""));

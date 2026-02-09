@@ -11,6 +11,9 @@
 #include "signupwindow.h"
 #include "../mainwindow.h"
 #include <QMessageBox>
+#include <QApplication>
+#include <QFile>
+#include <QPixmap>
 
 AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore)
     : QDialog(parent)
@@ -19,6 +22,27 @@ AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore
     , m_authManager(nullptr)
 {
     ui->setupUi(this);
+    if (m_easyPOSCore) {
+        setWindowTitle(m_easyPOSCore->getBrandingAppName());
+        QString logoPath = m_easyPOSCore->getBrandingLogoPath();
+        if (!logoPath.isEmpty() && QFile::exists(logoPath)) {
+            QPixmap pm(logoPath);
+            if (!pm.isNull()) {
+                pm = pm.scaledToWidth(220, Qt::SmoothTransformation);
+                ui->label_3->setPixmap(pm);
+                ui->label_3->setAlignment(Qt::AlignCenter);
+                QIcon icon(logoPath);
+                if (!icon.isNull())
+                    QApplication::setWindowIcon(icon);
+            } else {
+                ui->label_3->setText(m_easyPOSCore->getBrandingAppName());
+                ui->label_3->setAlignment(Qt::AlignCenter);
+            }
+        } else {
+            ui->label_3->setText(m_easyPOSCore->getBrandingAppName());
+            ui->label_3->setAlignment(Qt::AlignCenter);
+        }
+    }
     connect(ui->badgeLineEdit, &QLineEdit::returnPressed, this, &AuthWindow::on_badgeReturnPressed);
     connect(ui->badgeSignInButton, &QPushButton::clicked, this, &AuthWindow::on_badgeReturnPressed);
 

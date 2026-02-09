@@ -50,6 +50,9 @@
 #include <QApplication>
 #include <QTimer>
 #include <QPushButton>
+#include <QFile>
+#include <QIcon>
+#include <QPixmap>
 
 MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const UserSession &session)
     : QMainWindow(parent)
@@ -70,7 +73,8 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
         }
     });
 
-    QString title = tr("easyPOS - Касса");
+    QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+    QString title = tr("%1 - Касса").arg(appName);
     if (m_core) {
         QString host, user;
         if (auto *sm = m_core->getSettingsManager()) {
@@ -86,6 +90,24 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
         }
     }
     setWindowTitle(title);
+    if (m_core) {
+        QString logoPath = m_core->getBrandingLogoPath();
+        if (!logoPath.isEmpty() && QFile::exists(logoPath)) {
+            QIcon icon(logoPath);
+            if (!icon.isNull())
+                setWindowIcon(icon);
+            QPixmap pm(logoPath);
+            if (!pm.isNull()) {
+                pm = pm.scaled(180, 52, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                ui->brandingLogoLabel->setPixmap(pm);
+                ui->brandingLogoLabel->setVisible(true);
+            } else {
+                ui->brandingLogoLabel->setVisible(false);
+            }
+        } else {
+            ui->brandingLogoLabel->setVisible(false);
+        }
+    }
 
     m_employeeId = m_core ? m_core->getEmployeeIdByUserId(m_session.userId) : 0;
     m_salesManager = m_core ? m_core->createSalesManager(this) : nullptr;
@@ -616,7 +638,8 @@ void MainWindow::renderCheckContent(QPainter &painter, qint64 checkId, const Che
     int y = 50;
     const int leftMargin = 50;
 
-    painter.drawText(leftMargin, y, tr("easyPOS — Чек №%1").arg(checkId));
+    QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+    painter.drawText(leftMargin, y, tr("%1 — Чек №%2").arg(appName).arg(checkId));
     y += lineHeight * 2;
     painter.drawText(leftMargin, y, QLocale::system().toString(ch.date, QLocale::ShortFormat) + QLatin1String(" ") + ch.time.toString(Qt::ISODate));
     y += lineHeight;
@@ -646,6 +669,23 @@ void MainWindow::renderCheckContent(QPainter &painter, qint64 checkId, const Che
     painter.drawText(leftMargin, y, tr("Скидка: %1 ₽").arg(QString::number(ch.discountAmount, 'f', 2)));
     y += lineHeight;
     painter.drawText(leftMargin, y, tr("К оплате: %1 ₽").arg(QString::number(toPay, 'f', 2)));
+    QString address = m_core ? m_core->getBrandingAddress() : QString();
+    QString legalInfo = m_core ? m_core->getBrandingLegalInfo() : QString();
+    if (!address.isEmpty() || !legalInfo.isEmpty()) {
+        y += lineHeight * 2;
+        if (!address.isEmpty()) {
+            painter.drawText(leftMargin, y, address);
+            y += lineHeight;
+        }
+        if (!legalInfo.isEmpty()) {
+            for (const QString &line : legalInfo.split(QLatin1Char('\n'))) {
+                if (!line.trimmed().isEmpty()) {
+                    painter.drawText(leftMargin, y, line.trimmed());
+                    y += lineHeight;
+                }
+            }
+        }
+    }
 }
 
 bool MainWindow::saveCheckToPdf(qint64 checkId)
@@ -656,7 +696,8 @@ bool MainWindow::saveCheckToPdf(qint64 checkId)
     const QList<SaleRow> rows = m_salesManager->getSalesByCheck(checkId);
     const double toPay = (ch.totalAmount - ch.discountAmount) < 0 ? 0 : (ch.totalAmount - ch.discountAmount);
 
-    QString defaultName = tr("Чек_%1.pdf").arg(checkId);
+    QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+    QString defaultName = tr("%1_Чек_%2.pdf").arg(appName).arg(checkId);
     QString path = QFileDialog::getSaveFileName(this, tr("Сохранить чек в PDF"),
         defaultName, tr("PDF (*.pdf)"));
     if (path.isEmpty()) return false;
@@ -875,10 +916,11 @@ void MainWindow::on_actionDbConnection_triggered()
 
 void MainWindow::on_actionAbout_triggered()
 {
+    QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
     QMessageBox::about(this, tr("О программе"),
-        tr("<h3>easyPOS</h3>"
+        tr("<h3>%1</h3>"
            "<p>Система автоматизации торговли (касса)</p>"
-           "<p>Версия: %1</p>").arg(m_core->getProductVersion()));
+           "<p>Версия: %2</p>").arg(appName.toHtmlEscaped(), m_core->getProductVersion()));
 }
 
 void MainWindow::on_actionShortcuts_triggered()

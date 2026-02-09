@@ -19,6 +19,7 @@
 #include <QCheckBox>
 #include <QTableWidgetItem>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QTimeZone>
 #include <QSqlQuery>
 
@@ -28,6 +29,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     , m_core(core)
 {
     ui->setupUi(this);
+    if (m_core)
+        setWindowTitle(tr("Настройки — %1").arg(m_core->getBrandingAppName()));
     // Qt не задаёт userData элементов комбобокса из .ui — задаём вручную, иначе смена языка не сохраняется
     if (ui->languageComboBox->count() >= 3) {
         ui->languageComboBox->setItemData(0, QStringLiteral(""));
@@ -55,6 +58,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     ui->usersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->usersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     connect(ui->dbSettingsButton, &QPushButton::clicked, this, &SettingsDialog::onDbSettingsClicked);
+    connect(ui->brandingLogoBrowseButton, &QPushButton::clicked, this, &SettingsDialog::onBrandingLogoBrowseClicked);
     ui->logPathBrowseButton->setAutoDefault(false);
     ui->logPathBrowseButton->setDefault(false);
     connect(ui->rolesAddBtn, &QPushButton::clicked, this, &SettingsDialog::onRolesAddClicked);
@@ -87,6 +91,10 @@ void SettingsDialog::loadFromSettings()
     ui->timeZoneComboBox->setCurrentIndex(tzIdx >= 0 ? tzIdx : 0);
     ui->printAfterPayCheckBox->setChecked(sm->boolValue(SettingsKeys::PrintAfterPay, true));
     ui->logPathEdit->setText(sm->stringValue(SettingsKeys::LogPath, QString()));
+    ui->brandingAppNameEdit->setText(m_core->getBrandingAppName());
+    ui->brandingLogoPathEdit->setText(m_core->getBrandingLogoPath());
+    ui->brandingAddressEdit->setText(m_core->getBrandingAddress());
+    ui->brandingLegalEdit->setPlainText(m_core->getBrandingLegalInfo());
 
     // Ставка НДС по умолчанию
     ui->defaultVatRateComboBox->clear();
@@ -143,6 +151,17 @@ void SettingsDialog::on_logPathBrowseButton_clicked()
     if (!dir.isEmpty()) {
         ui->logPathEdit->setText(QDir::toNativeSeparators(dir));
         ui->logPathEdit->setFocus();
+    }
+}
+
+void SettingsDialog::onBrandingLogoBrowseClicked()
+{
+    QString current = ui->brandingLogoPathEdit->text().trimmed();
+    QString dir = current.isEmpty() ? QDir::homePath() : QFileInfo(current).absolutePath();
+    QString path = QFileDialog::getOpenFileName(this, tr("Выбрать логотип"), dir,
+        tr("Изображения (*.png *.jpg *.jpeg *.bmp);;Все файлы (*)"));
+    if (!path.isEmpty()) {
+        ui->brandingLogoPathEdit->setText(QDir::toNativeSeparators(path));
     }
 }
 
@@ -503,6 +522,23 @@ void SettingsDialog::accept()
         sm->setValue(SettingsKeys::DefaultVatRateId, static_cast<int>(vatId));
         sm->setValue(SettingsKeys::LogPath, logPath);
         sm->sync();
+        if (m_core->isDatabaseConnected()) {
+            const QString appName = ui->brandingAppNameEdit->text().trimmed();
+            const QString logoPath = ui->brandingLogoPathEdit->text().trimmed();
+            const QString address = ui->brandingAddressEdit->text().trimmed();
+            const QString legalInfo = ui->brandingLegalEdit->toPlainText().trimmed();
+            if (m_core->saveBranding(appName.isEmpty() ? QStringLiteral("easyPOS") : appName, logoPath, address, legalInfo)) {
+                if (auto *alerts = m_core->createAlertsManager()) {
+                    qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
+                    qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;
+                    alerts->log(AlertCategory::System, AlertSignature::SettingsChanged,
+                        tr("Брендирование сохранено в БД"), uid, empId);
+                }
+            } else {
+                QMessageBox::warning(this, tr("Настройки"),
+                    tr("Не удалось сохранить брендирование в базу данных. Проверьте подключение к БД."));
+            }
+        }
         if (auto *alerts = m_core->createAlertsManager()) {
             qint64 uid = m_core->hasActiveSession() ? m_core->getCurrentSession().userId : 0;
             qint64 empId = uid > 0 ? m_core->getEmployeeIdByUserId(uid) : 0;

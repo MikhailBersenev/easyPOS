@@ -15,6 +15,8 @@ SignupWindow::SignupWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOS
     , m_easyPOSCore(easyPOSCore)
 {
     ui->setupUi(this);
+    if (m_easyPOSCore)
+        setWindowTitle(tr("Регистрация — %1").arg(m_easyPOSCore->getBrandingAppName()));
     m_accountManager = m_easyPOSCore->createAccountManager(this);
     m_roleManager = m_easyPOSCore->createRoleManager(this);
 }

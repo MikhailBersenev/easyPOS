@@ -18,6 +18,7 @@ public:
 private slots:
     void onDbSettingsClicked();
     void on_logPathBrowseButton_clicked();
+    void onBrandingLogoBrowseClicked();
     void onRolesAddClicked();
     void onRolesEditClicked();
     void onRolesDeleteClicked();

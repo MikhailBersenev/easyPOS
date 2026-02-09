@@ -48,6 +48,18 @@ public:
     AlertsManager* getAlertsManager() const { return alertsManager; }
     QString getProductVersion();
 
+    /** Название приложения для брендирования (из БД; по умолчанию «easyPOS») */
+    QString getBrandingAppName() const;
+    /** Путь к логотипу (пустая строка — не задан) */
+    QString getBrandingLogoPath() const;
+    /** Адрес организации (на чеках, в подвале) */
+    QString getBrandingAddress() const;
+    /** Юридическая информация (ИНН, ОГРН и т.д.) */
+    QString getBrandingLegalInfo() const;
+    /** Сохранить данные брендирования в БД. Возвращает true при успехе. */
+    bool saveBranding(const QString &appName, const QString &logoPath,
+                      const QString &address, const QString &legalInfo);
+
     /**
      * @brief Инициализация подключения к БД (вызывать после первоначальной настройки)
      */

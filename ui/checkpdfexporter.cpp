@@ -8,14 +8,15 @@
 #include <QCoreApplication>
 
 static void renderCheckContent(QPainter &painter, qint64 checkId, const Check &ch,
-                               const QList<SaleRow> &rows, double toPay, SalesManager *sm)
+                               const QList<SaleRow> &rows, double toPay, SalesManager *sm,
+                               const QString &appName, const QString &address, const QString &legalInfo)
 {
     const int lineHeight = 24;
     int y = 50;
     const int leftMargin = 50;
     auto tr = [](const char *s) { return QCoreApplication::translate("CheckPdfExporter", s); };
 
-    painter.drawText(leftMargin, y, tr("easyPOS — Чек №%1").arg(checkId));
+    painter.drawText(leftMargin, y, tr("%1 — Чек №%2").arg(appName).arg(checkId));
     y += lineHeight * 2;
     painter.drawText(leftMargin, y, QLocale::system().toString(ch.date, QLocale::ShortFormat) + QLatin1String(" ") + ch.time.toString(Qt::ISODate));
     y += lineHeight;
@@ -50,6 +51,21 @@ static void renderCheckContent(QPainter &painter, qint64 checkId, const Check &c
     painter.drawText(leftMargin, y, tr("Сумма НДС: %1 ₽").arg(QString::number(totalVat, 'f', 2)));
     y += lineHeight;
     painter.drawText(leftMargin, y, tr("К оплате: %1 ₽").arg(QString::number(toPay, 'f', 2)));
+    if (!address.isEmpty() || !legalInfo.isEmpty()) {
+        y += lineHeight * 2;
+        if (!address.isEmpty()) {
+            painter.drawText(leftMargin, y, address);
+            y += lineHeight;
+        }
+        if (!legalInfo.isEmpty()) {
+            for (const QString &line : legalInfo.split(QLatin1Char('\n'))) {
+                if (!line.trimmed().isEmpty()) {
+                    painter.drawText(leftMargin, y, line.trimmed());
+                    y += lineHeight;
+                }
+            }
+        }
+    }
 }
 
 bool CheckPdfExporter::saveToPdf(std::shared_ptr<EasyPOSCore> core, qint64 checkId, const QString &path)
@@ -66,9 +82,12 @@ bool CheckPdfExporter::saveToPdf(std::shared_ptr<EasyPOSCore> core, qint64 check
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setOutputFileName(path);
 
+    QString appName = core->getBrandingAppName();
+    QString address = core->getBrandingAddress();
+    QString legalInfo = core->getBrandingLegalInfo();
     QPainter painter;
     if (!painter.begin(&printer)) return false;
-    renderCheckContent(painter, checkId, ch, rows, toPay, sm);
+    renderCheckContent(painter, checkId, ch, rows, toPay, sm, appName, address, legalInfo);
     painter.end();
     return true;
 }
