@@ -21,6 +21,8 @@ qt_add_executable(easyPOS
     ui/authwindow.h ui/authwindow.cpp ui/authwindow.ui
     ui/setupwizard.h ui/setupwizard.cpp
     ui/setupdbpage.h ui/setupdbpage.cpp ui/setupdbpage.ui
+    ui/setupbrandingpage.h ui/setupbrandingpage.cpp ui/setupbrandingpage.ui
+    ui/setupadminpage.h ui/setupadminpage.cpp ui/setupadminpage.ui
     db/structures.h
     db/databaseconnection.h db/databaseconnection.cpp
     RBAC/structures.h

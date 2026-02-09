@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SetupAdminPage</class>
+ <widget class="QWidget" name="SetupAdminPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>320</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="adminHintLabel">
+     <property name="text">
+      <string>Создайте учётную запись администратора. Ей будет назначена роль «Администратор» (полный доступ). При необходимости другие роли можно добавить позже в настройках.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="usernameLabel">
+       <property name="text">
+        <string>Имя пользователя (логин):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="usernameEdit">
+       <property name="placeholderText">
+        <string>admin</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="passwordLabel">
+       <property name="text">
+        <string>Пароль:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="passwordEdit">
+       <property name="echoMode">
+        <enum>QLineEdit::Password</enum>
+       </property>
+       <property name="placeholderText">
+        <string>не менее 8 символов</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="repeatPasswordLabel">
+       <property name="text">
+        <string>Повторите пароль:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="repeatPasswordEdit">
+       <property name="echoMode">
+        <enum>QLineEdit::Password</enum>
+       </property>
+       <property name="placeholderText">
+        <string>повторите пароль</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="showPasswordCheckBox">
+     <property name="text">
+      <string>Показать пароль</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="passwordRulesLabel">
+     <property name="text">
+      <string>Пароль: не менее 8 символов, хотя бы одна заглавная латинская буква (A–Z), не только цифры.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

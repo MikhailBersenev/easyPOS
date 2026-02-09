@@ -1,11 +1,16 @@
 #include "setupwizard.h"
 #include "setupdbpage.h"
+#include "setupbrandingpage.h"
+#include "setupadminpage.h"
 #include "../easyposcore.h"
 #include "../settings/settingsmanager.h"
 #include "../alerts/alertkeys.h"
 #include "../alerts/alertsmanager.h"
 #include "../logging/logmanager.h"
 #include "../db/databaseconnection.h"
+#include "../RBAC/rolemanager.h"
+#include "../RBAC/accountmanager.h"
+#include "../RBAC/structures.h"
 #include <QApplication>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -14,6 +19,7 @@
 #include <QMessageBox>
 #include <QComboBox>
 #include <QFormLayout>
+#include <QSqlQuery>
 
 SetupWizard::SetupWizard(std::shared_ptr<EasyPOSCore> core, QWidget *parent)
     : QWizard(parent)
@@ -89,7 +95,19 @@ void SetupWizard::setupPages()
 
     m_dbPageId = addPage(m_dbPage);
 
-    // --- Страница 3: Завершение ---
+    // --- Страница 3: Брендирование ---
+    m_brandingPage = new SetupBrandingPage(this);
+    m_brandingPage->setTitle(tr("Брендирование"));
+    m_brandingPage->setSubTitle(tr("Название приложения, логотип, адрес и реквизиты для чеков"));
+    addPage(m_brandingPage);
+
+    // --- Страница 4: Первый пользователь (Администратор) ---
+    m_adminPage = new SetupAdminPage(this);
+    m_adminPage->setTitle(tr("Первый пользователь"));
+    m_adminPage->setSubTitle(tr("Создайте учётную запись администратора с полным доступом"));
+    m_adminPageId = addPage(m_adminPage);
+
+    // --- Страница 5: Завершение ---
     QWizardPage *finishPage = new QWizardPage(this);
     finishPage->setTitle(tr("Настройка завершена"));
     finishPage->setSubTitle(tr("Параметры будут сохранены и приложение будет готово к работе."));
@@ -101,9 +119,37 @@ void SetupWizard::setupPages()
     QVBoxLayout *finishLayout = new QVBoxLayout(finishPage);
     finishLayout->addWidget(finishLabel);
 
-    addPage(finishPage);
+    m_finishPageId = addPage(finishPage);
 
     connect(this, &QWizard::currentIdChanged, this, &SetupWizard::onCurrentIdChanged);
+}
+
+int SetupWizard::nextId() const
+{
+    const int id = currentId();
+    if (id == m_dbPageId && m_dbPage) {
+        PostgreSQLAuth auth = m_dbPage->getAuth();
+        if (auth.isValid() && hasAdminRoleAndUser(auth)) {
+            const_cast<SetupWizard *>(this)->m_skipBrandingAndAdmin = true;
+            return m_finishPageId;
+        }
+    }
+    return QWizard::nextId();
+}
+
+bool SetupWizard::hasAdminRoleAndUser(const PostgreSQLAuth &auth) const
+{
+    DatabaseConnection conn;
+    if (!conn.connect(auth))
+        return false;
+    QSqlQuery q(conn.getDatabase());
+    // Роль с level = 0 (администратор) и хотя бы один неудалённый пользователь с этой ролью
+    const bool ok = q.exec(QLatin1String(
+        "SELECT 1 FROM users u INNER JOIN roles r ON r.id = u.roleid "
+        "WHERE r.level = 0 AND (r.isdeleted IS NULL OR r.isdeleted = false) "
+        "AND (u.isdeleted IS NULL OR u.isdeleted = false) LIMIT 1"));
+    conn.disconnect();
+    return ok && q.next();
 }
 
 void SetupWizard::onTestConnectionClicked()
@@ -144,12 +190,49 @@ void SetupWizard::saveSettings()
     }
     PostgreSQLAuth auth = m_dbPage->getAuth();
     m_core->getSettingsManager()->saveDatabaseSettings(auth);
-    m_core->getSettingsManager()->setValue(SettingsKeys::SetupCompleted, true);
     m_core->getSettingsManager()->sync();
-    if (auto *alerts = m_core->createAlertsManager()) {
-        alerts->log(AlertCategory::System, AlertSignature::DbSettingsChanged,
-                    tr("Первоначальная настройка: БД %1 на %2").arg(auth.database).arg(auth.host), 0, 0);
+}
+
+bool SetupWizard::saveBrandingAndAdmin()
+{
+    if (!m_core || !m_core->getDatabaseConnection() || !m_core->getDatabaseConnection()->isConnected())
+        return false;
+
+    // Брендирование
+    if (m_brandingPage) {
+        if (!m_core->saveBranding(m_brandingPage->appName(), m_brandingPage->logoPath(),
+                                  m_brandingPage->address(), m_brandingPage->legalInfo())) {
+            qWarning() << "SetupWizard: failed to save branding";
+        }
     }
+
+    // Роль «Администратор» (level 0)
+    RoleManager *roleManager = m_core->createRoleManager(this);
+    const QString adminRoleName = tr("Администратор");
+    if (!roleManager->roleExists(adminRoleName)) {
+        RoleOperationResult roleRes = roleManager->createRole(adminRoleName, AccessLevel::Admin);
+        if (!roleRes.success) {
+            qWarning() << "SetupWizard: failed to create role" << adminRoleName << roleRes.message;
+        }
+    }
+
+    // Первый пользователь
+    if (!m_adminPage)
+        return true;
+    AccountManager *accountManager = m_core->createAccountManager(this);
+    UserOperationResult userRes = accountManager->registerUser(
+                m_adminPage->username(), m_adminPage->password(), adminRoleName);
+    if (!userRes.success) {
+        QMessageBox::warning(this, tr("Ошибка создания пользователя"),
+            tr("Не удалось создать учётную запись администратора:\n%1").arg(userRes.message));
+        return false;
+    }
+    if (auto *alerts = m_core->createAlertsManager()) {
+        alerts->log(AlertCategory::Reference, AlertSignature::UserCreated,
+                    tr("Первоначальная настройка: создан администратор %1").arg(m_adminPage->username()),
+                    userRes.userId, 0);
+    }
+    return true;
 }
 
 void SetupWizard::accept()
@@ -176,6 +259,23 @@ void SetupWizard::accept()
     conn.disconnect();
 
     saveSettings();
+    m_core->ensureDbConnection();
+    if (!m_core->getDatabaseConnection() || !m_core->getDatabaseConnection()->isConnected()) {
+        QMessageBox::warning(this, tr("Ошибка"),
+            tr("Не удалось подключиться к базе данных после сохранения настроек."));
+        return;
+    }
+    if (!m_skipBrandingAndAdmin && !saveBrandingAndAdmin()) {
+        if (m_adminPageId >= 0)
+            setCurrentId(m_adminPageId);
+        return;
+    }
+    m_core->getSettingsManager()->setValue(SettingsKeys::SetupCompleted, true);
+    m_core->getSettingsManager()->sync();
+    if (auto *alerts = m_core->createAlertsManager()) {
+        alerts->log(AlertCategory::System, AlertSignature::DbSettingsChanged,
+                    tr("Первоначальная настройка: БД %1 на %2").arg(auth.database).arg(auth.host), 0, 0);
+    }
     qInfo() << "SetupWizard: setup completed, DB" << auth.host << auth.database;
     QWizard::accept();
 }
