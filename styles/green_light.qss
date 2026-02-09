@@ -1,0 +1,708 @@
+/* easyPOS — премиальный Material (зелёная тема)
+   Чёткая иерархия, мягкие скругления, выразительные акценты.
+*/
+
+/* ---- Палитра (тёмнее) ---- */
+/* primary: #008E40, hover: #00A848, dark: #006B1A */
+/* surface: #FFFFFF, background: #F5FBF6 */
+/* text: #1B2E1F, muted: #5A6B5C */
+
+/* ---- Типографика (базовый шрифт для всего приложения) ---- */
+/* Шкала: 11px — подписи, 12–13px — база */
+QWidget, QMainWindow, QDialog, QLabel, QLineEdit, QSpinBox, QDoubleSpinBox,
+QComboBox, QDateEdit, QDateTimeEdit, QTimeEdit, QTableWidget, QTableView,
+QMenu, QMenuBar, QStatusBar, QGroupBox, QCheckBox, QRadioButton, QTabBar::tab,
+QPushButton {
+    font-family: "Roboto", "Segoe UI", "Ubuntu", "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 12px;
+}
+
+/* ---- Фон ---- */
+QWidget, QMainWindow, QDialog {
+    background-color: #F5FBF6;
+}
+
+/* ---- Карточки (лёгкий elevation), единый отступ 12px ---- */
+QFrame#centralPanel, QFrame#toPayFrame,
+QGroupBox, QFrame[frameShape="4"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E8F0E9;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+QGroupBox {
+    border: 1px solid #E8F0E9;
+    border-radius: 8px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 14px;
+    padding: 0 8px;
+    color: #1B2E1F;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background-color: #FFFFFF;
+}
+
+/* ---- Кнопки: основные (filled) ---- */
+QPushButton {
+    background-color: #008E40;
+    border: none;
+    border-radius: 6px;
+    color: #FFFFFF;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    min-height: 32px;
+    min-width: 72px;
+}
+
+QPushButton:hover {
+    background-color: #00A848;
+}
+
+QPushButton:pressed {
+    background-color: #006B1A;
+}
+
+QPushButton:disabled {
+    background-color: #E0E0E0;
+    color: #9E9E9E;
+}
+
+/* Кнопка «Закрыть» и второстепенные — контурный стиль */
+QPushButton#closeButton, QPushButton#cancelButton {
+    background-color: transparent;
+    border: 2px solid #008E40;
+    color: #006B1A;
+}
+
+QPushButton#closeButton:hover, QPushButton#cancelButton:hover {
+    background-color: rgba(0, 200, 83, 0.08);
+    border-color: #00A848;
+    color: #008E40;
+}
+
+QPushButton#closeButton:pressed, QPushButton#cancelButton:pressed {
+    background-color: rgba(0, 200, 83, 0.16);
+    border-color: #006B1A;
+    color: #006B1A;
+}
+
+QPushButton#closeButton:disabled, QPushButton#cancelButton:disabled {
+    background-color: transparent;
+    border-color: #E0E0E0;
+    color: #9E9E9E;
+}
+
+/* Главное действие в диалоге (Добавить, Вход, Сохранить и т.д.) — чуть заметнее */
+QPushButton#addButton, QPushButton#signInButton, QPushButton#signupButton,
+QPushButton#testButton, QPushButton#selectButton {
+    min-width: 84px;
+    padding: 6px 20px;
+}
+
+/* Кнопка поиска (🔍) — плоская, компактная */
+QPushButton#searchButton {
+    min-width: 36px;
+    min-height: 32px;
+    padding: 0;
+    background-color: #E8F5E9;
+    border: none;
+    border-radius: 6px;
+    color: #006B1A;
+    font-size: 14px;
+}
+
+QPushButton#searchButton:hover {
+    background-color: #C8E6C9;
+    color: #008E40;
+}
+
+QPushButton#searchButton:pressed {
+    background-color: #A5D6A7;
+    color: #006B1A;
+}
+
+QPushButton#searchButton:disabled {
+    background-color: #EEEEEE;
+    color: #BDBDBD;
+}
+
+/* ---- Поля ввода (высота как у кнопок — 32px, шрифт 12px) ---- */
+QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox,
+QDateEdit, QDateTimeEdit, QTimeEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #1B2E1F;
+    font-size: 12px;
+    font-weight: 400;
+    selection-background-color: #B9F6CA;
+    selection-color: #1B2E1F;
+    min-height: 32px;
+}
+
+QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus,
+QDateEdit:focus, QDateTimeEdit:focus, QTimeEdit:focus {
+    border: 1px solid #008E40;
+}
+
+QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover, QComboBox:hover,
+QDateEdit:hover, QDateTimeEdit:hover, QTimeEdit:hover {
+    border-color: #C8E6C9;
+}
+
+/* QDateEdit / QDateTimeEdit / QTimeEdit — кнопки календаря/стрелок */
+QDateEdit::up-button, QDateEdit::down-button,
+QDateTimeEdit::up-button, QDateTimeEdit::down-button,
+QTimeEdit::up-button, QTimeEdit::down-button {
+    background-color: #F5FBF6;
+    border: 1px solid #E8F0E9;
+    border-radius: 4px;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+QDateEdit::up-button:hover, QDateEdit::down-button:hover,
+QDateTimeEdit::up-button:hover, QDateTimeEdit::down-button:hover,
+QTimeEdit::up-button:hover, QTimeEdit::down-button:hover {
+    background-color: #E8F5E9;
+}
+
+/* Календарь (выпадающий у QDateEdit) */
+QCalendarWidget {
+    background-color: #FFFFFF;
+    color: #1B2E1F;
+    font-size: 12px;
+}
+QCalendarWidget QWidget {
+    background-color: #FFFFFF;
+    color: #1B2E1F;
+}
+QCalendarWidget QTableView {
+    background-color: #FFFFFF;
+    color: #1B2E1F;
+    gridline-color: #E8F0E9;
+    selection-background-color: #E8F5E9;
+    selection-color: #1B2E1F;
+}
+QCalendarWidget QTableView::item {
+    padding: 4px;
+    color: #1B2E1F;
+}
+QCalendarWidget QTableView::item:selected {
+    background-color: #E8F5E9;
+    color: #1B2E1F;
+}
+QCalendarWidget QHeaderView::section {
+    background-color: #F5FBF6;
+    color: #1B2E1F;
+    padding: 6px;
+    border: none;
+    border-bottom: 1px solid #E8F0E9;
+    font-weight: 600;
+    font-size: 11px;
+}
+QCalendarWidget QToolButton {
+    color: #1B2E1F;
+    background-color: #F5FBF6;
+    border: 1px solid #E8F0E9;
+    border-radius: 4px;
+    min-height: 24px;
+    min-width: 28px;
+}
+QCalendarWidget QToolButton:hover {
+    background-color: #E8F5E9;
+    color: #006B1A;
+}
+QCalendarWidget QToolButton:pressed {
+    background-color: #C8E6C9;
+}
+QCalendarWidget QMenu {
+    background-color: #FFFFFF;
+    color: #1B2E1F;
+    border: 1px solid #E8F0E9;
+}
+QCalendarWidget QMenu::item {
+    padding: 6px 16px;
+    color: #1B2E1F;
+}
+QCalendarWidget QMenu::item:selected {
+    background-color: #E8F5E9;
+    color: #1B2E1F;
+}
+QCalendarWidget QSpinBox {
+    background-color: #FFFFFF;
+    color: #1B2E1F;
+    border: 1px solid #E8F0E9;
+    min-height: 24px;
+}
+QCalendarWidget QLabel {
+    color: #1B2E1F;
+}
+
+QComboBox {
+    min-height: 32px;
+    padding: 8px 36px 8px 12px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 28px;
+    border: none;
+    border-left: 1px solid #E8F0E9;
+    background-color: transparent;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+QComboBox::drop-down:hover {
+    background-color: #F5FBF6;
+}
+
+QComboBox::down-arrow {
+    image: url(:/icons/arrow_down.png);
+    width: 12px;
+    height: 8px;
+    margin-right: 6px;
+    background: transparent;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    padding: 4px 0;
+    outline: none;
+    selection-background-color: #E8F5E9;
+    selection-color: #1B2E1F;
+    color: #1B2E1F;
+    min-width: 100px;
+}
+
+QComboBox QAbstractItemView::item {
+    min-height: 28px;
+    padding: 4px 12px;
+}
+
+/* ---- Многострочные поля (шрифт 12px как в однострочных) ---- */
+QPlainTextEdit, QTextEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #1B2E1F;
+    font-size: 12px;
+    font-weight: 400;
+    selection-background-color: #B9F6CA;
+    selection-color: #1B2E1F;
+}
+
+QPlainTextEdit:focus, QTextEdit:focus {
+    border: 1px solid #008E40;
+}
+
+QPlainTextEdit:hover, QTextEdit:hover {
+    border-color: #C8E6C9;
+}
+
+/* ---- Таблицы ---- */
+QTableWidget, QTableView {
+    background-color: #FFFFFF;
+    alternate-background-color: #FAFDFA;
+    border: 1px solid #E8F0E9;
+    border-radius: 8px;
+    gridline-color: #E8F0E9;
+    color: #1B2E1F;
+}
+
+QTableWidget::item, QTableView::item {
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+QTableWidget::item:selected, QTableView::item:selected {
+    background-color: #E8F5E9;
+    color: #1B2E1F;
+}
+
+/* Подсказки (тултипы) */
+QToolTip {
+    background-color: #FFFFFF;
+    color: #1B2E1F;
+    border: 1px solid #E8F0E9;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+QHeaderView::section {
+    background-color: #F5FBF6;
+    border: none;
+    border-right: 1px solid #E8F0E9;
+    border-bottom: 2px solid #008E40;
+    padding: 6px 10px;
+    color: #1B2E1F;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+QHeaderView::section:first {
+    border-top-left-radius: 6px;
+}
+
+QHeaderView::section:last {
+    border-top-right-radius: 6px;
+    border-right: none;
+}
+
+/* ---- Тулбар (акцентная полоса) ---- */
+QToolBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #008E40,
+        stop:1 #006B1A);
+    border: none;
+    spacing: 6px;
+    padding: 6px 12px;
+    min-height: 24px;
+}
+
+QToolButton {
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 10px;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QToolButton:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+QToolButton:pressed {
+    background-color: rgba(255, 255, 255, 0.28);
+}
+
+/* ---- Статусбар ---- */
+QStatusBar {
+    background-color: #FFFFFF;
+    border-top: 1px solid #E8F0E9;
+    color: #5A6B5C;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* ---- Меню ---- */
+QMenuBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #008E40,
+        stop:1 #006B1A);
+    color: #FFFFFF;
+    border: none;
+    padding: 4px 0;
+}
+
+QMenuBar::item {
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QMenuBar::item:selected {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+QMenu {
+    background-color: #FFFFFF;
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    padding: 6px 0;
+    color: #1B2E1F;
+}
+
+QMenu::item {
+    padding: 8px 20px;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+QMenu::item:selected {
+    background-color: #E8F5E9;
+}
+
+/* ---- Скроллбары ---- */
+QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #C8E6C9;
+    border-radius: 4px;
+    min-height: 28px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #008E40;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QScrollBar:horizontal {
+    background-color: transparent;
+    height: 8px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #C8E6C9;
+    border-radius: 4px;
+    min-width: 28px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #008E40;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0;
+}
+
+/* ---- Текст ---- */
+QLabel {
+    color: #1B2E1F;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+QLabel#totalLabel {
+    color: #006B1A;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+QLabel#toPayLabel {
+    color: #006B1A;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* Название приложения в шапке главного окна */
+QLabel#brandingAppNameLabel {
+    color: #008E40;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+/* На форме авторизации — ещё крупнее */
+QDialog QLabel#brandingAppNameLabel {
+    font-size: 38px;
+}
+
+/* В формах (настройки и т.д.) подпись «Название приложения» — обычный стиль, не заголовок */
+QFormLayout QLabel#brandingAppNameLabel {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1B2E1F;
+    letter-spacing: normal;
+}
+
+/* Подписи полей в диалогах (Название, Описание, Категория и т.д.) */
+QDialog QLabel {
+    font-weight: 500;
+    color: #1B2E1F;
+}
+
+/* ---- Вкладки ---- */
+QTabWidget::pane {
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    top: -1px;
+    background-color: #FFFFFF;
+}
+
+QTabBar {
+    padding-right: 12px;
+}
+
+QTabBar::tab {
+    background-color: transparent;
+    border: none;
+    padding: 8px 16px;
+    margin-right: 2px;
+    color: #5A6B5C;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QTabBar::tab:selected {
+    background-color: transparent;
+    color: #008E40;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 2px solid #008E40;
+}
+
+QTabBar::tab:hover:!selected {
+    background-color: #F0F9F1;
+    color: #1B2E1F;
+}
+
+/* ---- Чекбоксы и радио ---- */
+QCheckBox, QRadioButton {
+    color: #1B2E1F;
+    font-size: 14px;
+    font-weight: 400;
+    spacing: 12px;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #81C784;
+    background-color: #FFFFFF;
+}
+
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+    background-color: #008E40;
+    border-color: #008E40;
+}
+
+QRadioButton::indicator {
+    border-radius: 8px;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #008E40;
+    border-color: #008E40;
+}
+
+/* ---- Спинбоксы ---- */
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    background-color: #F5FBF6;
+    border: 1px solid #E8F0E9;
+    border-radius: 4px;
+    min-width: 22px;
+}
+
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
+    background-color: #E8F5E9;
+}
+
+/* ---- Диалоги ---- */
+QDialog {
+    background-color: #F5FBF6;
+}
+
+/* Формы в диалогах: ровная сетка, выравнивание подписей по правому краю */
+QFormLayout {
+    margin: 0;
+}
+
+QFormLayout .QLabel {
+    min-width: 180px;
+}
+
+
+/* Панель OK/Cancel — отступ сверху, чёткая граница, кнопки в одну линию */
+QDialogButtonBox {
+    min-height: 40px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #E8F0E9;
+}
+
+QDialogButtonBox QPushButton {
+    min-width: 72px;
+    min-height: 32px;
+}
+
+/* Кнопка Cancel в диалоге — контурная (objectName задаётся в коде) */
+QDialogButtonBox QPushButton#cancelButton {
+    background-color: transparent;
+    border: 2px solid #008E40;
+    color: #006B1A;
+}
+
+QDialogButtonBox QPushButton#cancelButton:hover {
+    background-color: rgba(0, 200, 83, 0.08);
+    border-color: #00A848;
+    color: #008E40;
+}
+
+QDialogButtonBox QPushButton#cancelButton:pressed {
+    background-color: rgba(0, 200, 83, 0.16);
+    border-color: #006B1A;
+    color: #006B1A;
+}
+
+/* Диалог сохранения/открытия файла (Qt, не нативный) — в тон приложения */
+QFileDialog {
+    background-color: #F5FBF6;
+}
+QFileDialog QWidget {
+    font-size: 12px;
+}
+QFileDialog QDialogButtonBox {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #E8F0E9;
+}
+QFileDialog QDialogButtonBox QPushButton {
+    min-height: 32px;
+    min-width: 72px;
+}
+
+/* Превью пиктограммы в форме товара/услуги */
+QLabel#iconPreviewLabel {
+    background-color: #FAFAFA;
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    color: #5A6B5C;
+}
+
+/* Кнопки «Обзор…» в формах — как основные, но можно чуть спокойнее */
+QPushButton#browseImageButton, QPushButton#browseLogoButton,
+QPushButton#logPathBrowseButton, QPushButton#brandingLogoBrowseButton {
+    min-width: 72px;
+}
+
+/* ---- Прогресс ---- */
+QProgressBar {
+    border: none;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #E8F0E9;
+}
+
+QProgressBar::chunk {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+        stop:0 #00A848,
+        stop:1 #008E40);
+    border-radius: 4px;
+}

@@ -107,6 +107,10 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
         } else {
             ui->brandingLogoLabel->setVisible(false);
         }
+        QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+        ui->brandingAppNameLabel->setText(appName);
+    } else {
+        ui->brandingAppNameLabel->setText(QStringLiteral("easyPOS"));
     }
 
     m_employeeId = m_core ? m_core->getEmployeeIdByUserId(m_session.userId) : 0;
@@ -134,6 +138,10 @@ MainWindow::MainWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> core, const
     ui->checkWidget->setAlternatingRowColors(true);
     ui->checkWidget->horizontalHeader()->setStretchLastSection(false);
     ui->checkWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->checkWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    ui->checkWidget->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->checkWidget->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    ui->checkWidget->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
     ui->checkWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->checkWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::showCartContextMenu);
 
@@ -699,7 +707,7 @@ bool MainWindow::saveCheckToPdf(qint64 checkId)
     QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
     QString defaultName = tr("%1_Чек_%2.pdf").arg(appName).arg(checkId);
     QString path = QFileDialog::getSaveFileName(this, tr("Сохранить чек в PDF"),
-        defaultName, tr("PDF (*.pdf)"));
+        defaultName, tr("PDF (*.pdf)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (path.isEmpty()) return false;
     if (!path.endsWith(QLatin1String(".pdf"), Qt::CaseInsensitive))
         path += QLatin1String(".pdf");

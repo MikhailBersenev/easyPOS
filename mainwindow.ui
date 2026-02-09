@@ -40,6 +40,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="brandingAppNameLabel">
+        <property name="text">
+         <string>easyPOS</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="brandingBarSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

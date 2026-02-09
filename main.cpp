@@ -7,6 +7,8 @@
 
 #include <QApplication>
 #include <QCoreApplication>
+#include <QGuiApplication>
+#include <QStyleHints>
 #include <QLocale>
 #include <QString>
 #include <QStringList>
@@ -15,6 +17,9 @@
 #include <QSqlError>
 #include <QSettings>
 #include <QDir>
+#include <QFile>
+#include <QStandardPaths>
+#include <QUrl>
 #include <memory>
 
 namespace {
@@ -65,6 +70,60 @@ void applyLanguage(QApplication &app)
         }
     }
 }
+
+static QString comboArrowImagePath()
+{
+    /* Ресурс :/ в QSS иногда не подхватывается для QComboBox::down-arrow на части платформ.
+     * Копируем PNG во временный файл и подставляем file:// путь в QSS. */
+    const QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    const QDir dir(cacheDir);
+    if (!dir.exists() && !dir.mkpath(QStringLiteral(".")))
+        return QString();
+    const QString path = dir.absoluteFilePath(QStringLiteral("easypos_arrow_down.png"));
+    if (QFile::exists(path))
+        return path;
+    if (QFile::copy(QStringLiteral(":/icons/arrow_down.png"), path))
+        return path;
+    return QString();
+}
+
+bool loadLiquidGlassStyle(QApplication &app, bool dark)
+{
+    const QString resourcePath = dark ? QStringLiteral(":/styles/green_dark.qss")
+                                      : QStringLiteral(":/styles/green_light.qss");
+    const QString fileName = dark ? QStringLiteral("green_dark.qss")
+                                  : QStringLiteral("green_light.qss");
+    QString sheet;
+    QFile res(resourcePath);
+    if (res.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        sheet = QString::fromUtf8(res.readAll());
+    } else {
+        const QString appDir = QCoreApplication::applicationDirPath();
+        const QDir cwd(QDir::currentPath());
+        const QStringList stylePaths = {
+            appDir + QStringLiteral("/styles/") + fileName,
+            appDir + QStringLiteral("/../styles/") + fileName,
+            appDir + QStringLiteral("/../../styles/") + fileName,
+            cwd.absoluteFilePath(QStringLiteral("styles/") + fileName),
+        };
+        for (const QString &path : stylePaths) {
+            QFile f(path);
+            if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                sheet = QString::fromUtf8(f.readAll());
+                break;
+            }
+        }
+    }
+    if (sheet.isEmpty())
+        return false;
+    const QString arrowPath = comboArrowImagePath();
+    if (!arrowPath.isEmpty()) {
+        const QString fileUrl = QUrl::fromLocalFile(arrowPath).toString();
+        sheet.replace(QStringLiteral("url(:/icons/arrow_down.png)"), QStringLiteral("url(") + fileUrl + QLatin1Char(')'));
+    }
+    app.setStyleSheet(sheet);
+    return true;
+}
 } // namespace
 
 int main(int argc, char *argv[])
@@ -78,6 +137,14 @@ int main(int argc, char *argv[])
     qInfo() << "easyPOS started, log file:" << LogManager::logFilePath();
 
     applyLanguage(a);
+
+    /* Применяем зелёную тему: светлую при светлой ОС, тёмную при тёмной ОС */
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    const bool dark = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+    loadLiquidGlassStyle(a, dark);
+#else
+    loadLiquidGlassStyle(a, false);
+#endif
 
     std::shared_ptr<EasyPOSCore> easyPOSCore = std::make_shared<EasyPOSCore>();
     qInfo() << "EasyPOSCore created";

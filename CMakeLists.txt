@@ -85,6 +85,8 @@ qt_add_executable(easyPOS
     logging/logmanager.h logging/logmanager.cpp
 )
 
+qt_add_resources(easyPOS PRIVATE resources.qrc)
+
 # Переводы: lrelease компилирует .ts в .qm (по умолчанию в build/)
 find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
 qt_add_lrelease(easyPOS

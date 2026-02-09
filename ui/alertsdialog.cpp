@@ -22,17 +22,19 @@ AlertsDialog::AlertsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     ui->dateFromEdit->setDate(today.addDays(-7));
     ui->dateToEdit->setDate(today);
 
-    ui->table->horizontalHeader()->setStretchLastSection(true);
+    ui->table->horizontalHeader()->setStretchLastSection(false);
+    ui->table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    ui->table->setColumnWidth(0, 0);
+    ui->table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+    ui->table->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(7, QHeaderView::ResizeToContents);
     ui->table->setAlternatingRowColors(true);
-    ui->table->setColumnWidth(0, 50);
-    ui->table->setColumnWidth(1, 90);
-    ui->table->setColumnWidth(2, 70);
-    ui->table->setColumnWidth(3, 90);
-    ui->table->setColumnWidth(4, 140);
-    ui->table->setColumnWidth(5, 100);
-    ui->table->setColumnWidth(6, 120);
     ui->table->setSortingEnabled(true);
-    ui->table->setColumnHidden(0, true); // ID скрыт
+    ui->table->setColumnHidden(0, true);
 
     fillCategoryCombo();
 
@@ -155,7 +157,7 @@ void AlertsDialog::onExportCsv()
     const QDate to = ui->dateToEdit->date();
     QString defaultName = tr("События_%1_%2.csv").arg(from.toString(Qt::ISODate)).arg(to.toString(Qt::ISODate));
     QString path = QFileDialog::getSaveFileName(this, tr("Экспорт в CSV"),
-        defaultName, tr("CSV (*.csv)"));
+        defaultName, tr("CSV (*.csv)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
         path += QLatin1String(".csv");

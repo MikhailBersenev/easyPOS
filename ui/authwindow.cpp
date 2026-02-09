@@ -29,18 +29,18 @@ AuthWindow::AuthWindow(QWidget *parent, std::shared_ptr<EasyPOSCore> easyPOSCore
             QPixmap pm(logoPath);
             if (!pm.isNull()) {
                 pm = pm.scaledToWidth(220, Qt::SmoothTransformation);
-                ui->label_3->setPixmap(pm);
-                ui->label_3->setAlignment(Qt::AlignCenter);
+                ui->brandingAppNameLabel->setPixmap(pm);
+                ui->brandingAppNameLabel->setAlignment(Qt::AlignCenter);
                 QIcon icon(logoPath);
                 if (!icon.isNull())
                     QApplication::setWindowIcon(icon);
             } else {
-                ui->label_3->setText(m_easyPOSCore->getBrandingAppName());
-                ui->label_3->setAlignment(Qt::AlignCenter);
+                ui->brandingAppNameLabel->setText(m_easyPOSCore->getBrandingAppName());
+                ui->brandingAppNameLabel->setAlignment(Qt::AlignCenter);
             }
         } else {
-            ui->label_3->setText(m_easyPOSCore->getBrandingAppName());
-            ui->label_3->setAlignment(Qt::AlignCenter);
+            ui->brandingAppNameLabel->setText(m_easyPOSCore->getBrandingAppName());
+            ui->brandingAppNameLabel->setAlignment(Qt::AlignCenter);
         }
     }
     connect(ui->badgeLineEdit, &QLineEdit::returnPressed, this, &AuthWindow::on_badgeReturnPressed);
