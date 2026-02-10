@@ -27,6 +27,9 @@ ShiftsDialog::ShiftsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     ui->dateFromEdit->setDate(today.addDays(-7));
     ui->dateToEdit->setDate(today);
     ui->shiftsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->shiftsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    ui->shiftsTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->shiftsTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(ui->refreshButton, &QPushButton::clicked, this, &ShiftsDialog::on_refreshButton_clicked);
     connect(ui->startShiftButton, &QPushButton::clicked, this, &ShiftsDialog::on_startShiftButton_clicked);

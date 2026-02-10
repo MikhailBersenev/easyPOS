@@ -22,14 +22,14 @@ CheckHistoryDialog::CheckHistoryDialog(QWidget *parent, std::shared_ptr<EasyPOSC
 {
     ui->setupUi(this);
     ui->dateEdit->setDate(QDate::currentDate());
-    ui->table->horizontalHeader()->setStretchLastSection(true);
+    ui->table->horizontalHeader()->setStretchLastSection(false);
+    ui->table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
     ui->table->setAlternatingRowColors(true);
-    ui->table->setColumnWidth(0, 60);
-    ui->table->setColumnWidth(1, 80);
-    ui->table->setColumnWidth(2, 90);
-    ui->table->setColumnWidth(3, 70);
-    ui->table->setColumnWidth(4, 60);   // Смена
-    ui->table->setColumnWidth(5, 120); // Сотрудник
     ui->table->setSortingEnabled(true);
     ui->table->sortByColumn(4, Qt::AscendingOrder);  // по смене, затем по времени (порядок из SQL)
     connect(ui->dateEdit, &QDateEdit::dateChanged, this, &CheckHistoryDialog::onDateChanged);
@@ -136,7 +136,7 @@ void CheckHistoryDialog::onExportCsv()
     const QDate date = ui->dateEdit->date();
     QString defaultName = tr("Чеки_%1.csv").arg(date.toString(Qt::ISODate));
     QString path = QFileDialog::getSaveFileName(this, tr("Экспорт в CSV"),
-        defaultName, tr("CSV (*.csv)"));
+        defaultName, tr("CSV (*.csv)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
         path += QLatin1String(".csv");

@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>PaymentDialog</class>
  <widget class="QDialog" name="PaymentDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>598</width>
+    <height>423</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
     <width>460</width>
@@ -12,22 +20,141 @@
    <string>Оплата чека</string>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>24</number>
+   </property>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>16</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
+   <property name="bottomMargin">
+    <number>16</number>
+   </property>
    <item>
-    <widget class="QFrame" name="toPayFrame">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <layout class="QHBoxLayout" name="toPayLayout">
-      <item>
+    <widget class="QWidget" name="gridWidget" native="true">
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="horizontalSpacing">
+       <number>16</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>28</number>
+      </property>
+      <item row="0" column="0" colspan="2">
        <widget class="QLabel" name="toPayLabel">
         <property name="text">
          <string>К оплате: 0.00 ₽</string>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-          <bold>true</bold>
-         </font>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="methodLabel">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Способ оплаты:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="paymentMethodCombo">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>32</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="amountLabel">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Сумма, ₽:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="amountSpinBox">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="suffix">
+         <string> ₽</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>99999999.989999994635582</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <spacer name="gridLeftSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="fullAmountBtn">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Вся сумма</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QLabel" name="totalLabel">
+        <property name="text">
+         <string>К оплате: 0.00 ₽</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QLabel" name="diffLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::TextFormat::RichText</enum>
         </property>
        </widget>
       </item>
@@ -35,93 +162,28 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableWidget" name="paymentsTable">
-     <property name="minimumSize">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Policy::Expanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
       <size>
-       <width>0</width>
-       <height>120</height>
+       <width>20</width>
+       <height>40</height>
       </size>
      </property>
-     <property name="selectionBehavior">
-      <enum>QAbstractItemView::SelectRows</enum>
-     </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
-     </property>
-     <attribute name="columnCount">
-      <number>2</number>
-     </attribute>
-     <column>
-      <property name="text">
-       <string>Способ оплаты</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Сумма, ₽</string>
-      </property>
-     </column>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="btnLayout">
-     <item>
-      <widget class="QPushButton" name="addBtn">
-       <property name="text">
-        <string>+ Добавить способ оплаты</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="removeBtn">
-       <property name="text">
-        <string>Удалить строку</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="fullAmountBtn">
-       <property name="text">
-        <string>Вся сумма в одну строку</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QLabel" name="totalLabel">
-     <property name="text">
-      <string>Итого оплат: 0.00 ₽</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="diffLabel">
-     <property name="text">
-      <string/>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
-     </property>
-    </widget>
+    </spacer>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

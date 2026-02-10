@@ -42,7 +42,7 @@ void SetupBrandingPage::on_browseLogoButton_clicked()
     QString current = ui->logoPathEdit->text().trimmed();
     QString dir = current.isEmpty() ? QDir::homePath() : QFileInfo(current).absolutePath();
     QString path = QFileDialog::getOpenFileName(this, tr("Выбрать логотип"), dir,
-        tr("Изображения (*.png *.jpg *.jpeg *.bmp);;Все файлы (*)"));
+        tr("Изображения (*.png *.jpg *.jpeg *.bmp);;Все файлы (*)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (!path.isEmpty())
         ui->logoPathEdit->setText(QDir::toNativeSeparators(path));
 }

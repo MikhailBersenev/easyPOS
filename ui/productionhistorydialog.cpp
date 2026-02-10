@@ -20,14 +20,14 @@ ProductionHistoryDialog::ProductionHistoryDialog(QWidget *parent, std::shared_pt
     QDate today = QDate::currentDate();
     ui->dateFromEdit->setDate(today.addDays(-30));
     ui->dateToEdit->setDate(today);
-    ui->table->horizontalHeader()->setStretchLastSection(true);
+    ui->table->horizontalHeader()->setStretchLastSection(false);
+    ui->table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    ui->table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    ui->table->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
     ui->table->setAlternatingRowColors(true);
-    ui->table->setColumnWidth(0, 60);
-    ui->table->setColumnWidth(1, 180);
-    ui->table->setColumnWidth(2, 70);
-    ui->table->setColumnWidth(3, 100);
-    ui->table->setColumnWidth(4, 140);
-    ui->table->setColumnWidth(5, 80);
     ui->table->setSortingEnabled(true);
     ui->table->sortByColumn(3, Qt::DescendingOrder);
     connect(ui->dateFromEdit, &QDateEdit::dateChanged, this, &ProductionHistoryDialog::onDateRangeChanged);
@@ -115,7 +115,7 @@ void ProductionHistoryDialog::onExportCsv()
     const QDate to = ui->dateToEdit->date();
     QString defaultName = tr("Производства_%1_%2.csv").arg(from.toString(Qt::ISODate)).arg(to.toString(Qt::ISODate));
     QString path = QFileDialog::getSaveFileName(this, tr("Экспорт в CSV"),
-        defaultName, tr("CSV (*.csv)"));
+        defaultName, tr("CSV (*.csv)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
         path += QLatin1String(".csv");

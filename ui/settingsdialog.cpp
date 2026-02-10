@@ -10,7 +10,9 @@
 #include "../RBAC/rolemanager.h"
 #include "../RBAC/structures.h"
 #include <QMessageBox>
+#include <QPushButton>
 #include <QInputDialog>
+#include <QVBoxLayout>
 #include <QFormLayout>
 #include <QDialogButtonBox>
 #include <QLineEdit>
@@ -29,6 +31,10 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     , m_core(core)
 {
     ui->setupUi(this);
+    if (QPushButton *cancelBtn = ui->buttonBox->button(QDialogButtonBox::Cancel))
+        cancelBtn->setObjectName("cancelButton");
+    if (QVBoxLayout *mainLay = qobject_cast<QVBoxLayout *>(this->layout()))
+        mainLay->setAlignment(ui->buttonBox, Qt::AlignRight);
     if (m_core)
         setWindowTitle(tr("Настройки — %1").arg(m_core->getBrandingAppName()));
     // Qt не задаёт userData элементов комбобокса из .ui — задаём вручную, иначе смена языка не сохраняется
@@ -55,6 +61,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> cor
     loadRolesTable();
     loadUsersTable();
     ui->rolesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->rolesTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    ui->rolesTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
     ui->usersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->usersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     connect(ui->dbSettingsButton, &QPushButton::clicked, this, &SettingsDialog::onDbSettingsClicked);
@@ -159,7 +167,7 @@ void SettingsDialog::onBrandingLogoBrowseClicked()
     QString current = ui->brandingLogoPathEdit->text().trimmed();
     QString dir = current.isEmpty() ? QDir::homePath() : QFileInfo(current).absolutePath();
     QString path = QFileDialog::getOpenFileName(this, tr("Выбрать логотип"), dir,
-        tr("Изображения (*.png *.jpg *.jpeg *.bmp);;Все файлы (*)"));
+        tr("Изображения (*.png *.jpg *.jpeg *.bmp);;Все файлы (*)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (!path.isEmpty()) {
         ui->brandingLogoPathEdit->setText(QDir::toNativeSeparators(path));
     }

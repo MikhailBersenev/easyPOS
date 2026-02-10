@@ -69,7 +69,7 @@ void CheckDetailsDialog::onSaveToPdf()
     QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
     QString defaultName = tr("%1_Чек_%2.pdf").arg(appName).arg(m_checkId);
     QString path = QFileDialog::getSaveFileName(this, tr("Сохранить чек в PDF"),
-        defaultName, tr("PDF (*.pdf)"));
+        defaultName, tr("PDF (*.pdf)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".pdf"), Qt::CaseInsensitive))
         path += QLatin1String(".pdf");

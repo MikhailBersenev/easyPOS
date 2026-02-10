@@ -92,7 +92,7 @@ void SalesReportDialog::onExportCsv()
         .arg(from.toString(Qt::ISODate))
         .arg(to.toString(Qt::ISODate));
     QString path = QFileDialog::getSaveFileName(this, tr("Экспорт в CSV"),
-        defaultName, tr("CSV (*.csv)"));
+        defaultName, tr("CSV (*.csv)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
         path += QLatin1String(".csv");

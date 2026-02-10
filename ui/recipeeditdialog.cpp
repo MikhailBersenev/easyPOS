@@ -10,6 +10,7 @@ RecipeEditDialog::RecipeEditDialog(QWidget *parent)
 {
     ui->setupUi(this);
     ui->componentsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->componentsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     connect(ui->addCompBtn, &QPushButton::clicked, this, &RecipeEditDialog::onAddComponent);
     connect(ui->removeCompBtn, &QPushButton::clicked, this, &RecipeEditDialog::onRemoveComponent);
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, [this] {

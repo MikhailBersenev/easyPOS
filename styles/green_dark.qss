@@ -16,12 +16,18 @@ QWidget, QMainWindow, QDialog {
     background-color: #121212;
 }
 
-QFrame#centralPanel, QFrame#toPayFrame,
-QGroupBox, QFrame[frameShape="4"] {
+QFrame#centralPanel, QGroupBox, QFrame[frameShape="4"] {
     background-color: #1E1E1E;
     border: 1px solid #3D3D3D;
     border-radius: 8px;
     padding: 12px;
+}
+
+/* Блок «К оплате» — без отдельного фона, только отступ */
+QFrame#toPayFrame {
+    background-color: transparent;
+    border: none;
+    padding: 8px 0;
 }
 
 QGroupBox {
@@ -32,7 +38,7 @@ QGroupBox {
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    left: 14px;
+    left: 12px;
     padding: 0 8px;
     color: #E8E8E8;
     font-size: 13px;
@@ -46,7 +52,7 @@ QPushButton {
     border: none;
     border-radius: 6px;
     color: #FFFFFF;
-    padding: 6px 16px;
+    padding: 8px 16px;
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -94,7 +100,7 @@ QPushButton#closeButton:disabled, QPushButton#cancelButton:disabled {
 QPushButton#addButton, QPushButton#signInButton, QPushButton#signupButton,
 QPushButton#testButton, QPushButton#selectButton {
     min-width: 84px;
-    padding: 6px 20px;
+    padding: 8px 20px;
 }
 
 QPushButton#searchButton {
@@ -217,7 +223,7 @@ QCalendarWidget QMenu {
     border: 1px solid #3D3D3D;
 }
 QCalendarWidget QMenu::item {
-    padding: 6px 16px;
+    padding: 8px 16px;
     color: #E8E8E8;
 }
 QCalendarWidget QMenu::item:selected {
@@ -283,7 +289,7 @@ QPlainTextEdit, QTextEdit {
     background-color: #1E1E1E;
     border: 1px solid #3D3D3D;
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     color: #E8E8E8;
     font-size: 12px;
     font-weight: 400;
@@ -309,7 +315,7 @@ QTableWidget, QTableView {
 }
 
 QTableWidget::item, QTableView::item {
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-size: 12px;
     font-weight: 400;
 }
@@ -325,7 +331,7 @@ QToolTip {
     color: #E8E8E8;
     border: 1px solid #4CAF50;
     border-radius: 4px;
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 11px;
 }
 
@@ -334,7 +340,7 @@ QHeaderView::section {
     border: none;
     border-right: 1px solid #3D3D3D;
     border-bottom: 2px solid #4CAF50;
-    padding: 6px 10px;
+    padding: 8px 12px;
     color: #E8E8E8;
     font-size: 11px;
     font-weight: 600;
@@ -355,8 +361,8 @@ QToolBar {
         stop:0 #2E7D32,
         stop:1 #1B5E20);
     border: none;
-    spacing: 6px;
-    padding: 6px 12px;
+    spacing: 8px;
+    padding: 8px 12px;
     min-height: 24px;
 }
 
@@ -364,7 +370,7 @@ QToolButton {
     background: transparent;
     border: none;
     border-radius: 5px;
-    padding: 6px 10px;
+    padding: 8px 12px;
     color: #E8E8E8;
     font-size: 12px;
     font-weight: 500;
@@ -382,7 +388,7 @@ QStatusBar {
     background-color: #1E1E1E;
     border-top: 1px solid #3D3D3D;
     color: #9E9E9E;
-    padding: 4px 12px;
+    padding: 8px 12px;
     font-size: 11px;
     font-weight: 500;
 }
@@ -393,11 +399,11 @@ QMenuBar {
         stop:1 #1B5E20);
     color: #E8E8E8;
     border: none;
-    padding: 4px 0;
+    padding: 8px 0;
 }
 
 QMenuBar::item {
-    padding: 6px 14px;
+    padding: 8px 14px;
     border-radius: 5px;
     font-size: 12px;
     font-weight: 500;
@@ -411,12 +417,12 @@ QMenu {
     background-color: #1E1E1E;
     border: 1px solid #3D3D3D;
     border-radius: 6px;
-    padding: 6px 0;
+    padding: 8px 0;
     color: #E8E8E8;
 }
 
 QMenu::item {
-    padding: 8px 20px;
+    padding: 8px 16px;
     font-size: 12px;
     font-weight: 400;
 }
@@ -582,6 +588,7 @@ QSpinBox::down-button, QDoubleSpinBox::down-button {
     border: 1px solid #3D3D3D;
     border-radius: 4px;
     min-width: 22px;
+    margin-left: 8px;
 }
 
 QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
@@ -599,6 +606,7 @@ QFormLayout {
 
 QFormLayout .QLabel {
     min-width: 180px;
+    min-height: 32px;
 }
 
 QDialogButtonBox {

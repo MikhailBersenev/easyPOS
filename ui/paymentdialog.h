@@ -19,11 +19,8 @@ public:
     QList<CheckPaymentRow> getPayments() const;
 
 private slots:
-    void onAddRow();
-    void onRemoveRow();
     void onFullAmount();
     void updateTotal();
-    void onSelectionChanged();
 
 private:
     void setupConnections();

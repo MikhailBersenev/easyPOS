@@ -2,6 +2,7 @@
 #include "ui_goodeditdialog.h"
 #include <QMessageBox>
 #include <QApplication>
+#include <QPushButton>
 #include <QFileDialog>
 #include <QDir>
 #include <QFileInfo>
@@ -14,6 +15,8 @@ GoodEditDialog::GoodEditDialog(QWidget *parent)
     , ui(new Ui::GoodEditDialog)
 {
     ui->setupUi(this);
+    if (QPushButton *cancelBtn = ui->buttonBox->button(QDialogButtonBox::Cancel))
+        cancelBtn->setObjectName("cancelButton");
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, [this] {
         if (name().isEmpty()) {
             QMessageBox::warning(this, windowTitle(), tr("Введите название."));
@@ -126,7 +129,7 @@ void GoodEditDialog::on_browseImage_clicked()
 {
     const QString path = QFileDialog::getOpenFileName(this, tr("Выбрать пиктограмму товара"),
         ui->imageUrlEdit->text().trimmed().isEmpty() ? QDir::homePath() : QFileInfo(ui->imageUrlEdit->text().trimmed()).absolutePath(),
-        tr("Изображения (*.png *.jpg *.jpeg *.bmp *.gif);;Все файлы (*)"));
+        tr("Изображения (*.png *.jpg *.jpeg *.bmp *.gif);;Все файлы (*)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (!path.isEmpty()) {
         ui->imageUrlEdit->setText(path);
         updateIconPreview(path);

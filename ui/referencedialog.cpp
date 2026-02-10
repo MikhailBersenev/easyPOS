@@ -21,7 +21,7 @@ ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> c
     
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(false);
     ui->tableWidget->setAlternatingRowColors(true);
     
     // Настройка горячих клавиш
@@ -76,13 +76,17 @@ void ReferenceDialog::setupColumns(const QStringList &columns, const QList<int> 
     qDebug() << "ReferenceDialog::setupColumns" << "cols=" << columns.size();
     ui->tableWidget->setColumnCount(columns.size());
     ui->tableWidget->setHorizontalHeaderLabels(columns);
-    
-    if (!widths.isEmpty()) {
-        qDebug() << "ReferenceDialog::setupColumns: branch set_widths";
-        for (int i = 0; i < widths.size() && i < columns.size(); ++i) {
-            ui->tableWidget->setColumnWidth(i, widths[i]);
+
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    const int n = columns.size();
+    for (int i = 0; i < n; ++i) {
+        if (i == 1) {
+            header->setSectionResizeMode(i, QHeaderView::Stretch);
+        } else {
+            header->setSectionResizeMode(i, QHeaderView::ResizeToContents);
         }
     }
+
     // Скрываем колонку ID (индекс 0)
     if (columns.size() > 0) {
         qDebug() << "ReferenceDialog::setupColumns: branch hide_id_column";

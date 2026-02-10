@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
-    <height>520</height>
+    <width>996</width>
+    <height>816</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -22,6 +22,18 @@
   <layout class="QVBoxLayout" name="mainLayout">
    <item>
     <layout class="QFormLayout" name="formLayout">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::FieldGrowthPolicy::ExpandingFieldsGrow</enum>
+     </property>
+     <property name="labelAlignment">
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+     </property>
+     <property name="horizontalSpacing">
+      <number>12</number>
+     </property>
+     <property name="verticalSpacing">
+      <number>8</number>
+     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="goodLabel">
        <property name="text">
@@ -99,7 +111,7 @@
         <number>2</number>
        </property>
        <property name="maximum">
-        <double>99999999.990000000000000</double>
+        <double>99999999.989999994635582</double>
        </property>
        <property name="value">
         <double>0.000000000000000</double>
@@ -137,7 +149,7 @@
      <item row="7" column="0">
       <spacer name="formSpacer">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -164,11 +176,11 @@
      <layout class="QVBoxLayout" name="barcodeGroupLayout">
       <item>
        <widget class="QTableWidget" name="barcodeTable">
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectRows</enum>
-        </property>
         <property name="selectionMode">
-         <enum>QAbstractItemView::SingleSelection</enum>
+         <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
         </property>
         <column>
          <property name="text">
@@ -213,10 +225,10 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

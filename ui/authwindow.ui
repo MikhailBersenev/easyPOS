@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>744</width>
     <height>360</height>
    </rect>
   </property>
@@ -26,7 +26,7 @@
       <string>easyPOS</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -35,7 +35,7 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tabBadge" native="true">
+     <widget class="QWidget" name="tabBadge">
       <attribute name="title">
        <string>Бейдж</string>
       </attribute>
@@ -78,22 +78,22 @@
            <pointsize>10</pointsize>
           </font>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
          <property name="text">
           <string>Приложите бейдж сотрудника к сканеру — вход выполнится автоматически после считывания штрихкода.
 
 Либо введите штрихкод вручную в поле выше и нажмите «Войти».</string>
          </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabLogin" native="true">
+     <widget class="QWidget" name="tabLogin">
       <attribute name="title">
        <string>Логин и пароль</string>
       </attribute>
