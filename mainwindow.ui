@@ -291,8 +291,8 @@
      <string>Файл</string>
     </property>
    <addaction name="actionCheckHistory"/>
+   <addaction name="actionReports"/>
    <addaction name="actionAlerts"/>
-   <addaction name="actionSalesReport"/>
    <addaction name="actionShifts"/>
    <addaction name="actionSaveCheckToPdf"/>
    <addaction name="actionLogout"/>
@@ -455,6 +455,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionReports">
+   <property name="text">
+    <string>Отчёты…</string>
    </property>
   </action>
   <action name="actionSalesReport">

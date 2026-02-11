@@ -1189,6 +1189,29 @@ QList<PaymentMethodInfo> SalesManager::getPaymentMethods()
     return list;
 }
 
+QList<CheckPaymentRow> SalesManager::getCheckPayments(qint64 checkId)
+{
+    QList<CheckPaymentRow> list;
+    if (!m_dbConnection || !m_dbConnection->isConnected() || checkId <= 0)
+        return list;
+    QSqlQuery q(m_dbConnection->getDatabase());
+    q.prepare(QStringLiteral(
+        "SELECT cp.paymentmethodid, COALESCE(pm.name, ''), cp.amount "
+        "FROM checkpayments cp LEFT JOIN paymentmethods pm ON pm.id = cp.paymentmethodid "
+        "WHERE cp.checkid = :cid ORDER BY cp.paymentmethodid"));
+    q.bindValue(QStringLiteral(":cid"), checkId);
+    if (!q.exec())
+        return list;
+    while (q.next()) {
+        CheckPaymentRow row;
+        row.paymentMethodId = q.value(0).toLongLong();
+        row.paymentMethodName = q.value(1).toString();
+        row.amount = q.value(2).toDouble();
+        list.append(row);
+    }
+    return list;
+}
+
 SaleOperationResult SalesManager::recordCheckPayments(qint64 checkId, const QList<CheckPaymentRow> &payments)
 {
     SaleOperationResult r;

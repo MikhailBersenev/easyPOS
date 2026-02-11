@@ -69,6 +69,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="reportOdtButton">
+       <property name="text">
+        <string>Мастер отчётов</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

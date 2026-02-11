@@ -10,6 +10,7 @@
 #include "alerts/alertsmanager.h"
 #include "alerts/alertkeys.h"
 #include "logging/logmanager.h"
+#include "reports/reportmanager.h"
 #include <QSqlQuery>
 
 EasyPOSCore::EasyPOSCore()
@@ -186,6 +187,29 @@ SalesManager* EasyPOSCore::createSalesManager(QObject *parent)
     return salesManager;
 }
 
+ReportManager* EasyPOSCore::createReportManager(QObject *parent)
+{
+    if (!databaseConnection || !databaseConnection->isConnected()) {
+        qWarning() << "EasyPOSCore: cannot create ReportManager, no DB connection";
+        return nullptr;
+    }
+    QObject *p = parent ? parent : this;
+    ReportManager *rm = new ReportManager(p);
+    rm->setDatabaseConnection(databaseConnection);
+    if (stockManager)
+        rm->setStockManager(stockManager);
+    if (!shiftManager)
+        createShiftManager(this);
+    if (shiftManager)
+        rm->setShiftManager(shiftManager);
+    if (productionManager)
+        rm->setProductionManager(productionManager);
+    SalesManager *sm = createSalesManager(rm);
+    if (sm)
+        rm->setSalesManager(sm);
+    return rm;
+}
+
 ShiftManager* EasyPOSCore::createShiftManager(QObject *parent)
 {
     if (!databaseConnection || !databaseConnection->isConnected()) {
@@ -320,6 +344,36 @@ qint64 EasyPOSCore::getEmployeeIdByUserId(qint64 userId) const
     if (!q.exec() || !q.next())
         return 0;
     return q.value(0).toLongLong();
+}
+
+QString EasyPOSCore::getCurrentEmployeeDisplayName() const
+{
+    qint64 empId = getEmployeeIdByUserId(m_currentSession.userId);
+    if (empId <= 0 || !databaseConnection || !databaseConnection->isConnected())
+        return QString();
+    QSqlQuery q(databaseConnection->getDatabase());
+    q.prepare(QStringLiteral(
+        "SELECT TRIM(COALESCE(lastname,'') || ' ' || COALESCE(firstname,'')) FROM employees WHERE id = :id"));
+    q.bindValue(QStringLiteral(":id"), empId);
+    if (!q.exec() || !q.next())
+        return QString();
+    return q.value(0).toString().trimmed();
+}
+
+QString EasyPOSCore::getCurrentEmployeePositionName() const
+{
+    qint64 empId = getEmployeeIdByUserId(m_currentSession.userId);
+    if (empId <= 0 || !databaseConnection || !databaseConnection->isConnected())
+        return QString();
+    QSqlQuery q(databaseConnection->getDatabase());
+    q.prepare(QStringLiteral(
+        "SELECT COALESCE(p.name,'') FROM employees e "
+        "LEFT JOIN positions p ON p.id = e.positionid AND (p.isdeleted IS NULL OR p.isdeleted = false) "
+        "WHERE e.id = :id"));
+    q.bindValue(QStringLiteral(":id"), empId);
+    if (!q.exec() || !q.next())
+        return QString();
+    return q.value(0).toString().trimmed();
 }
 
 void EasyPOSCore::setCurrentSession(const UserSession &session)

@@ -99,6 +99,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="reportButton">
+         <property name="text">
+          <string>Отчёт</string>
+         </property>
+         <property name="visible">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="refreshButton">
          <property name="text">
           <string>Обновить</string>

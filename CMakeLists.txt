@@ -46,6 +46,8 @@ qt_add_executable(easyPOS
     ui/checkhistorydialog.h ui/checkhistorydialog.cpp ui/checkhistorydialog.ui
     ui/alertsdialog.h ui/alertsdialog.cpp ui/alertsdialog.ui
     ui/salesreportdialog.h ui/salesreportdialog.cpp ui/salesreportdialog.ui
+    ui/reportsdialog.h ui/reportsdialog.cpp ui/reportsdialog.ui
+    ui/reportwizarddialog.h ui/reportwizarddialog.cpp
     ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp ui/checkdetailsdialog.ui
     ui/checkpdfexporter.h ui/checkpdfexporter.cpp
     ui/servicesdialog.h ui/servicesdialog.cpp
@@ -78,6 +80,12 @@ qt_add_executable(easyPOS
     ui/batcheditdialog.h ui/batcheditdialog.cpp ui/batcheditdialog.ui
     shifts/structures.h
     shifts/shiftmanager.h shifts/shiftmanager.cpp
+    reports/reportdata.h
+    reports/abstractreportexporter.h
+    reports/abstractreport.h
+    reports/csvreportexporter.h reports/csvreportexporter.cpp
+    reports/odtreportexporter.h reports/odtreportexporter.cpp
+    reports/reportmanager.h reports/reportmanager.cpp
     alerts/structures.h
     alerts/alertkeys.h
     alerts/alertsmanager.h alerts/alertsmanager.cpp
@@ -149,6 +157,10 @@ qt_add_executable(unit_tests
     RBAC/rolemanager.h RBAC/rolemanager.cpp
     sales/stockmanager.h sales/stockmanager.cpp
     sales/salesmanager.h sales/salesmanager.cpp
+    reports/reportdata.h reports/abstractreportexporter.h reports/abstractreport.h
+    reports/csvreportexporter.h reports/csvreportexporter.cpp
+    reports/odtreportexporter.h reports/odtreportexporter.cpp
+    reports/reportmanager.h reports/reportmanager.cpp
     production/structures.h production/productionmanager.h production/productionmanager.cpp
     shifts/structures.h shifts/shiftmanager.h shifts/shiftmanager.cpp
     alerts/structures.h alerts/alertkeys.h alerts/alertsmanager.h alerts/alertsmanager.cpp
@@ -159,6 +171,7 @@ target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unit_tests
     PRIVATE
         Qt::Core
+        Qt::Gui
         Qt::Test
         Qt::Sql
 )

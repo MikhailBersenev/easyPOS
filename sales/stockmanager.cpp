@@ -580,10 +580,11 @@ QList<BatchDetail> StockManager::getBatches(bool includeDeleted)
     if (!m_dbConnection || !m_dbConnection->isConnected())
         return list;
     QString sql = QStringLiteral(
-        "SELECT b.id, b.goodid, g.name, COALESCE(b.batchnumber,''), b.qnt, "
+        "SELECT b.id, b.goodid, g.name, COALESCE(c.name,''), COALESCE(b.batchnumber,''), b.qnt, "
         "COALESCE(b.reservedquantity, 0), b.price, b.proddate, b.expdate, "
         "COALESCE(b.writtenoff, false), b.updatedate, b.emoloyeeid, COALESCE(b.isdeleted, false) "
-        "FROM batches b JOIN goods g ON g.id = b.goodid ");
+        "FROM batches b JOIN goods g ON g.id = b.goodid "
+        "LEFT JOIN goodcats c ON c.id = g.categoryid ");
     if (!includeDeleted)
         sql += QStringLiteral("WHERE (b.isdeleted IS NULL OR b.isdeleted = false) ");
     sql += QStringLiteral("ORDER BY g.name, b.proddate DESC, b.id DESC");
@@ -595,16 +596,17 @@ QList<BatchDetail> StockManager::getBatches(bool includeDeleted)
         d.id = q.value(0).toLongLong();
         d.goodId = q.value(1).toLongLong();
         d.goodName = q.value(2).toString();
-        d.batchNumber = q.value(3).toString();
-        d.qnt = q.value(4).toLongLong();
-        d.reservedQuantity = q.value(5).toLongLong();
-        d.price = q.value(6).toDouble();
-        d.prodDate = q.value(7).toDate();
-        d.expDate = q.value(8).toDate();
-        d.writtenOff = q.value(9).toBool();
-        d.updateDate = q.value(10).toDate();
-        d.employeeId = q.value(11).toLongLong();
-        d.isDeleted = q.value(12).toBool();
+        d.categoryName = q.value(3).toString();
+        d.batchNumber = q.value(4).toString();
+        d.qnt = q.value(5).toLongLong();
+        d.reservedQuantity = q.value(6).toLongLong();
+        d.price = q.value(7).toDouble();
+        d.prodDate = q.value(8).toDate();
+        d.expDate = q.value(9).toDate();
+        d.writtenOff = q.value(10).toBool();
+        d.updateDate = q.value(11).toDate();
+        d.employeeId = q.value(12).toLongLong();
+        d.isDeleted = q.value(13).toBool();
         list.append(d);
     }
     return list;
@@ -617,26 +619,28 @@ BatchDetail StockManager::getBatch(qint64 batchId)
         return d;
     QSqlQuery q(m_dbConnection->getDatabase());
     q.prepare(QStringLiteral(
-        "SELECT b.id, b.goodid, g.name, COALESCE(b.batchnumber,''), b.qnt, "
+        "SELECT b.id, b.goodid, g.name, COALESCE(c.name,''), COALESCE(b.batchnumber,''), b.qnt, "
         "COALESCE(b.reservedquantity, 0), b.price, b.proddate, b.expdate, "
         "COALESCE(b.writtenoff, false), b.updatedate, b.emoloyeeid, COALESCE(b.isdeleted, false) "
-        "FROM batches b JOIN goods g ON g.id = b.goodid WHERE b.id = :id"));
+        "FROM batches b JOIN goods g ON g.id = b.goodid "
+        "LEFT JOIN goodcats c ON c.id = g.categoryid WHERE b.id = :id"));
     q.bindValue(QStringLiteral(":id"), batchId);
     if (!q.exec() || !q.next())
         return d;
     d.id = q.value(0).toLongLong();
     d.goodId = q.value(1).toLongLong();
     d.goodName = q.value(2).toString();
-    d.batchNumber = q.value(3).toString();
-    d.qnt = q.value(4).toLongLong();
-    d.reservedQuantity = q.value(5).toLongLong();
-    d.price = q.value(6).toDouble();
-    d.prodDate = q.value(7).toDate();
-    d.expDate = q.value(8).toDate();
-    d.writtenOff = q.value(9).toBool();
-    d.updateDate = q.value(10).toDate();
-    d.employeeId = q.value(11).toLongLong();
-    d.isDeleted = q.value(12).toBool();
+    d.categoryName = q.value(3).toString();
+    d.batchNumber = q.value(4).toString();
+    d.qnt = q.value(5).toLongLong();
+    d.reservedQuantity = q.value(6).toLongLong();
+    d.price = q.value(7).toDouble();
+    d.prodDate = q.value(8).toDate();
+    d.expDate = q.value(9).toDate();
+    d.writtenOff = q.value(10).toBool();
+    d.updateDate = q.value(11).toDate();
+    d.employeeId = q.value(12).toLongLong();
+    d.isDeleted = q.value(13).toBool();
     return d;
 }
 

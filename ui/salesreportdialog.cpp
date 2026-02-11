@@ -3,12 +3,11 @@
 #include "../easyposcore.h"
 #include "../sales/salesmanager.h"
 #include "../sales/structures.h"
-#include <QFile>
+#include "../reports/reportmanager.h"
+#include "../reports/csvreportexporter.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QLocale>
-#include <QTextStream>
-#include <QStringConverter>
 
 SalesReportDialog::SalesReportDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : QDialog(parent)
@@ -82,12 +81,18 @@ void SalesReportDialog::onGenerate()
 
 void SalesReportDialog::onExportCsv()
 {
-    if (m_lastChecks.isEmpty()) {
+    const QDate from = ui->dateFromEdit->date();
+    const QDate to = ui->dateToEdit->date();
+    ReportManager *rm = m_core ? m_core->createReportManager(this) : nullptr;
+    if (!rm) {
+        QMessageBox::warning(this, windowTitle(), tr("Не удалось создать отчёт."));
+        return;
+    }
+    ReportData data = rm->generateSalesByPeriodReport(from, to);
+    if (data.rows.isEmpty()) {
         QMessageBox::information(this, windowTitle(), tr("Нет данных для экспорта."));
         return;
     }
-    const QDate from = ui->dateFromEdit->date();
-    const QDate to = ui->dateToEdit->date();
     QString defaultName = tr("Продажи_%1_%2.csv")
         .arg(from.toString(Qt::ISODate))
         .arg(to.toString(Qt::ISODate));
@@ -97,24 +102,10 @@ void SalesReportDialog::onExportCsv()
     if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
         path += QLatin1String(".csv");
 
-    QFile f(path);
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    CsvReportExporter exporter;
+    if (!exporter.exportReport(data, path)) {
         QMessageBox::critical(this, windowTitle(), tr("Не удалось создать файл."));
         return;
     }
-    QTextStream out(&f);
-    out.setEncoding(QStringConverter::Utf8);
-    out << "№ чека;Дата;Время;Сотрудник;Сумма;Скидка;К оплате\n";
-    for (const Check &ch : m_lastChecks) {
-        const double pay = (ch.totalAmount - ch.discountAmount) < 0 ? 0 : (ch.totalAmount - ch.discountAmount);
-        out << ch.id << ";"
-            << ch.date.toString(Qt::ISODate) << ";"
-            << ch.time.toString(Qt::ISODate) << ";"
-            << "\"" << QString(ch.employeeName).replace(QLatin1String("\""), QLatin1String("\"\"")) << "\";"
-            << QString::number(ch.totalAmount, 'f', 2) << ";"
-            << QString::number(ch.discountAmount, 'f', 2) << ";"
-            << QString::number(pay, 'f', 2) << "\n";
-    }
-    f.close();
     QMessageBox::information(this, windowTitle(), tr("Файл сохранён."));
 }

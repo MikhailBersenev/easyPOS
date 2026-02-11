@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ReportsDialog</class>
+ <widget class="QDialog" name="ReportsDialog">
+  <property name="minimumSize">
+   <size>
+    <width>620</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Отчёты</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <layout class="QFormLayout" name="paramsLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="reportTypeLabel">
+       <property name="text">
+        <string>Тип отчёта:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="reportTypeCombo">
+       <item>
+        <property name="text">
+         <string>Продажи за период</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Приход товаров на остатки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Списание с остатков</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Продажи за смену</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Сверка итогов (смена)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Выгрузка остатков</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="periodLabel">
+       <property name="text">
+        <string>Период:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QWidget" name="periodWidget" native="true">
+       <layout class="QHBoxLayout" name="periodLayout">
+        <item>
+         <widget class="QDateEdit" name="dateFromEdit">
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="dashLabel">
+          <property name="text">
+           <string>—</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDateEdit" name="dateToEdit">
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="shiftLabel">
+       <property name="text">
+        <string>Смена:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="shiftCombo">
+       <property name="minimumWidth">
+        <number>280</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <widget class="QPushButton" name="generateButton">
+       <property name="text">
+        <string>Сформировать</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="exportCsvButton">
+       <property name="text">
+        <string>Экспорт в CSV</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="exportOdtButton">
+       <property name="text">
+        <string>Сформировать в ODT</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="previewTable">
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

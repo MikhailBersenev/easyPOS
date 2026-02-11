@@ -1,0 +1,34 @@
+#ifndef ODTREPORTEXPORTER_H
+#define ODTREPORTEXPORTER_H
+
+#include "abstractreportexporter.h"
+
+/**
+ * Экспорт отчётов в формат ODT (OpenDocument Text).
+ * Сохраняет как FODT (плоский XML), открывается в LibreOffice Writer.
+ * Структура: логотип, реквизиты, название отчёта, сводка, таблица, подпись и печать.
+ */
+class OdtReportExporter : public AbstractReportExporter
+{
+public:
+    OdtReportExporter() = default;
+
+    bool exportReport(const ReportData &data, const QString &filePath) override;
+    QString formatDescription() const override;
+    QString defaultFileExtension() const override;
+
+    void setLogoPath(const QString &path) { m_logoPath = path; }
+    void setCompanyName(const QString &name) { m_companyName = name; }
+    void setAddress(const QString &address) { m_address = address; }
+    void setLegalInfo(const QString &info) { m_legalInfo = info; }
+
+private:
+    static QString escapeXml(const QString &value);
+
+    QString m_logoPath;
+    QString m_companyName;
+    QString m_address;
+    QString m_legalInfo;
+};
+
+#endif // ODTREPORTEXPORTER_H

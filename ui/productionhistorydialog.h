@@ -19,7 +19,7 @@ public:
 private slots:
     void onDateRangeChanged();
     void refreshTable();
-    void onExportCsv();
+    void onReportWizard();
 
 private:
     Ui::ProductionHistoryDialog *ui;

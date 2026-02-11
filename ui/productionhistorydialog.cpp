@@ -1,14 +1,11 @@
 #include "productionhistorydialog.h"
 #include "ui_productionhistorydialog.h"
+#include "reportwizarddialog.h"
 #include "../easyposcore.h"
 #include "../production/productionmanager.h"
 #include "../production/structures.h"
 #include <QHeaderView>
 #include <QMessageBox>
-#include <QFile>
-#include <QFileDialog>
-#include <QTextStream>
-#include <QStringConverter>
 #include <QVariant>
 
 ProductionHistoryDialog::ProductionHistoryDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
@@ -34,7 +31,7 @@ ProductionHistoryDialog::ProductionHistoryDialog(QWidget *parent, std::shared_pt
     connect(ui->dateToEdit, &QDateEdit::dateChanged, this, &ProductionHistoryDialog::onDateRangeChanged);
     connect(ui->recipeCombo, &QComboBox::currentIndexChanged, this, &ProductionHistoryDialog::refreshTable);
     connect(ui->refreshButton, &QPushButton::clicked, this, &ProductionHistoryDialog::refreshTable);
-    connect(ui->exportButton, &QPushButton::clicked, this, &ProductionHistoryDialog::onExportCsv);
+    connect(ui->exportButton, &QPushButton::clicked, this, &ProductionHistoryDialog::onReportWizard);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     ProductionManager *pm = m_core ? m_core->getProductionManager() : nullptr;
@@ -105,37 +102,13 @@ void ProductionHistoryDialog::refreshTable()
         .arg(QString::number(totalQty, 'f', 2)));
 }
 
-void ProductionHistoryDialog::onExportCsv()
+void ProductionHistoryDialog::onReportWizard()
 {
-    if (ui->table->rowCount() == 0) {
-        QMessageBox::information(this, windowTitle(), tr("Нет данных для экспорта."));
-        return;
-    }
-    const QDate from = ui->dateFromEdit->date();
-    const QDate to = ui->dateToEdit->date();
-    QString defaultName = tr("Производства_%1_%2.csv").arg(from.toString(Qt::ISODate)).arg(to.toString(Qt::ISODate));
-    QString path = QFileDialog::getSaveFileName(this, tr("Экспорт в CSV"),
-        defaultName, tr("CSV (*.csv)"), nullptr, QFileDialog::DontUseNativeDialog);
-    if (path.isEmpty()) return;
-    if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
-        path += QLatin1String(".csv");
-
-    QFile f(path);
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, windowTitle(), tr("Не удалось создать файл."));
-        return;
-    }
-    QTextStream out(&f);
-    out.setEncoding(QStringConverter::Utf8);
-    out << tr("№;Рецепт;Кол-во;Дата;Сотрудник;Номер партии\n");
-    for (int row = 0; row < ui->table->rowCount(); ++row) {
-        out << ui->table->item(row, 0)->text() << ";"
-            << "\"" << ui->table->item(row, 1)->text().replace(QLatin1String("\""), QLatin1String("\"\"")) << "\";"
-            << ui->table->item(row, 2)->text() << ";"
-            << ui->table->item(row, 3)->text() << ";"
-            << "\"" << ui->table->item(row, 4)->text().replace(QLatin1String("\""), QLatin1String("\"\"")) << "\";"
-            << ui->table->item(row, 5)->text() << "\n";
-    }
-    f.close();
-    QMessageBox::information(this, windowTitle(), tr("Файл сохранён."));
+    if (!m_core) return;
+    QDate from = ui->dateFromEdit->date();
+    QDate to = ui->dateToEdit->date();
+    if (from > to) to = from;
+    ReportWizardDialog dlg(this, m_core);
+    dlg.setPreset(ReportProduction, from, to, 0, 2);
+    dlg.exec();
 }

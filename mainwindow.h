@@ -54,6 +54,7 @@ private slots:
     void on_actionDbConnection_triggered();
     void on_actionAbout_triggered();
     void on_actionShortcuts_triggered();
+    void on_actionReports_triggered();
     void on_actionSalesReport_triggered();
     void on_actionRecipes_triggered();
     void on_actionProductionRun_triggered();

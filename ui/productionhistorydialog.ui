@@ -79,7 +79,7 @@
      <item>
       <widget class="QPushButton" name="exportButton">
        <property name="text">
-        <string>Экспорт в CSV</string>
+        <string>Мастер отчётов</string>
        </property>
       </widget>
      </item>

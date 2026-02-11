@@ -15,6 +15,7 @@ class ProductionManager;
 class SettingsManager;
 class ShiftManager;
 class AlertsManager;
+class ReportManager;
 
 class EasyPOSCore : public QObject
 {
@@ -35,6 +36,8 @@ public:
     SalesManager* createSalesManager(QObject *parent = nullptr);
     ShiftManager* createShiftManager(QObject *parent = nullptr);
     AlertsManager* createAlertsManager(QObject *parent = nullptr);
+    /** Создаёт ReportManager с подключёнными БД, StockManager, ShiftManager и временным SalesManager */
+    ReportManager* createReportManager(QObject *parent = nullptr);
 
     // Получение менеджера настроек (создаётся при первом вызове createSettingsManager)
     SettingsManager* getSettingsManager() const { return settingsManager; }
@@ -70,6 +73,10 @@ public:
 
     // userid (users.id) -> employees.id для кассы
     qint64 getEmployeeIdByUserId(qint64 userId) const;
+    /** ФИО текущего сотрудника (по активной сессии); пустая строка, если нет привязки */
+    QString getCurrentEmployeeDisplayName() const;
+    /** Должность текущего сотрудника; пустая строка, если нет */
+    QString getCurrentEmployeePositionName() const;
     
     // Управление сессией пользователя
     void setCurrentSession(const UserSession &session);

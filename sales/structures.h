@@ -111,6 +111,7 @@ struct BatchDetail {
     qint64 id = 0;
     qint64 goodId = 0;
     QString goodName;
+    QString categoryName;
     QString batchNumber;
     qint64 qnt = 0;
     qint64 reservedQuantity = 0;

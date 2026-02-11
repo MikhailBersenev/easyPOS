@@ -20,6 +20,7 @@ private slots:
     void onDateChanged();
     void refreshTable();
     void onExportCsv();
+    void onReportWizard();
 
 private:
     Ui::CheckHistoryDialog *ui;

@@ -20,6 +20,7 @@
 #include "ui/checkhistorydialog.h"
 #include "ui/alertsdialog.h"
 #include "ui/salesreportdialog.h"
+#include "ui/reportwizarddialog.h"
 #include "ui/recipesdialog.h"
 #include "ui/productionrundialog.h"
 #include "ui/productionhistorydialog.h"
@@ -941,6 +942,17 @@ void MainWindow::on_actionShortcuts_triggered()
            "Delete — Удалить позицию из чека<br>"
            "Ctrl+Q — Выход<br>"
            "F1 — Справка по горячим клавишам"));
+}
+
+void MainWindow::on_actionReports_triggered()
+{
+    if (!m_core || !m_core->ensureSessionValid()) { close(); return; }
+    if (!m_session.role.hasAccessLevel(AccessLevel::Manager)) {
+        QMessageBox::warning(this, tr("Доступ"), tr("Недостаточно прав для отчётов."));
+        return;
+    }
+    ReportWizardDialog dlg(this, m_core);
+    dlg.exec();
 }
 
 void MainWindow::on_actionSalesReport_triggered()

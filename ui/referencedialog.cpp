@@ -36,6 +36,7 @@ ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> c
             this, &ReferenceDialog::on_tableWidget_doubleClicked);
     connect(ui->tableWidget, &QTableWidget::customContextMenuRequested,
             this, &ReferenceDialog::on_tableWidget_customContextMenuRequested);
+    connect(ui->reportButton, &QPushButton::clicked, this, [this] { emit reportButtonClicked(); });
     
     // Устанавливаем фокус на поле поиска
     ui->searchEdit->setFocus();
@@ -143,6 +144,16 @@ bool ReferenceDialog::askConfirmation(const QString &message)
     return QMessageBox::question(this, windowTitle(), message,
                                  QMessageBox::Yes | QMessageBox::No,
                                  QMessageBox::No) == QMessageBox::Yes;
+}
+
+void ReferenceDialog::setReportButtonVisible(bool visible)
+{
+    ui->reportButton->setVisible(visible);
+}
+
+void ReferenceDialog::setReportButtonText(const QString &text)
+{
+    ui->reportButton->setText(text);
 }
 
 void ReferenceDialog::updateRecordCount()

@@ -16,6 +16,9 @@ protected:
     void editRecord() override;
     void deleteRecord() override;
 
+private slots:
+    void onExportReport();
+
 private:
     class StockManager *stockManager() const;
     QList<QPair<qint64, QString>> loadGoodsList() const;

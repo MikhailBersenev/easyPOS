@@ -20,6 +20,9 @@ class ReferenceDialog : public QDialog
 {
     Q_OBJECT
 
+signals:
+    void reportButtonClicked();
+
 public:
     explicit ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core, 
                             const QString &title);
@@ -107,6 +110,11 @@ protected:
      * @brief Обновить счётчик записей
      */
     void updateRecordCount();
+
+    /** Показать кнопку «Отчёт» (для справочников с экспортом отчёта) */
+    void setReportButtonVisible(bool visible);
+    /** Текст кнопки отчёта */
+    void setReportButtonText(const QString &text);
 
     // Доступ к core для производных классов
     std::shared_ptr<EasyPOSCore> m_core;

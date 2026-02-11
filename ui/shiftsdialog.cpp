@@ -1,5 +1,6 @@
 #include "shiftsdialog.h"
 #include "ui_shiftsdialog.h"
+#include "reportwizarddialog.h"
 #include "../easyposcore.h"
 #include "../shifts/shiftmanager.h"
 #include "../shifts/structures.h"
@@ -8,8 +9,8 @@
 #include "../RBAC/structures.h"
 #include "../logging/logmanager.h"
 #include "windowcreator.h"
-#include <QMessageBox>
 #include <QHeaderView>
+#include <QMessageBox>
 #include <QTableWidgetItem>
 #include <QDateTime>
 
@@ -34,6 +35,7 @@ ShiftsDialog::ShiftsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     connect(ui->refreshButton, &QPushButton::clicked, this, &ShiftsDialog::on_refreshButton_clicked);
     connect(ui->startShiftButton, &QPushButton::clicked, this, &ShiftsDialog::on_startShiftButton_clicked);
     connect(ui->endShiftButton, &QPushButton::clicked, this, &ShiftsDialog::on_endShiftButton_clicked);
+    connect(ui->reportOdtButton, &QPushButton::clicked, this, &ShiftsDialog::onReportWizard);
     updateCurrentShiftLabel();
     loadShifts();
 }
@@ -75,14 +77,15 @@ void ShiftsDialog::updateCurrentShiftLabel()
 void ShiftsDialog::loadShifts()
 {
     ui->shiftsTable->setRowCount(0);
+    m_shifts.clear();
     ShiftManager *sm = m_core ? m_core->getShiftManager() : nullptr;
     if (!sm) return;
     QDate from = ui->dateFromEdit->date();
     QDate to = ui->dateToEdit->date();
     if (from > to) from = to;
-    QList<WorkShift> list = sm->getShifts(m_employeeId, from, to);
-    LOG_DEBUG() << "ShiftsDialog::loadShifts: загружено смен:" << list.size() << "за период" << from << "-" << to;
-    for (const WorkShift &s : list) {
+    m_shifts = sm->getShifts(m_employeeId, from, to);
+    LOG_DEBUG() << "ShiftsDialog::loadShifts: загружено смен:" << m_shifts.size() << "за период" << from << "-" << to;
+    for (const WorkShift &s : m_shifts) {
         int row = ui->shiftsTable->rowCount();
         ui->shiftsTable->insertRow(row);
         ui->shiftsTable->setItem(row, 0, new QTableWidgetItem(s.employeeName.isEmpty() ? QString::number(s.employeeId) : s.employeeName));
@@ -160,4 +163,22 @@ void ShiftsDialog::on_endShiftButton_clicked()
     QMessageBox::information(this, windowTitle(), tr("Смена завершена."));
     updateCurrentShiftLabel();
     loadShifts();
+}
+
+void ShiftsDialog::onReportWizard()
+{
+    if (!m_core) return;
+    QDate from = ui->dateFromEdit->date();
+    QDate to = ui->dateToEdit->date();
+    if (from > to) to = from;
+    qint64 shiftId = 0;
+    const int row = ui->shiftsTable->currentRow();
+    if (row >= 0 && row < m_shifts.size())
+        shiftId = m_shifts.at(row).id;
+    ReportWizardDialog dlg(this, m_core);
+    if (shiftId > 0)
+        dlg.setPreset(ReportSalesByShift, from, to, shiftId, 2);
+    else
+        dlg.setPreset(ReportSalesByPeriod, from, to, 0, 2);
+    dlg.exec();
 }

@@ -1,11 +1,13 @@
 #include "checkhistorydialog.h"
 #include "ui_checkhistorydialog.h"
 #include "checkdetailsdialog.h"
+#include "reportwizarddialog.h"
 #include "../easyposcore.h"
 #include "../sales/salesmanager.h"
 #include "../sales/structures.h"
 #include "../shifts/shiftmanager.h"
 #include "../shifts/structures.h"
+#include <QFileDialog>
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QLocale>
@@ -46,6 +48,7 @@ CheckHistoryDialog::CheckHistoryDialog(QWidget *parent, std::shared_ptr<EasyPOSC
     });
     connect(ui->refreshButton, &QPushButton::clicked, this, &CheckHistoryDialog::refreshTable);
     connect(ui->exportButton, &QPushButton::clicked, this, &CheckHistoryDialog::onExportCsv);
+    connect(ui->reportOdtButton, &QPushButton::clicked, this, &CheckHistoryDialog::onReportWizard);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     refreshTable();
 }
@@ -159,4 +162,17 @@ void CheckHistoryDialog::onExportCsv()
     }
     f.close();
     QMessageBox::information(this, windowTitle(), tr("Файл сохранён."));
+}
+
+void CheckHistoryDialog::onReportWizard()
+{
+    if (!m_core) return;
+    const QDate date = ui->dateEdit->date();
+    const qint64 shiftId = ui->shiftCombo->currentData().toLongLong();
+    ReportWizardDialog dlg(this, m_core);
+    if (shiftId > 0)
+        dlg.setPreset(ReportSalesByShift, date, date, shiftId, 2);
+    else
+        dlg.setPreset(ReportSalesByPeriod, date, date, 0, 2);
+    dlg.exec();
 }

@@ -1,11 +1,14 @@
 #include "stockbalancedialog.h"
 #include "batcheditdialog.h"
+#include "reportwizarddialog.h"
 #include "../easyposcore.h"
 #include "../sales/stockmanager.h"
 #include "../sales/structures.h"
 #include "../RBAC/structures.h"
+#include <QDate>
 #include <QInputDialog>
 #include <QLocale>
+#include <QMessageBox>
 #include <QSqlQuery>
 
 StockBalanceDialog::StockBalanceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
@@ -14,6 +17,9 @@ StockBalanceDialog::StockBalanceDialog(QWidget *parent, std::shared_ptr<EasyPOSC
     setupColumns({ tr("ID"), tr("Товар"), tr("Номер партии"), tr("Кол-во"), tr("Резерв"), tr("Цена"),
                   tr("Дата пр-ва"), tr("Срок годности"), tr("Списана") },
                  { 50, 180, 120, 70, 70, 80, 90, 90, 60 });
+    setReportButtonVisible(true);
+    setReportButtonText(tr("Мастер отчётов"));
+    connect(this, &ReferenceDialog::reportButtonClicked, this, &StockBalanceDialog::onExportReport);
     loadTable();
 }
 
@@ -58,6 +64,15 @@ void StockBalanceDialog::loadTable(bool includeDeleted)
         setCellText(row, 8, b.writtenOff ? tr("Да") : tr("Нет"));
     }
     updateRecordCount();
+}
+
+void StockBalanceDialog::onExportReport()
+{
+    if (!m_core) return;
+    QDate today = QDate::currentDate();
+    ReportWizardDialog dlg(this, m_core);
+    dlg.setPreset(ReportStockBalanceWithBarcodes, today, today, 0, 2);
+    dlg.exec();
 }
 
 void StockBalanceDialog::addRecord()
