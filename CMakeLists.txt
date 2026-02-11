@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(easyPOS LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Sql PrintSupport Test LinguistTools)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets Sql PrintSupport Test LinguistTools)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
