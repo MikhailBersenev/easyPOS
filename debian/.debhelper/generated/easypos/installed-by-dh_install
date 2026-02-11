@@ -1,0 +1,12 @@
+debian/tmp/usr/bin/easyPOS
+debian/tmp/usr/share/easyPOS/i18n/easyPOS_en.qm
+debian/tmp/usr/share/easyPOS/i18n/easyPOS_ru_RU.qm
+debian/tmp/usr/share/easyPOS/styles/green_dark.qss
+debian/tmp/usr/share/easyPOS/styles/green_light.qss
+debian/tmp/usr/share/applications/easypos.desktop
+debian/tmp/usr/share/icons/hicolor/128x128/apps/easypos.png
+debian/tmp/usr/share/icons/hicolor/16x16/apps/easypos.png
+debian/tmp/usr/share/icons/hicolor/256x256/apps/easypos.png
+debian/tmp/usr/share/icons/hicolor/32x32/apps/easypos.png
+debian/tmp/usr/share/icons/hicolor/48x48/apps/easypos.png
+debian/tmp/usr/share/icons/hicolor/64x64/apps/easypos.png

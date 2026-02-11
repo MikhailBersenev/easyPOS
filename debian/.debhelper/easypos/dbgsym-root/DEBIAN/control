@@ -1,0 +1,13 @@
+Package: easypos-dbgsym
+Package-Type: ddeb
+Source: easypos
+Version: 26.02-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Mikhail Bersenev <inbox@mbersenev.ph>
+Installed-Size: 9222
+Depends: easypos (= 26.02-1)
+Section: debug
+Priority: optional
+Description: debug symbols for easypos
+Build-Ids: 405e35afff78c778aa28e121e9a9dd3146d4e7a6

@@ -1,0 +1,6 @@
+usr/bin/easyPOS
+usr/share/easyPOS/i18n/*.qm
+usr/share/easyPOS/styles/*.qss
+usr/share/applications/easypos.desktop
+usr/share/icons/hicolor/*/apps/easypos.png
+

@@ -1,0 +1,58 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tmp
+
+override_dh_auto_build:
+	dh_auto_build
+
+override_dh_install:
+	# Установка стилей, если они есть (до dh_install)
+	if [ -d styles ]; then \
+		mkdir -p debian/tmp/usr/share/easyPOS/styles; \
+		install -m 644 styles/*.qss debian/tmp/usr/share/easyPOS/styles/ 2>/dev/null || true; \
+	fi
+	# Установка desktop файла (до dh_install)
+	mkdir -p debian/tmp/usr/share/applications
+	install -m 644 debian/easypos.desktop debian/tmp/usr/share/applications/
+	# Установка иконок (до dh_install)
+	if [ -d icons/hicolor ]; then \
+		for size_dir in icons/hicolor/*/apps; do \
+			if [ -f "$$size_dir/easypos.png" ]; then \
+				install -d debian/tmp/usr/share/$$size_dir; \
+				install -m 644 "$$size_dir/easypos.png" debian/tmp/usr/share/$$size_dir/; \
+			fi; \
+		done; \
+	fi
+	# Теперь вызываем dh_install, который найдет все файлы в debian/tmp
+	dh_install
+	# Убеждаемся, что переводы установлены (CMake должен их установить)
+	# Если нет, устанавливаем вручную из obj-* директории
+	if [ ! -d debian/tmp/usr/share/easyPOS/i18n ] || [ -z "$$(ls -A debian/tmp/usr/share/easyPOS/i18n 2>/dev/null)" ]; then \
+		mkdir -p debian/tmp/usr/share/easyPOS/i18n; \
+		for objdir in obj-*; do \
+			if [ -d "$$objdir" ]; then \
+				if [ -f "$$objdir/easyPOS_ru_RU.qm" ]; then \
+					install -m 644 "$$objdir/easyPOS_ru_RU.qm" debian/tmp/usr/share/easyPOS/i18n/; \
+				fi; \
+				if [ -f "$$objdir/easyPOS_en.qm" ]; then \
+					install -m 644 "$$objdir/easyPOS_en.qm" debian/tmp/usr/share/easyPOS/i18n/; \
+				fi; \
+			fi; \
+		done; \
+		if [ -f build/easyPOS_ru_RU.qm ]; then \
+			install -m 644 build/easyPOS_ru_RU.qm debian/tmp/usr/share/easyPOS/i18n/; \
+		fi; \
+		if [ -f build/easyPOS_en.qm ]; then \
+			install -m 644 build/easyPOS_en.qm debian/tmp/usr/share/easyPOS/i18n/; \
+		fi; \
+	fi
+

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=easyPOS
+GenericName=Point of Sale
+Comment=Point of Sale system for managing sales, inventory, and employees
+Exec=easyPOS
+Icon=easypos
+Terminal=false
+Categories=Office;Finance;
+StartupNotify=true
+Keywords=pos;point of sale;cash register;retail;sales;inventory;
+MimeType=
+X-App-Version=26.02
+

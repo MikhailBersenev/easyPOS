@@ -1,0 +1,11 @@
+easypos (26.02-1) unstable; urgency=medium
+
+  * Initial release of easyPOS
+  * Point of Sale system with comprehensive features
+  * Sales management, inventory control, employee management
+  * Multi-language support (Russian, English)
+  * Production and recipe management
+  * Comprehensive reporting system
+
+ -- EasyPOS Team <easypos@example.com>  Mon, 01 Jan 2024 12:00:00 +0000
+

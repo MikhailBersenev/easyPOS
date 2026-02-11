@@ -123,6 +123,7 @@ bool loadLiquidGlassStyle(QApplication &app, bool dark)
         const QString appDir = QCoreApplication::applicationDirPath();
         const QDir cwd(QDir::currentPath());
         const QStringList stylePaths = {
+            QStringLiteral("/usr/share/easyPOS/styles/") + fileName,
             appDir + QStringLiteral("/styles/") + fileName,
             appDir + QStringLiteral("/../styles/") + fileName,
             appDir + QStringLiteral("/../../styles/") + fileName,

@@ -117,6 +117,14 @@ qt_add_lrelease(easyPOS
 )
 add_dependencies(easyPOS easyPOS_lrelease)
 
+# Установка переводов
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/easyPOS_ru_RU.qm
+    ${CMAKE_CURRENT_BINARY_DIR}/easyPOS_en.qm
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/easyPOS/i18n
+    OPTIONAL
+)
+
 target_include_directories(easyPOS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(easyPOS

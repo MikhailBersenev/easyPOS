@@ -1,2 +1,70 @@
 build/
 CMakeLists.txt.user
+
+# Debian package build files
+debian/tmp/
+debian/easypos/
+obj-*/
+*.deb
+*.ddeb
+*.changes
+*.buildinfo
+*.dsc
+*.tar.*
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+
+# CMake build directories
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Qt build files
+*_autogen/
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Compiled files
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Executables
+easyPOS
+unit_tests
+
+# Translation files (compiled)
+*.qm
+!easyPOS_*.ts
+
+# IDE files
+.vscode/
+.idea/
+*.pro.user
+*.creator.user
+*.creator.user.*
+*.user
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+
+# Logs
+*.log
+*.log.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.backup

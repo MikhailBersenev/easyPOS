@@ -1,0 +1,38 @@
+Source: easypos
+Section: office
+Priority: optional
+Maintainer: Mikhail Bersenev <inbox@mbersenev.ph>
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.19),
+               qt6-base-dev (>= 6.4),
+               qt6-base-dev-tools (>= 6.4),
+               qt6-tools-dev (>= 6.4),
+               qt6-tools-dev-tools (>= 6.4),
+               pkg-config
+Standards-Version: 4.6.1
+Homepage: https://github.com/MikhailBersenev/easyPOS
+Vcs-Browser: https://github.com/MikhailBersenev/easyPOS
+Vcs-Git: https://github.com/MikhailBersenev/easyPOS.git
+
+Package: easypos
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         libqt6core6t64 (>= 6.4),
+         libqt6widgets6t64 (>= 6.4),
+         libqt6gui6t64 (>= 6.4),
+         libqt6sql6-sqlite,
+         libqt6printsupport6t64,
+         libqt6dbus6t64
+Description: Point of Sale (POS) system
+ easyPOS is a comprehensive Point of Sale system built with Qt6.
+ It provides features for sales management, inventory control,
+ employee management, reporting, and more.
+ .
+ Features:
+  - Sales management and checkout
+  - Inventory and stock management
+  - Employee and role management
+  - Production and recipe management
+  - Comprehensive reporting system
+  - Multi-language support (Russian, English)
+
