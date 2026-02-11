@@ -93,7 +93,7 @@ qt_add_executable(easyPOS
     logging/logmanager.h logging/logmanager.cpp
 )
 
-qt_add_resources(easyPOS PRIVATE resources.qrc)
+qt_add_resources(easyPOS PRIVATE PREFIX "/" resources.qrc)
 
 # Переводы: lrelease компилирует .ts в .qm (по умолчанию в build/)
 find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
@@ -129,12 +129,13 @@ install(TARGETS easyPOS
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-qt_generate_deploy_app_script(
-    TARGET easyPOS
-    OUTPUT_SCRIPT deploy_script
-    NO_UNSUPPORTED_PLATFORM_ERROR
-)
-install(SCRIPT ${deploy_script})
+# qt_generate_deploy_app_script is not available in Qt 6.4, using alternative approach
+# qt_generate_deploy_app_script(
+#     TARGET easyPOS
+#     OUTPUT_SCRIPT deploy_script
+#     NO_UNSUPPORTED_PLATFORM_ERROR
+# )
+# install(SCRIPT ${deploy_script})
 
 # Тесты
 enable_testing()

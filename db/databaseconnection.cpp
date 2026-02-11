@@ -3,6 +3,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QUuid>
+#include <QDebug>
 
 DatabaseConnection::DatabaseConnection()
     : m_connectionName(generateConnectionName())
