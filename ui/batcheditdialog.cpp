@@ -23,6 +23,7 @@ BatchEditDialog::~BatchEditDialog()
 void BatchEditDialog::setupConnections()
 {
     connect(ui->addBarcodeButton, &QPushButton::clicked, this, &BatchEditDialog::onAddBarcode);
+    connect(ui->barcodeEdit, &QLineEdit::returnPressed, this, &BatchEditDialog::onAddBarcode);
     connect(ui->removeBarcodeButton, &QPushButton::clicked, this, &BatchEditDialog::onRemoveBarcode);
     connect(ui->qntSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int v) {
         ui->reservedSpin->setMaximum(v);
