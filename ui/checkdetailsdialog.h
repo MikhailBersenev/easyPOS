@@ -16,7 +16,7 @@ public:
     ~CheckDetailsDialog();
 
 private slots:
-    void onSaveToPdf();
+    void onPrint();
 
 private:
     Ui::CheckDetailsDialog *ui;

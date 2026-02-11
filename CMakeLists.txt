@@ -57,6 +57,7 @@ qt_add_executable(easyPOS
     ui/reportwizarddialog.h ui/reportwizarddialog.cpp
     ui/checkdetailsdialog.h ui/checkdetailsdialog.cpp ui/checkdetailsdialog.ui
     ui/checkpdfexporter.h ui/checkpdfexporter.cpp
+    ui/checkexporter.h ui/checkexporter.cpp
     ui/servicesdialog.h ui/servicesdialog.cpp
     ui/vatratesdialog.h ui/vatratesdialog.cpp
     ui/positioneditdialog.h ui/positioneditdialog.cpp ui/positioneditdialog.ui

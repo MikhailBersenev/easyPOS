@@ -330,9 +330,23 @@ StockOperationResult StockManager::removeStock(int goodId, double quantity)
             continue;
         qint64 toRemove = qMin(static_cast<qint64>(remaining), available);
         qint64 newQnt = batchQnt - toRemove;
+        
+        // Уменьшаем резерв пропорционально списываемому количеству
+        // Если списываем весь доступный товар, снимаем весь резерв этой партии
+        // Иначе уменьшаем резерв пропорционально
+        qint64 newReserved = batchReserved;
+        if (batchReserved > 0) {
+            // Снимаем резерв на количество списываемого товара
+            // Если резерв больше или равен списываемому количеству, уменьшаем резерв
+            // Если резерв меньше, снимаем весь резерв
+            qint64 reserveToRelease = qMin(toRemove, batchReserved);
+            newReserved = batchReserved - reserveToRelease;
+        }
+        
         QSqlQuery u(m_dbConnection->getDatabase());
-        u.prepare(QStringLiteral("UPDATE batches SET qnt = :qnt, updatedate = :updatedate WHERE id = :id"));
+        u.prepare(QStringLiteral("UPDATE batches SET qnt = :qnt, reservedquantity = :reserved, updatedate = :updatedate WHERE id = :id"));
         u.bindValue(QStringLiteral(":qnt"), newQnt);
+        u.bindValue(QStringLiteral(":reserved"), newReserved);
         u.bindValue(QStringLiteral(":updatedate"), QDate::currentDate());
         u.bindValue(QStringLiteral(":id"), batchId);
         if (!u.exec()) {

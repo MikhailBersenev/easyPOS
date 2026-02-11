@@ -19,6 +19,7 @@
 #include "ui/settingsdialog.h"
 #include "ui/checkhistorydialog.h"
 #include "ui/alertsdialog.h"
+#include "ui/checkexporter.h"
 #include "ui/salesreportdialog.h"
 #include "ui/reportwizarddialog.h"
 #include "ui/recipesdialog.h"
@@ -44,8 +45,19 @@
 #include <QPrintDialog>
 #include <QPrinterInfo>
 #include <QPainter>
+#include <QPageSize>
+#include <QPageLayout>
 #include <QFileDialog>
 #include <QLocale>
+#include <QTextDocument>
+#include <QTextStream>
+#include <QFile>
+#include <QDir>
+#include <QStringConverter>
+#include <QFont>
+#include <QFontDatabase>
+#include <QTextOption>
+#include <QStandardPaths>
 #include <QMenu>
 #include <QKeyEvent>
 #include <QApplication>
@@ -762,6 +774,7 @@ bool MainWindow::saveCheckToPdf(qint64 checkId)
     return true;
 }
 
+
 void MainWindow::printCheck(qint64 checkId)
 {
     if (!m_salesManager || checkId <= 0) return;
@@ -770,25 +783,135 @@ void MainWindow::printCheck(qint64 checkId)
     const QList<SaleRow> rows = m_salesManager->getSalesByCheck(checkId);
     const double toPay = (ch.totalAmount - ch.discountAmount) < 0 ? 0 : (ch.totalAmount - ch.discountAmount);
 
-    const bool hasPrinters = !QPrinterInfo::availablePrinters().isEmpty() || !QPrinterInfo::defaultPrinter().isNull();
+    // Генерируем текстовое представление чека
+    QString checkText = CheckExporter::generateText(m_core, m_salesManager, checkId, ch, rows, toPay);
 
-    if (!hasPrinters) {
-        if (saveCheckToPdf(checkId))
-            QMessageBox::information(this, tr("Печать"), tr("Чек сохранён в PDF."));
-        return;
+    // Автоматически сохраняем чек в txt файл перед печатью
+    QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+    QString defaultTxtName = tr("%1_Чек_%2.txt").arg(appName).arg(checkId);
+    
+    // Используем стандартную директорию для сохранения чеков
+    QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString checksDir = documentsPath + QLatin1String("/easyPOS/Checks");
+    QDir dir;
+    if (!dir.exists(checksDir)) {
+        dir.mkpath(checksDir);
+    }
+    
+    QString txtPath = checksDir + QLatin1String("/") + defaultTxtName;
+    
+    // Сохраняем чек в txt файл
+    if (!CheckExporter::saveToTxt(m_core, m_salesManager, checkId, txtPath)) {
+        QMessageBox::warning(this, tr("Предупреждение"), 
+            tr("Не удалось автоматически сохранить чек в файл, но печать продолжится."));
     }
 
+    // Всегда показываем диалог выбора принтера
+    // QPrintDialog позволяет выбрать принтер, даже если он не найден автоматически
+    // Также можно выбрать сохранение в PDF или другой формат
     QPrinter printer(QPrinter::HighResolution);
+    
+    // Проверяем наличие принтеров
+    const bool hasPrinters = !QPrinterInfo::availablePrinters().isEmpty() || !QPrinterInfo::defaultPrinter().isNull();
+    if (!hasPrinters) {
+        // Если принтеры не найдены автоматически, предлагаем сохранить в PDF
+        printer.setOutputFormat(QPrinter::PdfFormat);
+        QString defaultPdfName = tr("%1_Чек_%2.pdf").arg(appName).arg(checkId);
+        QString pdfPath = checksDir + QLatin1String("/") + defaultPdfName;
+        printer.setOutputFileName(pdfPath);
+    }
+    
     QPrintDialog dlg(&printer, this);
+    dlg.setOption(QAbstractPrintDialog::PrintToFile, true); // Разрешаем печать в файл
+    
     if (dlg.exec() != QDialog::Accepted) return;
+    
+    // Если выбран формат PDF или печать в файл, проверяем путь
+    QString pdfOutputPath;
+    if (printer.outputFormat() == QPrinter::PdfFormat) {
+        pdfOutputPath = printer.outputFileName();
+        if (pdfOutputPath.isEmpty()) {
+            // Если путь не указан, используем стандартную директорию
+            QString defaultPdfName = tr("%1_Чек_%2.pdf").arg(appName).arg(checkId);
+            pdfOutputPath = checksDir + QLatin1String("/") + defaultPdfName;
+            printer.setOutputFileName(pdfOutputPath);
+        }
+    }
 
+    // Печатаем текст напрямую через QTextDocument
+    QTextDocument document;
+    
+    // Настраиваем размер страницы для принтера ДО создания painter
+    if (printer.outputFormat() == QPrinter::PdfFormat) {
+        printer.setPageSize(QPageSize(QPageSize::A4));
+        printer.setPageMargins(QMarginsF(15, 15, 15, 15), QPageLayout::Millimeter);
+    }
+    
+    // Используем шрифт с поддержкой кириллицы
+    QFont font;
+    const QStringList tryFamilies = { QStringLiteral("DejaVu Sans Mono"), QStringLiteral("Liberation Mono"),
+                                      QStringLiteral("Courier New"), QStringLiteral("Courier"),
+                                      QStringLiteral("Monospace") };
+    for (const QString &family : tryFamilies) {
+        if (QFontDatabase().hasFamily(family)) {
+            font.setFamily(family);
+            break;
+        }
+    }
+    font.setPointSize(9);
+    document.setDefaultFont(font);
+    
+    // Устанавливаем черный цвет текста
+    document.setDefaultStyleSheet("body { color: black; }");
+    
+    // Настраиваем форматирование для печати
+    QTextOption textOption;
+    textOption.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+    document.setDefaultTextOption(textOption);
+    
+    // Устанавливаем текст как HTML для лучшего форматирования
+    // Преобразуем plain text в HTML с сохранением форматирования
+    QString htmlText = QString("<pre style='font-family: %1; font-size: %2pt; color: black; white-space: pre;'>%3</pre>")
+                          .arg(font.family())
+                          .arg(font.pointSize())
+                          .arg(checkText.toHtmlEscaped());
+    document.setHtml(htmlText);
+    
     QPainter painter;
     if (!painter.begin(&printer)) {
         QMessageBox::critical(this, tr("Печать"), tr("Не удалось начать печать."));
         return;
     }
-    renderCheckContent(painter, checkId, ch, rows, toPay);
+    
+    // Устанавливаем черный цвет для painter
+    painter.setPen(Qt::black);
+    
+    // Получаем размеры страницы в точках (1/72 дюйма)
+    QRectF pageRect = printer.pageRect(QPrinter::Point);
+    const double pageWidthPt = pageRect.width();
+    const double pageHeightPt = pageRect.height();
+    
+    // Устанавливаем окно для painter
+    painter.setWindow(QRect(0, 0, int(pageWidthPt), int(pageHeightPt)));
+    
+    // Настраиваем размер документа по размеру страницы
+    document.setTextWidth(pageWidthPt);
+    document.setPageSize(QSizeF(pageWidthPt, pageHeightPt));
+    
+    // Вычисляем высоту содержимого
+    qreal documentHeight = document.size().height();
+    
+    // Рисуем документ с учетом отступов
+    QRectF targetRect(0, 0, pageWidthPt, qMin(documentHeight, pageHeightPt));
+    document.drawContents(&painter, targetRect);
+    
     painter.end();
+    
+    // Показываем сообщение о сохранении PDF, если был выбран формат PDF
+    if (printer.outputFormat() == QPrinter::PdfFormat && !pdfOutputPath.isEmpty()) {
+        QMessageBox::information(this, tr("Печать"), 
+            tr("Чек сохранён в PDF:\n%1").arg(pdfOutputPath));
+    }
 }
 
 void MainWindow::on_payButton_clicked()
