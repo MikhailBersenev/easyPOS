@@ -29,6 +29,9 @@ public:
     ~ReferenceDialog();
 
 protected:
+    void changeEvent(QEvent *event) override;
+
+protected:
     // Виртуальные методы для переопределения в производных классах
     
     /**
@@ -118,6 +121,9 @@ protected:
 
     // Доступ к core для производных классов
     std::shared_ptr<EasyPOSCore> m_core;
+    
+    // Сохраняем исходный заголовок для обновления при смене языка
+    QString m_title;
 
 private slots:
     void on_addButton_clicked();

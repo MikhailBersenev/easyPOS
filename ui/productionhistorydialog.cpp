@@ -7,6 +7,7 @@
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QVariant>
+#include <QEvent>
 
 ProductionHistoryDialog::ProductionHistoryDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : QDialog(parent)
@@ -111,4 +112,13 @@ void ProductionHistoryDialog::onReportWizard()
     ReportWizardDialog dlg(this, m_core);
     dlg.setPreset(ReportProduction, from, to, 0, 2);
     dlg.exec();
+}
+
+void ProductionHistoryDialog::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        ui->retranslateUi(this);
+        refreshTable();
+    }
+    QDialog::changeEvent(event);
 }

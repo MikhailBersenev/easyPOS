@@ -189,6 +189,41 @@ void MainWindow::showEvent(QShowEvent *event)
         ui->checkWidget->setFocus();
 }
 
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        // Обновляем UI при смене языка
+        ui->retranslateUi(this);
+        // Обновляем заголовок окна
+        QString appName = m_core ? m_core->getBrandingAppName() : QStringLiteral("easyPOS");
+        QString title = tr("%1 - Касса").arg(appName);
+        if (m_core) {
+            QString host, user;
+            if (auto *sm = m_core->getSettingsManager()) {
+                host = sm->stringValue(SettingsKeys::DbHost, QStringLiteral("localhost"));
+                if (host.isEmpty()) host = QStringLiteral("localhost");
+            }
+            user = m_session.username;
+            if (!host.isEmpty() || !user.isEmpty()) {
+                title += QLatin1String(" | ");
+                if (!host.isEmpty()) title += host;
+                if (!host.isEmpty() && !user.isEmpty()) title += QLatin1String(" | ");
+                if (!user.isEmpty()) title += user;
+            }
+        }
+        setWindowTitle(title);
+        // Обновляем другие тексты
+        updateCheckNumberLabel();
+        updateItemsCountLabel();
+        updateDaySummary();
+        if (m_daySummaryLabel && ui->statusbar) {
+            ui->statusbar->removeWidget(m_daySummaryLabel);
+            ui->statusbar->addPermanentWidget(m_daySummaryLabel);
+        }
+    }
+    QMainWindow::changeEvent(event);
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;

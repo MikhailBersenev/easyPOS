@@ -8,7 +8,7 @@
             "name": "(gdb) Запустить",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Qt_6_4_2_Release/easyPOS",
+            "program": "${workspaceFolder}/build/easyPOS",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

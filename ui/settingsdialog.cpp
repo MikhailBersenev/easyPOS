@@ -24,6 +24,7 @@
 #include <QFileInfo>
 #include <QTimeZone>
 #include <QSqlQuery>
+#include "../translationutils.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core)
     : QDialog(parent)
@@ -523,6 +524,7 @@ void SettingsDialog::accept()
                     << "->" << (logPath.isEmpty() ? "по умолчанию" : logPath)
                     << "(применится после перезапуска)";
         }
+        QString prevLang = sm->stringValue(SettingsKeys::Language, QString());
         sm->setValue(SettingsKeys::Language, lang);
         sm->setValue(SettingsKeys::TimeZone, ui->timeZoneComboBox->currentData().toString());
         sm->setValue(SettingsKeys::PrintAfterPay, ui->printAfterPayCheckBox->isChecked());
@@ -530,6 +532,19 @@ void SettingsDialog::accept()
         sm->setValue(SettingsKeys::DefaultVatRateId, static_cast<int>(vatId));
         sm->setValue(SettingsKeys::LogPath, logPath);
         sm->sync();
+        
+        // Перезагружаем переводы, если язык изменился
+        if (prevLang != lang) {
+            if (loadApplicationTranslation(lang)) {
+                // Обновляем тексты в текущем диалоге
+                ui->retranslateUi(this);
+                if (m_core)
+                    setWindowTitle(tr("Настройки — %1").arg(m_core->getBrandingAppName()));
+                loadFromSettings();
+                loadRolesTable();
+                loadUsersTable();
+            }
+        }
         if (m_core->isDatabaseConnected()) {
             const QString appName = ui->brandingAppNameEdit->text().trimmed();
             const QString logoPath = ui->brandingLogoPathEdit->text().trimmed();

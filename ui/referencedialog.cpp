@@ -8,6 +8,7 @@
 #include <QShortcut>
 #include <QKeySequence>
 #include <QMenu>
+#include <QEvent>
 
 ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core,
                                  const QString &title)
@@ -18,6 +19,7 @@ ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> c
 {
     qDebug() << "ReferenceDialog::ReferenceDialog" << "title=" << title;
     ui->setupUi(this);
+    m_title = title;
     setWindowTitle(title);
     
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -325,4 +327,15 @@ void ReferenceDialog::applyFilter(const QString &searchText)
     }
     
     updateRecordCount();
+}
+
+void ReferenceDialog::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        ui->retranslateUi(this);
+        setWindowTitle(m_title);
+        // Перезагружаем таблицу, чтобы обновить заголовки колонок
+        loadTable();
+    }
+    QDialog::changeEvent(event);
 }

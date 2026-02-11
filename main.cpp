@@ -21,12 +21,21 @@
 #include <QStandardPaths>
 #include <QUrl>
 #include <memory>
+#include "translationutils.h"
 
-namespace {
-bool loadTranslation(QApplication &app, const QString &languageCode)
+// Глобальная функция для загрузки переводов (доступна из других файлов)
+bool loadApplicationTranslation(const QString &languageCode)
 {
-    static QTranslator translator;
-    app.removeTranslator(&translator);
+    QApplication *app = qobject_cast<QApplication *>(QCoreApplication::instance());
+    if (!app)
+        return false;
+    
+    static QTranslator *translator = nullptr;
+    if (!translator) {
+        translator = new QTranslator(app);
+    }
+    app->removeTranslator(translator);
+    
     QString baseName;
     if (languageCode == QLatin1String("ru"))
         baseName = QStringLiteral("easyPOS_ru_RU");
@@ -34,6 +43,7 @@ bool loadTranslation(QApplication &app, const QString &languageCode)
         baseName = QStringLiteral("easyPOS_en");
     else
         return false;
+    
     const QString appDir = QCoreApplication::applicationDirPath();
     const QStringList searchPaths = {
         QStringLiteral(":/i18n"),
@@ -42,12 +52,24 @@ bool loadTranslation(QApplication &app, const QString &languageCode)
         appDir + QStringLiteral("/../share/easyPOS/i18n"),
     };
     for (const QString &path : searchPaths) {
-        if (translator.load(baseName, path)) {
-            app.installTranslator(&translator);
+        if (translator->load(baseName, path)) {
+            app->installTranslator(translator);
+            // Отправляем событие LanguageChange для всех окон
+            QEvent ev(QEvent::LanguageChange);
+            for (QWidget *widget : app->allWidgets()) {
+                if (widget)
+                    QCoreApplication::sendEvent(widget, &ev);
+            }
             return true;
         }
     }
     return false;
+}
+
+namespace {
+bool loadTranslation(QApplication &app, const QString &languageCode)
+{
+    return loadApplicationTranslation(languageCode);
 }
 
 void applyLanguage(QApplication &app)

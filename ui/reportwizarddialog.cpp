@@ -23,6 +23,7 @@
 #include <QDate>
 #include <QFont>
 #include <QFontDatabase>
+#include <QEvent>
 
 enum ReportType {
     SalesByPeriod = 0,
@@ -396,5 +397,15 @@ ReportData ReportWizardDialog::generateReport() const
     default:
         return empty;
     }
+}
+
+void ReportWizardDialog::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        // Обновляем страницы мастера - пересоздаём их для обновления текстов
+        setupPages();
+        setWindowTitle(tr("Мастер отчётов"));
+    }
+    QWizard::changeEvent(event);
 }
 

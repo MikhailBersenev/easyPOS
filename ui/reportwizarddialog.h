@@ -37,6 +37,9 @@ public:
     /** Предзаполнить тип отчёта и параметры, открыть на нужной странице (0=тип, 1=параметры, 2=экспорт) */
     void setPreset(ReportWizardType type, const QDate &dateFrom, const QDate &dateTo, qint64 shiftId = 0, int startPage = 0);
 
+protected:
+    void changeEvent(QEvent *event) override;
+
 private slots:
     void onCurrentIdChanged(int id);
 

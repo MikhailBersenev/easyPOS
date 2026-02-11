@@ -16,6 +16,9 @@ public:
     explicit ProductionHistoryDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> core);
     ~ProductionHistoryDialog();
 
+protected:
+    void changeEvent(QEvent *event) override;
+
 private slots:
     void onDateRangeChanged();
     void refreshTable();

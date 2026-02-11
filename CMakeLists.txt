@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.19)
 project(easyPOS LANGUAGES CXX)
 
+# Автоматический поиск Qt6 в домашней директории, если не указан CMAKE_PREFIX_PATH
+if(NOT CMAKE_PREFIX_PATH AND EXISTS "$ENV{HOME}/Qt/6.4.2/gcc_64")
+    set(CMAKE_PREFIX_PATH "$ENV{HOME}/Qt/6.4.2/gcc_64" ${CMAKE_PREFIX_PATH})
+elseif(NOT CMAKE_PREFIX_PATH AND EXISTS "$ENV{HOME}/Qt/6.8.3/gcc_64")
+    set(CMAKE_PREFIX_PATH "$ENV{HOME}/Qt/6.8.3/gcc_64" ${CMAKE_PREFIX_PATH})
+endif()
+
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets Sql PrintSupport Test LinguistTools)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
@@ -95,8 +102,13 @@ qt_add_executable(easyPOS
 
 qt_add_resources(easyPOS PRIVATE PREFIX "/" resources.qrc)
 
-# Переводы: lrelease компилирует .ts в .qm (по умолчанию в build/)
+# Переводы: lupdate извлекает строки из кода, lrelease компилирует .ts в .qm
 find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
+qt_add_lupdate(easyPOS
+    TS_FILES
+        easyPOS_ru_RU.ts
+        easyPOS_en.ts
+)
 qt_add_lrelease(easyPOS
     TS_FILES
         easyPOS_ru_RU.ts
