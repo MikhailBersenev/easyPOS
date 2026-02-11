@@ -669,23 +669,6 @@ QDialogButtonBox QPushButton#cancelButton:pressed {
     color: #006B1A;
 }
 
-/* Диалог сохранения/открытия файла (Qt, не нативный) — в тон приложения */
-QFileDialog {
-    background-color: #F5FBF6;
-}
-QFileDialog QWidget {
-    font-size: 12px;
-}
-QFileDialog QDialogButtonBox {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #E8F0E9;
-}
-QFileDialog QDialogButtonBox QPushButton {
-    min-height: 32px;
-    min-width: 72px;
-}
-
 /* Превью пиктограммы в форме товара/услуги */
 QLabel#iconPreviewLabel {
     background-color: #FAFAFA;
@@ -713,4 +696,56 @@ QProgressBar::chunk {
         stop:0 #00A848,
         stop:1 #008E40);
     border-radius: 4px;
+}
+
+/* ---- Диалог сохранения файла ---- */
+QFileDialog {
+    color: #000000;
+}
+
+QFileDialog QLabel {
+    color: #000000;
+}
+
+QFileDialog QLineEdit {
+    color: #000000;
+}
+
+QFileDialog QListView, QFileDialog QTreeView {
+    color: #000000;
+}
+
+QFileDialog QHeaderView::section {
+    color: #000000;
+}
+
+/* ---- Мастер (QWizard) ---- */
+QWizard, QWizardPage {
+    font-family: "Roboto", "Segoe UI", "Ubuntu", "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 12px;
+    color: #1B2E1F;
+}
+
+QWizard QListWidget {
+    font-family: "Roboto", "Segoe UI", "Ubuntu", "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 13px;
+    color: #1B2E1F;
+    background-color: #FFFFFF;
+    border: 1px solid #E8F0E9;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+QWizard QListWidget::item {
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+QWizard QListWidget::item:selected {
+    background-color: #E8F5E9;
+    color: #1B2E1F;
+}
+
+QWizard QListWidget::item:hover {
+    background-color: #F1F8F2;
 }

@@ -21,6 +21,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDate>
+#include <QFont>
+#include <QFontDatabase>
 
 enum ReportType {
     SalesByPeriod = 0,
@@ -42,6 +44,22 @@ TypePage::TypePage(QWidget *parent)
     setSubTitle(tr("Выберите отчёт, который хотите сформировать."));
 
     m_list = new QListWidget(this);
+    // Устанавливаем шрифт для списка с поддержкой кириллицы
+    QFont listFont = m_list->font();
+    listFont.setPointSize(13);
+    // Пробуем найти подходящий шрифт с поддержкой кириллицы
+    const QStringList fontFamilies = { QStringLiteral("Roboto"), QStringLiteral("Segoe UI"), 
+                                       QStringLiteral("Ubuntu"), QStringLiteral("Liberation Sans"),
+                                       QStringLiteral("DejaVu Sans"), QStringLiteral("Arial") };
+    QFontDatabase fontDb;
+    for (const QString &family : fontFamilies) {
+        if (fontDb.hasFamily(family)) {
+            listFont.setFamily(family);
+            break;
+        }
+    }
+    m_list->setFont(listFont);
+    
     m_list->addItem(tr("Продажи за период"));
     m_list->addItem(tr("Приход товаров на остатки"));
     m_list->addItem(tr("Списание с остатков"));
@@ -109,8 +127,24 @@ void ParamsPage::updateForReportType(int type)
 {
     const bool needShift = (type == SalesByShift || type == Reconciliation || type == Checks);
     const bool needPeriod = (type != StockBalance && type != StockBalanceWithBarcodes);
+    
     m_periodWidget->setVisible(needPeriod);
     m_shiftWidget->setVisible(needShift);
+    
+    // Обновляем подзаголовок в зависимости от того, что нужно
+    if (!needPeriod && !needShift) {
+        // Для остатков параметры не нужны
+        setSubTitle(tr("Параметры не требуются."));
+    } else if (needShift && needPeriod) {
+        // Нужны и период, и смена (для Checks)
+        setSubTitle(tr("Укажите период и/или смену."));
+    } else if (needShift) {
+        // Нужна только смена
+        setSubTitle(tr("Укажите смену."));
+    } else {
+        // Нужен только период
+        setSubTitle(tr("Укажите период."));
+    }
 }
 
 QDate ParamsPage::dateFrom() const { return m_dateFrom->date(); }
@@ -219,7 +253,7 @@ void ExportPage::onExportCsv()
     }
     QString defaultName = data.suggestedFilename.isEmpty() ? tr("Otchet.csv") : data.suggestedFilename + QLatin1String(".csv");
     QString path = QFileDialog::getSaveFileName(this, tr("Экспорт в CSV"),
-        defaultName, tr("CSV (*.csv)"), nullptr, QFileDialog::DontUseNativeDialog);
+        defaultName, tr("CSV (*.csv)"));
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".csv"), Qt::CaseInsensitive))
         path += QLatin1String(".csv");
@@ -240,7 +274,7 @@ void ExportPage::onExportOdt()
     }
     QString defaultName = data.suggestedFilename.isEmpty() ? tr("Otchet.fodt") : data.suggestedFilename + QLatin1String(".fodt");
     QString path = QFileDialog::getSaveFileName(this, tr("Отчёт в ODT"), defaultName,
-        tr("Документ ODT (*.fodt *.odt);;Все файлы (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+        tr("Документ ODT (*.fodt *.odt);;Все файлы (*)"));
     if (path.isEmpty()) return;
     if (!path.endsWith(QLatin1String(".fodt"), Qt::CaseInsensitive) && !path.endsWith(QLatin1String(".odt"), Qt::CaseInsensitive))
         path += QLatin1String(".fodt");

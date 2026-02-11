@@ -14,6 +14,7 @@ ReferenceDialog::ReferenceDialog(QWidget *parent, std::shared_ptr<EasyPOSCore> c
     : QDialog(parent)
     , ui(new Ui::ReferenceDialog)
     , m_core(core)
+    , m_isMaximized(false)
 {
     qDebug() << "ReferenceDialog::ReferenceDialog" << "title=" << title;
     ui->setupUi(this);
@@ -66,6 +67,10 @@ void ReferenceDialog::setupShortcuts()
     // F5 - обновить
     QShortcut *refreshShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
     connect(refreshShortcut, &QShortcut::activated, this, &ReferenceDialog::on_refreshButton_clicked);
+    
+    // F11 - развернуть/свернуть
+    QShortcut *maximizeShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
+    connect(maximizeShortcut, &QShortcut::activated, this, &ReferenceDialog::on_maximizeButton_clicked);
     
     // Esc - закрыть
     QShortcut *escShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this);
@@ -217,6 +222,26 @@ void ReferenceDialog::on_refreshButton_clicked()
     qDebug() << "ReferenceDialog::on_refreshButton_clicked";
     if (!m_core || !m_core->ensureSessionValid()) { qDebug() << "ReferenceDialog::on_refreshButton_clicked: branch session_invalid"; reject(); return; }
     loadTable(false);  // false = не показывать удалённые
+}
+
+void ReferenceDialog::on_maximizeButton_clicked()
+{
+    toggleMaximize();
+}
+
+void ReferenceDialog::toggleMaximize()
+{
+    if (m_isMaximized) {
+        showNormal();
+        ui->maximizeButton->setText(tr("Развернуть"));
+        ui->maximizeButton->setToolTip(tr("Развернуть окно на весь экран (F11)"));
+        m_isMaximized = false;
+    } else {
+        showMaximized();
+        ui->maximizeButton->setText(tr("Свернуть"));
+        ui->maximizeButton->setToolTip(tr("Восстановить размер окна (F11)"));
+        m_isMaximized = true;
+    }
 }
 
 void ReferenceDialog::on_searchButton_clicked()

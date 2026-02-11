@@ -119,6 +119,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="maximizeButton">
+         <property name="text">
+          <string>Развернуть</string>
+         </property>
+         <property name="toolTip">
+          <string>Развернуть окно на весь экран (F11)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

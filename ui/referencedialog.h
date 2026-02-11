@@ -125,6 +125,7 @@ private slots:
     void on_deleteButton_clicked();
     void on_closeButton_clicked();
     void on_refreshButton_clicked();
+    void on_maximizeButton_clicked();
     void on_searchButton_clicked();
     void on_searchEdit_textChanged(const QString &text);
     void on_searchEdit_returnPressed();
@@ -134,9 +135,11 @@ private slots:
 private:
     void setupShortcuts();
     void applyFilter(const QString &searchText);
+    void toggleMaximize();
     
     Ui::ReferenceDialog *ui;
     QString m_lastSearchText;
+    bool m_isMaximized;
 };
 
 #endif // REFERENCEDIALOG_H
