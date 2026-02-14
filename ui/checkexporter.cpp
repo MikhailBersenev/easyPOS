@@ -40,14 +40,14 @@ QString CheckExporter::generateText(std::shared_ptr<EasyPOSCore> core, SalesMana
     QString dateTime = QLocale::system().toString(ch.date, QLocale::ShortFormat) + " " + ch.time.toString(Qt::ISODate);
     stream << dateTime << "\n";
     stream << tr("Сотрудник: %1").arg(ch.employeeName) << "\n";
-    stream << QString(lineWidth, QChar('─')) << "\n\n";
+    stream << QString(lineWidth, QChar('-')) << "\n\n";
     
     // Заголовок таблицы товаров
     stream << tr("Товар").leftJustified(30);
     stream << tr("Кол-во").rightJustified(8);
     stream << tr("Цена").rightJustified(10);
     stream << tr("Сумма").rightJustified(12) << "\n";
-    stream << QString(lineWidth, QChar('─')) << "\n";
+    stream << QString(lineWidth, QChar('-')) << "\n";
 
     // Список товаров
     for (const SaleRow &r : rows) {
@@ -85,7 +85,7 @@ QString CheckExporter::generateText(std::shared_ptr<EasyPOSCore> core, SalesMana
     }
 
     // Итоги
-    stream << QString(lineWidth, QChar('─')) << "\n";
+    stream << QString(lineWidth, QChar('-')) << "\n";
     stream << tr("Итого:").leftJustified(30) << QString::number(ch.totalAmount, 'f', 2).rightJustified(30) << " ₽\n";
     
     if (ch.discountAmount > 0.0) {
@@ -98,7 +98,7 @@ QString CheckExporter::generateText(std::shared_ptr<EasyPOSCore> core, SalesMana
 
     // Адрес и реквизиты
     if (!address.isEmpty() || !legalInfo.isEmpty()) {
-        stream << QString(lineWidth, QChar('─')) << "\n";
+        stream << QString(lineWidth, QChar('-')) << "\n";
         if (!address.isEmpty()) {
             stream << address << "\n";
         }
@@ -109,7 +109,7 @@ QString CheckExporter::generateText(std::shared_ptr<EasyPOSCore> core, SalesMana
                 }
             }
         }
-        stream << QString(lineWidth, QChar('─')) << "\n";
+        stream << QString(lineWidth, QChar('-')) << "\n";
     }
     
     // Нижний разделитель
