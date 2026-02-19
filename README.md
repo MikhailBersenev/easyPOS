@@ -65,7 +65,21 @@ ctest
 ./unit_tests
 ```
 
-Tests cover DatabaseConnection, AuthManager, AccountManager, RoleManager, StockManager, SalesManager, and SettingsManager.
+Tests cover DatabaseConnection, AuthManager, AccountManager, RoleManager, StockManager, SalesManager, SettingsManager, ShiftManager, AlertsManager, ReportManager, ProductionManager, EasyPOSCore, CategoryManager (goods), PositionManager, EmployeeManager, and PromotionManager.
+
+Tests that need a database (Auth, Account, Role, Stock, Sales) use connection settings from environment variables, with defaults for a local test DB:
+
+| Variable | Default |
+|----------|---------|
+| `EASYPOS_TEST_DB_HOST` | `192.168.0.202` |
+| `EASYPOS_TEST_DB_PORT` | `5432` |
+| `EASYPOS_TEST_DB_NAME` | `pos_bakery` |
+| `EASYPOS_TEST_DB_USER` | `postgres` |
+| `EASYPOS_TEST_DB_PASSWORD` | `123456` |
+| `EASYPOS_TEST_DB_SSL` | `prefer` |
+| `EASYPOS_TEST_DB_TIMEOUT` | `10` |
+
+If the database is unavailable, those tests are skipped (QSKIP). DatabaseConnection and SettingsManager tests do not require a running database.
 
 ## Install
 

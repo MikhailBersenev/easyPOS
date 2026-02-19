@@ -23,7 +23,7 @@ void TestSalesManager::cleanupTestCase()
 {
     qDebug() << "Завершение тестового набора для SalesManager";
     cleanupTestData();
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestSalesManager::init()
@@ -33,43 +33,12 @@ void TestSalesManager::init()
 void TestSalesManager::cleanup()
 {
     cleanupTestData();
-    cleanupDatabaseConnections();
-}
-
-PostgreSQLAuth TestSalesManager::createTestAuth() const
-{
-    PostgreSQLAuth auth;
-    auth.host = "192.168.0.202";
-    auth.port = 5432;
-    auth.database = "pos_bakery";
-    auth.username = "postgres";
-    auth.password = "123456";
-    auth.sslMode = "prefer";
-    auth.connectTimeout = 10;
-    return auth;
-}
-
-DatabaseConnection *TestSalesManager::createTestDatabaseConnection()
-{
-    DatabaseConnection *dbConn = new DatabaseConnection();
-    PostgreSQLAuth auth = createTestAuth();
-    if (dbConn->connect(auth))
-        return dbConn;
-    delete dbConn;
-    return nullptr;
-}
-
-void TestSalesManager::cleanupDatabaseConnections()
-{
-    for (const QString &name : QSqlDatabase::connectionNames()) {
-        if (name.startsWith("easyPOS_connection_"))
-            QSqlDatabase::removeDatabase(name);
-    }
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 int TestSalesManager::createTestGood(const QString &name)
 {
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return 0;
 
@@ -93,7 +62,7 @@ int TestSalesManager::createTestGood(const QString &name)
 
 qint64 TestSalesManager::createTestEmployee()
 {
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return 0;
 
@@ -111,7 +80,7 @@ qint64 TestSalesManager::createTestEmployee()
 
 qint64 TestSalesManager::createTestBatch(int goodId, double price, qint64 qnt)
 {
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return 0;
 
@@ -136,7 +105,7 @@ qint64 TestSalesManager::createTestBatch(int goodId, double price, qint64 qnt)
 
 qint64 TestSalesManager::createTestService(const QString &name, double price)
 {
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return 0;
 
@@ -162,7 +131,7 @@ qint64 TestSalesManager::createTestService(const QString &name, double price)
 
 void TestSalesManager::cleanupTestData()
 {
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return;
 
@@ -191,7 +160,7 @@ void TestSalesManager::testConstructor()
 void TestSalesManager::testSetDatabaseConnection()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (dbConn) {
         sm.setDatabaseConnection(dbConn);
         QVERIFY(true);
@@ -203,7 +172,7 @@ void TestSalesManager::testSetDatabaseConnection()
 void TestSalesManager::testCreateCheck()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -237,7 +206,7 @@ void TestSalesManager::testCreateCheckWithoutConnection()
 void TestSalesManager::testCreateCheckInvalidEmployee()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -251,7 +220,7 @@ void TestSalesManager::testCreateCheckInvalidEmployee()
 void TestSalesManager::testGetCheck()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -274,7 +243,7 @@ void TestSalesManager::testGetCheck()
 void TestSalesManager::testAddSaleByBatchId()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -310,7 +279,7 @@ void TestSalesManager::testAddSaleByBatchId()
 void TestSalesManager::testAddSaleByServiceId()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -342,7 +311,7 @@ void TestSalesManager::testAddSaleByServiceId()
 void TestSalesManager::testAddSaleInsufficientBatch()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -370,7 +339,7 @@ void TestSalesManager::testAddSaleInsufficientBatch()
 void TestSalesManager::testRemoveSale()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -404,7 +373,7 @@ void TestSalesManager::testRemoveSale()
 void TestSalesManager::testUpdateSaleQuantity()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -439,7 +408,7 @@ void TestSalesManager::testUpdateSaleQuantity()
 void TestSalesManager::testSetCheckDiscount()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -468,7 +437,7 @@ void TestSalesManager::testSetCheckDiscount()
 void TestSalesManager::testCancelCheck()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -497,7 +466,7 @@ void TestSalesManager::testCancelCheck()
 void TestSalesManager::testGetSalesByCheck()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -525,7 +494,7 @@ void TestSalesManager::testGetSalesByCheck()
 void TestSalesManager::testGetSale()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;
@@ -554,7 +523,7 @@ void TestSalesManager::testGetSale()
 void TestSalesManager::testGetChecks()
 {
     SalesManager sm;
-    DatabaseConnection *dbConn = createTestDatabaseConnection();
+    DatabaseConnection *dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected()) {
         QSKIP("Нет подключения к БД для теста");
         return;

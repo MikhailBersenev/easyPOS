@@ -162,6 +162,7 @@ install(TARGETS easyPOS
 enable_testing()
 qt_add_executable(unit_tests
     unit_tests/main.cpp
+    unit_tests/test_helpers.h
     unit_tests/test_databaseconnection.cpp
     unit_tests/test_databaseconnection.h
     unit_tests/test_AuthManager.h unit_tests/test_AuthManager.cpp
@@ -170,6 +171,15 @@ qt_add_executable(unit_tests
     unit_tests/test_StockManager.h unit_tests/test_StockManager.cpp
     unit_tests/test_SalesManager.h unit_tests/test_SalesManager.cpp
     unit_tests/test_SettingsManager.h unit_tests/test_SettingsManager.cpp
+    unit_tests/test_ShiftManager.h unit_tests/test_ShiftManager.cpp
+    unit_tests/test_AlertsManager.h unit_tests/test_AlertsManager.cpp
+    unit_tests/test_ReportManager.h unit_tests/test_ReportManager.cpp
+    unit_tests/test_ProductionManager.h unit_tests/test_ProductionManager.cpp
+    unit_tests/test_EasyPOSCore.h unit_tests/test_EasyPOSCore.cpp
+    unit_tests/test_CategoryManager.h unit_tests/test_CategoryManager.cpp
+    unit_tests/test_PositionManager.h unit_tests/test_PositionManager.cpp
+    unit_tests/test_EmployeeManager.h unit_tests/test_EmployeeManager.cpp
+    unit_tests/test_PromotionManager.h unit_tests/test_PromotionManager.cpp
     db/databaseconnection.cpp
     db/databaseconnection.h
     db/structures.h
@@ -188,6 +198,10 @@ qt_add_executable(unit_tests
     alerts/structures.h alerts/alertkeys.h alerts/alertsmanager.h alerts/alertsmanager.cpp
     settings/settingsmanager.h settings/settingsmanager.cpp
     easyposcore.cpp easyposcore.h
+    goods/structures.h goods/categorymanager.h goods/categorymanager.cpp
+    employees/structures.h employees/positionmanager.h employees/positionmanager.cpp
+    employees/employeemanager.h employees/employeemanager.cpp
+    promotions/structures.h promotions/promotionmanager.h promotions/promotionmanager.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unit_tests

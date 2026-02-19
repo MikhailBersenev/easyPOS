@@ -21,7 +21,7 @@ void TestRoleManager::initTestCase()
 void TestRoleManager::cleanupTestCase()
 {
     qDebug() << "Завершение тестового набора для RoleManager";
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestRoleManager::init()
@@ -30,7 +30,7 @@ void TestRoleManager::init()
 
 void TestRoleManager::cleanup()
 {
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestRoleManager::testConstructor()
@@ -42,7 +42,7 @@ void TestRoleManager::testConstructor()
 void TestRoleManager::testSetDatabaseConnection()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn) {
         roleManager.setDatabaseConnection(dbConn);
@@ -62,7 +62,7 @@ void TestRoleManager::testSetDatabaseConnectionNull()
 void TestRoleManager::testCreateRoleWithEmptyName()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -87,7 +87,7 @@ void TestRoleManager::testCreateRoleWithoutConnection()
 void TestRoleManager::testCreateRole()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -113,7 +113,7 @@ void TestRoleManager::testCreateRole()
 void TestRoleManager::testCreateRoleDuplicate()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -134,7 +134,7 @@ void TestRoleManager::testCreateRoleDuplicate()
 void TestRoleManager::testGetRole()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -159,7 +159,7 @@ void TestRoleManager::testGetRole()
 void TestRoleManager::testGetRoleByName()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -183,7 +183,7 @@ void TestRoleManager::testGetRoleByName()
 void TestRoleManager::testGetAllRoles()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -212,7 +212,7 @@ void TestRoleManager::testGetAllRoles()
 void TestRoleManager::testRoleExists()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -234,7 +234,7 @@ void TestRoleManager::testRoleExists()
 void TestRoleManager::testUpdateRole()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -267,7 +267,7 @@ void TestRoleManager::testUpdateRoleWithoutConnection()
 void TestRoleManager::testUpdateRoleNotFound()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -283,7 +283,7 @@ void TestRoleManager::testUpdateRoleNotFound()
 void TestRoleManager::testDeleteRole()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -310,7 +310,7 @@ void TestRoleManager::testDeleteRole()
 void TestRoleManager::testDeleteRoleByName()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -339,7 +339,7 @@ void TestRoleManager::testDeleteRoleWithoutConnection()
 void TestRoleManager::testRestoreRole()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -366,7 +366,7 @@ void TestRoleManager::testRestoreRole()
 void TestRoleManager::testRestoreRoleByName()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -397,7 +397,7 @@ void TestRoleManager::testRestoreRoleWithoutConnection()
 void TestRoleManager::testBlockRole()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -426,7 +426,7 @@ void TestRoleManager::testBlockRole()
 void TestRoleManager::testBlockRoleByName()
 {
     RoleManager roleManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         roleManager.setDatabaseConnection(dbConn);
@@ -452,44 +452,6 @@ void TestRoleManager::testBlockRoleWithoutConnection()
     RoleOperationResult result = roleManager.blockRole(1, true);
     QVERIFY(!result.success);
     QVERIFY(result.message.contains("Нет подключения"));
-}
-
-// === Вспомогательные методы ===
-
-DatabaseConnection* TestRoleManager::createTestDatabaseConnection()
-{
-    DatabaseConnection* dbConn = new DatabaseConnection();
-    PostgreSQLAuth auth = createTestAuth();
-    
-    if (dbConn->connect(auth)) {
-        return dbConn;
-    } else {
-        delete dbConn;
-        return nullptr;
-    }
-}
-
-PostgreSQLAuth TestRoleManager::createTestAuth() const
-{
-    PostgreSQLAuth auth;
-    auth.host = "192.168.0.202";
-    auth.port = 5432;
-    auth.database = "pos_bakery";
-    auth.username = "postgres";
-    auth.password = "123456";
-    auth.sslMode = "prefer";
-    auth.connectTimeout = 10;
-    return auth;
-}
-
-void TestRoleManager::cleanupDatabaseConnections()
-{
-    QStringList connections = QSqlDatabase::connectionNames();
-    for (const QString &name : connections) {
-        if (name.startsWith("easyPOS_connection_")) {
-            QSqlDatabase::removeDatabase(name);
-        }
-    }
 }
 
 QString TestRoleManager::generateUniqueRoleName() const

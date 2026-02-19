@@ -6,6 +6,7 @@
 #include "../RBAC/rolemanager.h"
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
+#include "test_helpers.h"
 
 class TestRoleManager : public QObject
 {
@@ -64,9 +65,6 @@ private slots:
     void testBlockRoleWithoutConnection();
 
 private:
-    DatabaseConnection* createTestDatabaseConnection();
-    PostgreSQLAuth createTestAuth() const;
-    void cleanupDatabaseConnections();
     QString generateUniqueRoleName() const;
 };
 

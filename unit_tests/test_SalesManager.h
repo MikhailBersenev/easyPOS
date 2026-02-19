@@ -7,6 +7,7 @@
 #include "../sales/stockmanager.h"
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
+#include "test_helpers.h"
 
 class TestSalesManager : public QObject
 {
@@ -40,9 +41,6 @@ private slots:
     void testGetChecks();
 
 private:
-    DatabaseConnection *createTestDatabaseConnection();
-    PostgreSQLAuth createTestAuth() const;
-    void cleanupDatabaseConnections();
     qint64 createTestEmployee();
     qint64 createTestBatch(int goodId, double price, qint64 qnt);
     qint64 createTestService(const QString &name, double price);

@@ -21,18 +21,16 @@ void TestAccountManager::initTestCase()
 void TestAccountManager::cleanupTestCase()
 {
     qDebug() << "Завершение тестового набора для AccountManager";
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestAccountManager::init()
 {
-    // Инициализация перед каждым тестом
 }
 
 void TestAccountManager::cleanup()
 {
-    // Очистка после каждого теста
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestAccountManager::testConstructor()
@@ -46,7 +44,7 @@ void TestAccountManager::testConstructor()
 void TestAccountManager::testSetDatabaseConnection()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -71,7 +69,7 @@ void TestAccountManager::testSetDatabaseConnectionNull()
 void TestAccountManager::testRegisterUserWithEmptyUsername()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -87,7 +85,7 @@ void TestAccountManager::testRegisterUserWithEmptyUsername()
 void TestAccountManager::testRegisterUserWithEmptyPassword()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -113,7 +111,7 @@ void TestAccountManager::testRegisterUserWithoutConnection()
 void TestAccountManager::testRegisterUserWithInvalidRole()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -131,7 +129,7 @@ void TestAccountManager::testRegisterUserWithInvalidRole()
 void TestAccountManager::testUserExists()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -147,7 +145,7 @@ void TestAccountManager::testUserExists()
 void TestAccountManager::testUserExistsWithIncludeDeleted()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -163,7 +161,7 @@ void TestAccountManager::testUserExistsWithIncludeDeleted()
 void TestAccountManager::testGetUser()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -188,7 +186,7 @@ void TestAccountManager::testGetUser()
 void TestAccountManager::testGetUserByUsername()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -214,7 +212,7 @@ void TestAccountManager::testGetUserByUsername()
 void TestAccountManager::testGetAllUsers()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -231,7 +229,7 @@ void TestAccountManager::testGetAllUsers()
 void TestAccountManager::testDeleteUser()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -248,7 +246,7 @@ void TestAccountManager::testDeleteUser()
 void TestAccountManager::testDeleteUserByUsername()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -275,7 +273,7 @@ void TestAccountManager::testDeleteUserWithoutConnection()
 void TestAccountManager::testRestoreUser()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -292,7 +290,7 @@ void TestAccountManager::testRestoreUser()
 void TestAccountManager::testRestoreUserByUsername()
 {
     AccountManager accountManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         accountManager.setDatabaseConnection(dbConn);
@@ -314,42 +312,6 @@ void TestAccountManager::testRestoreUserWithoutConnection()
     UserOperationResult result = accountManager.restoreUser(1);
     QVERIFY(!result.success);
     QVERIFY(result.message.contains("Нет подключения"));
-}
-
-DatabaseConnection* TestAccountManager::createTestDatabaseConnection()
-{
-    DatabaseConnection* dbConn = new DatabaseConnection();
-    PostgreSQLAuth auth = createTestAuth();
-    
-    if (dbConn->connect(auth)) {
-        return dbConn;
-    } else {
-        delete dbConn;
-        return nullptr;
-    }
-}
-
-PostgreSQLAuth TestAccountManager::createTestAuth() const
-{
-    PostgreSQLAuth auth;
-    auth.host = "192.168.0.202";
-    auth.port = 5432;
-    auth.database = "pos_bakery";
-    auth.username = "postgres";
-    auth.password = "123456";
-    auth.sslMode = "prefer";
-    auth.connectTimeout = 10;
-    return auth;
-}
-
-void TestAccountManager::cleanupDatabaseConnections()
-{
-    QStringList connections = QSqlDatabase::connectionNames();
-    for (const QString &name : connections) {
-        if (name.startsWith("easyPOS_connection_")) {
-            QSqlDatabase::removeDatabase(name);
-        }
-    }
 }
 
 QString TestAccountManager::generateUniqueUsername() const

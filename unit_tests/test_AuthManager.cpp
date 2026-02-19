@@ -20,147 +20,103 @@ void TestAuthManager::initTestCase()
 void TestAuthManager::cleanupTestCase()
 {
     qDebug() << "Завершение тестового набора для AuthManager";
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestAuthManager::init()
 {
-    // Инициализация перед каждым тестом
 }
 
 void TestAuthManager::cleanup()
 {
-    // Очистка после каждого теста
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestAuthManager::testConstructor()
 {
     AuthManager authManager;
-    
-    // Проверяем, что объект создан
-    QVERIFY(authManager.getSession(0).userId == 0);
+    UserSession s = authManager.getSession(0);
+    QCOMPARE(s.userId, 0);
+    QVERIFY(!s.isValid());
 }
 
 void TestAuthManager::testSetDatabaseConnection()
 {
     AuthManager authManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
-    
-    if (dbConn && dbConn->isConnected()) {
-        authManager.setDatabaseConnection(dbConn);
-        // Если подключение успешно, можно протестировать авторизацию
-        // Но для этого нужны данные в БД
-        QVERIFY(true);
-    } else {
-        QSKIP("Нет подключения к БД для теста");
-    }
+    TEST_REQUIRE_CONNECTION(conn);
+    authManager.setDatabaseConnection(conn);
+    QVERIFY2(conn->isConnected(), "Требуется рабочее подключение к БД");
 }
 
 void TestAuthManager::testSetDatabaseConnectionNull()
 {
     AuthManager authManager;
     authManager.setDatabaseConnection(nullptr);
-    
-    // Проверяем, что авторизация не работает без подключения
     AuthResult result = authManager.authenticate("test", "test");
-    QVERIFY(!result.success);
-    QVERIFY(result.message.contains("Нет подключения"));
+    QVERIFY2(!result.success, "Без подключения авторизация должна завершаться ошибкой");
+    QVERIFY2(result.message.contains("Нет подключения"), qPrintable(result.message));
 }
 
-void TestAuthManager::testAuthenticateWithEmptyUsername()
+void TestAuthManager::testAuthenticateWithEmptyCredentials_data()
 {
-    AuthManager authManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
-    
-    if (dbConn && dbConn->isConnected()) {
-        authManager.setDatabaseConnection(dbConn);
-        
-        AuthResult result = authManager.authenticate("", "password");
-        QVERIFY(!result.success);
-        QVERIFY(result.message.contains("не могут быть пустыми"));
-    } else {
-        QSKIP("Нет подключения к БД для теста");
-    }
+    QTest::addColumn<QString>("username");
+    QTest::addColumn<QString>("password");
+    QTest::newRow("пустой_логин") << "" << "password";
+    QTest::newRow("пустой_пароль") << "username" << "";
 }
 
-void TestAuthManager::testAuthenticateWithEmptyPassword()
+void TestAuthManager::testAuthenticateWithEmptyCredentials()
 {
+    QFETCH(QString, username);
+    QFETCH(QString, password);
     AuthManager authManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
-    
-    if (dbConn && dbConn->isConnected()) {
-        authManager.setDatabaseConnection(dbConn);
-        
-        AuthResult result = authManager.authenticate("username", "");
-        QVERIFY(!result.success);
-        QVERIFY(result.message.contains("не могут быть пустыми"));
-    } else {
-        QSKIP("Нет подключения к БД для теста");
-    }
+    TEST_REQUIRE_CONNECTION(conn);
+    authManager.setDatabaseConnection(conn);
+    AuthResult result = authManager.authenticate(username, password);
+    QVERIFY2(!result.success, "Пустые логин или пароль должны отклоняться");
+    QVERIFY2(result.message.contains("не могут быть пустыми"), qPrintable(result.message));
 }
 
 void TestAuthManager::testAuthenticateWithoutConnection()
 {
     AuthManager authManager;
-    // Не устанавливаем подключение
-    
     AuthResult result = authManager.authenticate("test", "test");
-    QVERIFY(!result.success);
-    QVERIFY(result.message.contains("Нет подключения"));
+    QVERIFY2(!result.success, "Без подключения авторизация должна завершаться ошибкой");
+    QVERIFY2(result.message.contains("Нет подключения"), qPrintable(result.message));
 }
 
 void TestAuthManager::testAuthenticateWithInvalidUser()
 {
     AuthManager authManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
-    
-    if (dbConn && dbConn->isConnected()) {
-        authManager.setDatabaseConnection(dbConn);
-        
-        // Пытаемся авторизоваться с несуществующим пользователем
-        AuthResult result = authManager.authenticate("nonexistent_user_12345", "password");
-        QVERIFY(!result.success);
-        QVERIFY(result.message.contains("не найден") || result.message.contains("Нет подключения"));
-    } else {
-        QSKIP("Нет подключения к БД для теста");
-    }
+    TEST_REQUIRE_CONNECTION(conn);
+    authManager.setDatabaseConnection(conn);
+    AuthResult result = authManager.authenticate("nonexistent_user_12345", "password");
+    QVERIFY2(!result.success, "Несуществующий пользователь должен отклоняться");
+    QVERIFY(result.message.contains("не найден") || result.message.contains("Нет подключения"));
 }
 
 void TestAuthManager::testAuthenticateWithInvalidPassword()
 {
     AuthManager authManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
-    
-    if (dbConn && dbConn->isConnected()) {
-        authManager.setDatabaseConnection(dbConn);
-        
-        // Этот тест требует существующего пользователя в БД
-        // Поэтому просто проверяем структуру результата
-        AuthResult result = authManager.authenticate("nonexistent_user", "wrong_password");
-        QVERIFY(!result.success || result.message.contains("не найден") || result.message.contains("Неверный пароль"));
-    } else {
-        QSKIP("Нет подключения к БД для теста");
-    }
+    TEST_REQUIRE_CONNECTION(conn);
+    authManager.setDatabaseConnection(conn);
+    AuthResult result = authManager.authenticate("nonexistent_user", "wrong_password");
+    QVERIFY2(!result.success, "Неверный пароль или несуществующий пользователь");
+    QVERIFY(result.message.contains("не найден") || result.message.contains("Неверный пароль"));
 }
 
 void TestAuthManager::testGetSession()
 {
     AuthManager authManager;
-    
-    // Проверяем получение сессии для несуществующего пользователя
     UserSession session = authManager.getSession(999);
     QVERIFY(!session.isValid());
-    QVERIFY(session.userId == 0);
+    QCOMPARE(session.userId, 0);
 }
 
 void TestAuthManager::testIsSessionValid()
 {
     AuthManager authManager;
-    
-    // Проверяем валидность сессии для несуществующего пользователя
-    bool isValid = authManager.isSessionValid(999);
-    QVERIFY(!isValid);
+    QVERIFY(!authManager.isSessionValid(999));
 }
 
 void TestAuthManager::testUpdateSessionActivity()
@@ -211,51 +167,9 @@ void TestAuthManager::testLogoutWithInvalidUser()
 void TestAuthManager::testGetUserRole()
 {
     AuthManager authManager;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
-    
-    if (dbConn && dbConn->isConnected()) {
-        authManager.setDatabaseConnection(dbConn);
-        
-        // Получение роли для несуществующего пользователя
-        Role role = authManager.getUserRole(999);
-        QVERIFY(role.id == 0);
-    } else {
-        QSKIP("Нет подключения к БД для теста");
-    }
+    TEST_REQUIRE_CONNECTION(conn);
+    authManager.setDatabaseConnection(conn);
+    Role role = authManager.getUserRole(999);
+    QCOMPARE(role.id, 0);
 }
 
-DatabaseConnection* TestAuthManager::createTestDatabaseConnection()
-{
-    DatabaseConnection* dbConn = new DatabaseConnection();
-    PostgreSQLAuth auth = createTestAuth();
-    
-    if (dbConn->connect(auth)) {
-        return dbConn;
-    } else {
-        delete dbConn;
-        return nullptr;
-    }
-}
-
-PostgreSQLAuth TestAuthManager::createTestAuth() const
-{
-    PostgreSQLAuth auth;
-    auth.host = "192.168.0.202";
-    auth.port = 5432;
-    auth.database = "pos_bakery";
-    auth.username = "postgres";
-    auth.password = "123456";
-    auth.sslMode = "prefer";
-    auth.connectTimeout = 10;
-    return auth;
-}
-
-void TestAuthManager::cleanupDatabaseConnections()
-{
-    QStringList connections = QSqlDatabase::connectionNames();
-    for (const QString &name : connections) {
-        if (name.startsWith("easyPOS_connection_")) {
-            QSqlDatabase::removeDatabase(name);
-        }
-    }
-}

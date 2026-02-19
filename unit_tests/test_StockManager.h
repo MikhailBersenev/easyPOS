@@ -7,6 +7,7 @@
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
 #include "../easyposcore.h"
+#include "test_helpers.h"
 
 class TestStockManager : public QObject
 {
@@ -73,9 +74,6 @@ private slots:
     void testRestoreStock();
 
 private:
-    DatabaseConnection* createTestDatabaseConnection();
-    PostgreSQLAuth createTestAuth() const;
-    void cleanupDatabaseConnections();
     int createTestGood(const QString &name = QString());
     void cleanupTestData();
 };

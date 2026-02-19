@@ -7,6 +7,7 @@
 #include "../RBAC/structures.h"
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
+#include "test_helpers.h"
 
 class TestAuthManager : public QObject
 {
@@ -31,8 +32,8 @@ private slots:
     void testSetDatabaseConnectionNull();
     
     // Тесты авторизации
-    void testAuthenticateWithEmptyUsername();
-    void testAuthenticateWithEmptyPassword();
+    void testAuthenticateWithEmptyCredentials_data();
+    void testAuthenticateWithEmptyCredentials();
     void testAuthenticateWithoutConnection();
     void testAuthenticateWithInvalidUser();
     void testAuthenticateWithInvalidPassword();
@@ -52,11 +53,6 @@ private slots:
     
     // Тесты получения роли
     void testGetUserRole();
-
-private:
-    DatabaseConnection* createTestDatabaseConnection();
-    PostgreSQLAuth createTestAuth() const;
-    void cleanupDatabaseConnections();
 };
 
 #endif // TEST_AUTHMANAGER_H

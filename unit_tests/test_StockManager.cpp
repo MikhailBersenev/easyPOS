@@ -23,7 +23,7 @@ void TestStockManager::cleanupTestCase()
 {
     qDebug() << "Завершение тестового набора для StockManager";
     cleanupTestData();
-    cleanupDatabaseConnections();
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 void TestStockManager::init()
@@ -33,48 +33,12 @@ void TestStockManager::init()
 void TestStockManager::cleanup()
 {
     cleanupTestData();
-    cleanupDatabaseConnections();
-}
-
-PostgreSQLAuth TestStockManager::createTestAuth() const
-{
-    PostgreSQLAuth auth;
-    auth.host = "192.168.0.202";
-    auth.port = 5432;
-    auth.database = "pos_bakery";
-    auth.username = "postgres";
-    auth.password = "123456";
-    auth.sslMode = "prefer";
-    auth.connectTimeout = 10;
-    return auth;
-}
-
-DatabaseConnection* TestStockManager::createTestDatabaseConnection()
-{
-    DatabaseConnection* dbConn = new DatabaseConnection();
-    PostgreSQLAuth auth = createTestAuth();
-    
-    if (dbConn->connect(auth)) {
-        return dbConn;
-    } else {
-        delete dbConn;
-        return nullptr;
-    }
-}
-
-void TestStockManager::cleanupDatabaseConnections()
-{
-    QStringList connections = QSqlDatabase::connectionNames();
-    for (const QString &name : connections) {
-        if (name.startsWith("easyPOS_connection_")) {
-            QSqlDatabase::removeDatabase(name);
-        }
-    }
+    TestHelpers::cleanupDatabaseConnections();
 }
 
 int TestStockManager::createTestGood(const QString &name)
 {
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return 0;
     
@@ -113,7 +77,7 @@ int TestStockManager::createTestGood(const QString &name)
 
 void TestStockManager::cleanupTestData()
 {
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     if (!dbConn || !dbConn->isConnected())
         return;
     
@@ -133,7 +97,7 @@ void TestStockManager::testConstructor()
 void TestStockManager::testSetDatabaseConnection()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn) {
         sm.setDatabaseConnection(dbConn);
@@ -156,7 +120,7 @@ void TestStockManager::testSetDatabaseConnectionNull()
 void TestStockManager::testSetStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -180,7 +144,7 @@ void TestStockManager::testSetStock()
 void TestStockManager::testSetStockByGoodName()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -211,7 +175,7 @@ void TestStockManager::testSetStockWithoutConnection()
 void TestStockManager::testSetStockInvalidGood()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -227,7 +191,7 @@ void TestStockManager::testSetStockInvalidGood()
 void TestStockManager::testSetStockNegativeQuantity()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -246,7 +210,7 @@ void TestStockManager::testSetStockNegativeQuantity()
 void TestStockManager::testAddStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -269,7 +233,7 @@ void TestStockManager::testAddStock()
 void TestStockManager::testAddStockByGoodName()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -293,7 +257,7 @@ void TestStockManager::testAddStockByGoodName()
 void TestStockManager::testAddStockMultipleBatches()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -315,7 +279,7 @@ void TestStockManager::testAddStockMultipleBatches()
 void TestStockManager::testGetStockByGoodId()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -340,7 +304,7 @@ void TestStockManager::testGetStockByGoodId()
 void TestStockManager::testGetStockByGoodName()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -363,7 +327,7 @@ void TestStockManager::testGetStockByGoodName()
 void TestStockManager::testGetAllStocks()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -394,7 +358,7 @@ void TestStockManager::testGetAllStocks()
 void TestStockManager::testGetStocksByGoodId()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -415,7 +379,7 @@ void TestStockManager::testGetStocksByGoodId()
 void TestStockManager::testRemoveStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -438,7 +402,7 @@ void TestStockManager::testRemoveStock()
 void TestStockManager::testRemoveStockByGoodName()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -462,7 +426,7 @@ void TestStockManager::testRemoveStockByGoodName()
 void TestStockManager::testRemoveStockInsufficient()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -483,7 +447,7 @@ void TestStockManager::testRemoveStockInsufficient()
 void TestStockManager::testRemoveStockFIFO()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -507,7 +471,7 @@ void TestStockManager::testRemoveStockFIFO()
 void TestStockManager::testReserveStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -532,7 +496,7 @@ void TestStockManager::testReserveStock()
 void TestStockManager::testReserveStockByGoodName()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -556,7 +520,7 @@ void TestStockManager::testReserveStockByGoodName()
 void TestStockManager::testReserveStockInsufficient()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -577,7 +541,7 @@ void TestStockManager::testReserveStockInsufficient()
 void TestStockManager::testReleaseReserve()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -601,7 +565,7 @@ void TestStockManager::testReleaseReserve()
 void TestStockManager::testReleaseReserveInsufficient()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -623,7 +587,7 @@ void TestStockManager::testReleaseReserveInsufficient()
 void TestStockManager::testHasEnoughStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -644,7 +608,7 @@ void TestStockManager::testHasEnoughStock()
 void TestStockManager::testHasEnoughStockByGoodName()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -665,7 +629,7 @@ void TestStockManager::testHasEnoughStockByGoodName()
 void TestStockManager::testStockExists()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -687,7 +651,7 @@ void TestStockManager::testStockExists()
 void TestStockManager::testDeleteStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);
@@ -711,7 +675,7 @@ void TestStockManager::testDeleteStock()
 void TestStockManager::testRestoreStock()
 {
     StockManager sm;
-    DatabaseConnection* dbConn = createTestDatabaseConnection();
+    DatabaseConnection* dbConn = TestHelpers::createTestDatabaseConnection();
     
     if (dbConn && dbConn->isConnected()) {
         sm.setDatabaseConnection(dbConn);

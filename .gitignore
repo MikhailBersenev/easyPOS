@@ -1,29 +1,19 @@
+# === Build (корень и каталог build) ===
 build/
-CMakeLists.txt.user
-
-# Debian package build files
-debian/tmp/
-debian/easypos/
-obj-*/
-*.deb
-*.ddeb
-*.changes
-*.buildinfo
-*.dsc
-*.tar.*
-*.tar.gz
-*.tar.xz
-*.tar.bz2
-
-# CMake build directories
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+install_manifest.txt
+.ninja_log
+compile_commands.json
+.cmake/
+
+# CMake (не игнорировать сам CMakeLists.txt)
 *.cmake
 !CMakeLists.txt
 
-# Qt build files
+# Qt / MOC / RCC / UIC
 *_autogen/
 *.moc
 moc_*.cpp
@@ -31,40 +21,79 @@ moc_*.h
 qrc_*.cpp
 ui_*.h
 
-# Compiled files
+# Объектные и бинарные файлы
 *.o
+*.obj
 *.a
+*.lib
 *.so
+*.so.*
 *.dylib
 *.dll
+*.exe
+*.exp
+*.pdb
 
-# Executables
+# Исполняемые цели проекта
 easyPOS
 unit_tests
 
-# Translation files (compiled)
+# CTest
+Testing/
+CTestTestfile.cmake
+
+# === Debian package build ===
+debian/tmp/
+debian/easypos/
+debian/.debhelper/
+obj-*/
+*.deb
+*.ddeb
+*.changes
+*.buildinfo
+*.dsc
+*.tar
+*.tar.*
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+
+# === Переводы (скомпилированные) ===
 *.qm
 !easyPOS_*.ts
 
-# IDE files
+# === IDE и редакторы ===
 .vscode/
 .idea/
+.qtcreator/
 *.pro.user
 *.creator.user
 *.creator.user.*
 *.user
+CMakeLists.txt.user
+*.sublime-project
+*.sublime-workspace
 
-# OS files
+# === Кэш ===
+.cache/
+
+# === ОС ===
 .DS_Store
 Thumbs.db
 *~
+desktop.ini
 
-# Logs
+# === Логи и временные файлы ===
 *.log
 *.log.*
+*.bak
+*.swp
+*.tmp
+*.temp
 
-# Database
+# === База данных и бэкапы ===
 *.db
 *.sqlite
 *.sqlite3
 database.backup
+*.backup

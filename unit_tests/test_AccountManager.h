@@ -7,6 +7,7 @@
 #include "../db/databaseconnection.h"
 #include "../db/structures.h"
 #include "../RBAC/structures.h"
+#include "test_helpers.h"
 
 class TestAccountManager : public QObject
 {
@@ -56,9 +57,6 @@ private slots:
     void testRestoreUserWithoutConnection();
 
 private:
-    DatabaseConnection* createTestDatabaseConnection();
-    PostgreSQLAuth createTestAuth() const;
-    void cleanupDatabaseConnections();
     QString generateUniqueUsername() const;
 };
 
